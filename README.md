@@ -28,6 +28,15 @@ go build ./...
 go run ./cmd/server
 ```
 
+O servidor sobe em `:8080`, com `GET /health` e `GET /ws` (WebSocket, protocolo v1).
+Variáveis de ambiente:
+
+| Variável | Padrão | Uso |
+|---|---|---|
+| `RW_ADDR` | `:8080` | endereço HTTP |
+| `RW_ALLOWED_ORIGINS` | `localhost:3000` | origens do navegador aceitas no `/ws`, separadas por vírgula |
+| `RW_DEBUG` | — | `1` liga os logs de debug |
+
 ```bash
 go test ./...
 ```

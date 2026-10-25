@@ -100,7 +100,11 @@ Os erros de domínio são `ErrNicknameTaken`, `ErrNicknameInvalid` e `ErrRoomFul
   própria sala no próximo tick, e a sala recebe `PlayerLeft` (RN5). Quando o socket fecha
   normalmente, o adapter chama `LeaveRoom` na hora. Com a regra no domínio, o timeout é
   testável com o relógio falso, sem esperar 10 s reais.
-- Origem permitida por config, para evitar uso cross-site.
+- Origem permitida por config (`RW_ALLOWED_ORIGINS`), para evitar uso cross-site.
+- `ws.Hub` implementa o `Broadcaster`. Cada conexão tem um buffer de 64 mensagens, e uma
+  conexão lenta que enche o buffer é derrubada, para nunca travar o loop da sala. Só recebe
+  as mensagens da sala quem já recebeu `Joined`.
+- Mensagens inválidas são ignoradas (log de debug), e a conexão continua aberta.
 
 ### 3.4 Protocolo WebSocket (v1)
 
