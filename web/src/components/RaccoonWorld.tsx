@@ -1,5 +1,6 @@
 "use client";
 
+import { useMovementKeys } from "@/game/useMovementKeys";
 import { defaultServerUrl } from "@/net/client";
 import { useRoom } from "@/net/useRoom";
 
@@ -10,7 +11,8 @@ import styles from "./RaccoonWorld.module.css";
 const wsUrl = defaultServerUrl();
 
 export function RaccoonWorld() {
-  const { state, status, join } = useRoom(wsUrl);
+  const { state, status, join, sendInput } = useRoom(wsUrl);
+  useMovementKeys(state.phase === "playing", sendInput);
 
   if (state.phase !== "playing" || !state.map) {
     return (
