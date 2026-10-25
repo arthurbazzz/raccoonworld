@@ -23,7 +23,7 @@ os cenários ou testes indicados passam. Commits no formato `RW-001/Tn: <descri�
 
 - [x] **T5** `Nickname`: value object com validação (RN1). Testes de tabela.
 - [x] **T6** `Vec` e `Input`: vetor a partir de WASD, com a diagonal normalizada (RN3).
-- [ ] **T7** `TileMap`: carregar `maps/praca.json`, colisão eixo a eixo e limites da sala.
+- [x] **T7** `TileMap`: carregar `maps/praca.json`, colisão eixo a eixo e limites da sala.
 - [ ] **T8** `Room`: entrar e sair, capacidade de 10, apelido único e `Step(dt)` aplicando
   o movimento com colisão.
 - [ ] **T9** `Chat`: limite de 120 caracteres e intervalo mínimo de 1 s entre mensagens (RN4).

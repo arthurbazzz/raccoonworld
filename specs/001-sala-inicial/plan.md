@@ -41,7 +41,7 @@ raccoons-world/
         httpapi/                  # rotas Gin: GET /health, GET /ws
       infra/
         config/  clock/           # relógio real
-    maps/praca.json               # tilemap da Praça (colisão)
+    maps/praca.json               # tilemap da Praça (colisão), embutido via go:embed (maps.go)
     features/                     # runner godog + steps (lê specs/*/features)
   web/                            # Next.js (TypeScript)
     src/app/page.tsx              # tela de apelido + jogo
