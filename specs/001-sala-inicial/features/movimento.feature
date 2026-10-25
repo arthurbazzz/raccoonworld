@@ -8,6 +8,7 @@ Funcionalidade: Andar pela Praça com WASD
   Contexto:
     Dado que a sala "Praça" está aberta
 
+  @e2e
   Cenário: Andar com WASD
     Dado que "rocky" e "bandit" estão na Praça
     Quando "rocky" segura a tecla "D"

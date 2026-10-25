@@ -46,7 +46,10 @@ Funcionalidade: Entrar em um minigame
 ## Comandos
 
 <!-- Preencher quando o projeto tiver código -->
-- Frontend: `npm run dev` · `npm test` · `npx bddgen && npx playwright test` (BDD) · `npm run lint` · `npm run format:check`
+- Frontend (em `web/`): `npm run dev` · `npm test` (Vitest) · `npm run test:e2e` (playwright-bdd,
+  cenários `@ui`/`@e2e`; sobe os dois servidores sozinho) · `npm run lint` · `npm run format:check`
+- O BDD de UI usa um único servidor compartilhado. Feche abas do jogo abertas em outro navegador
+  antes de rodar: elas reconectam sozinhas e ocupam os apelidos dos cenários.
 - Backend (em `server/`): `go run ./cmd/server` · `go test ./...` (inclui godog) ·
   `go tool -modfile=tools/go.mod golangci-lint run ./...` · `go tool -modfile=tools/go.mod golangci-lint fmt ./...`
 - BDD do backend: `go test ./features/...`. Ele roda em modo strict, então steps pendentes falham:

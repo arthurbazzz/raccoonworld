@@ -71,6 +71,17 @@ npm test
 ```
 
 ```bash
+npm run test:e2e
+```
+
+O `test:e2e` roda os cenários BDD de navegador (playwright-bdd) e sobe o servidor Go e o
+Next.js sozinho. Na primeira vez, instale o Chromium do Playwright:
+
+```bash
+npx playwright install chromium
+```
+
+```bash
 npm run lint
 ```
 

@@ -50,7 +50,10 @@ export function RaccoonWorld() {
       {/* Screen readers and UI tests read the room from here. */}
       <ul className={styles.srOnly} aria-label="Jogadores na Praça">
         {players.map((p) => (
-          <li key={p.id}>{p.nickname}</li>
+          // Server position (not the interpolated one) for UI tests.
+          <li key={p.id} data-player={p.nickname} data-x={p.x} data-y={p.y}>
+            {p.nickname}
+          </li>
         ))}
       </ul>
       <ol className={styles.srOnly} aria-label="Mensagens" aria-live="polite">

@@ -8,7 +8,7 @@ Funcionalidade: Chat na Praça
   Contexto:
     Dado que a sala "Praça" está aberta
 
-  @smoke
+  @smoke @e2e
   Cenário: Mensagem de chat
     Dado que "rocky" e "bandit" estão na Praça
     Quando "rocky" envia a mensagem "olá!"

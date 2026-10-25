@@ -55,5 +55,5 @@ os cenários ou testes indicados passam. Commits no formato `RW-001/Tn: <descri�
 
 ## Fase 5 — BDD de UI e fechamento
 
-- [ ] **T24** playwright-bdd com dois navegadores: entrar, andar, chat e digitar sem mover.
+- [x] **T24** playwright-bdd com dois navegadores: entrar, andar, chat e digitar sem mover.
 - [ ] **T25** Checar a Definição de Pronto da constituição e atualizar spec e plan com o que mudou.

@@ -3,3 +3,6 @@ out/
 node_modules/
 package-lock.json
 next-env.d.ts
+.features-gen/
+test-results/
+playwright-report/

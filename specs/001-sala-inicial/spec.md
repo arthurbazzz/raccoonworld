@@ -63,6 +63,11 @@ no navegador. Ele roda no playwright-bdd e o godog o ignora.
 Os cenários com a tag `@smoke` ("Visitante entra na Praça", "Apelido já em uso" e
 "Mensagem de chat") também rodam contra o **servidor real**, por WebSocket de verdade.
 
+Os cenários com `@ui` ou `@e2e` ("Visitante entra na Praça", "Andar com WASD", "Mensagem de chat"
+e "Digitar no chat não move o guaxinim") rodam também **no navegador**, com o playwright-bdd, um
+contexto de navegador por jogador e os dois servidores reais. O balão é desenhado no canvas, então
+o teste confere a mesma mensagem na lista acessível de mensagens.
+
 ```gherkin
 # language: pt
 Funcionalidade: Sala inicial em tempo real

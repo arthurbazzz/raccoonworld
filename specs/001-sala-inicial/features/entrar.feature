@@ -8,7 +8,7 @@ Funcionalidade: Entrar na Praça
   Contexto:
     Dado que a sala "Praça" está aberta
 
-  @smoke
+  @smoke @e2e
   Cenário: Visitante entra na Praça
     Quando o visitante entra com o apelido "rocky"
     Então "rocky" aparece na Praça
