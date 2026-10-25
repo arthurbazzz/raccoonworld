@@ -1,6 +1,6 @@
 # RW-001 — Tasks: Sala inicial
 
-Status: **Aprovado** (2026-10-25) · Plano: [plan.md](plan.md) · Criado: 2026-10-25
+Status: **Concluído** (2026-10-25) · Aprovado: 2026-10-25 · Plano: [plan.md](plan.md) · Criado: 2026-10-25
 
 Regras: execute uma task por vez, na ordem. Cada task de implementação só termina quando
 os cenários ou testes indicados passam. Commits no formato `RW-001/Tn: <descrição>`.
@@ -56,4 +56,47 @@ os cenários ou testes indicados passam. Commits no formato `RW-001/Tn: <descri�
 ## Fase 5 — BDD de UI e fechamento
 
 - [x] **T24** playwright-bdd com dois navegadores: entrar, andar, chat e digitar sem mover.
-- [ ] **T25** Checar a Definição de Pronto da constituição e atualizar spec e plan com o que mudou.
+- [x] **T25** Checar a Definição de Pronto da constituição e atualizar spec e plan com o que mudou.
+
+## Fechamento (T25, 2026-10-25)
+
+### Definição de Pronto
+
+- [x] **Critérios de aceitação da spec atendidos.** Todos os cenários de `features/` passam.
+- [x] **Cenários BDD passando:**
+  - godog, casos de uso: **24/24 cenários, 94/94 steps**;
+  - godog, servidor real por WebSocket (`@smoke`): **3/3**;
+  - playwright-bdd, navegador com dois jogadores (`@ui`/`@e2e`): **4/4**.
+- [x] **Testes, lint e formatação limpos:**
+  - `go test ./...`, `go vet`, `golangci-lint run` (0 problemas) e `golangci-lint fmt` sem diferenças;
+  - Vitest com 77 testes, `tsc`, ESLint, Prettier e `next build`.
+- [x] **Nenhuma violação de camada.** O depguard no `golangci-lint` barra imports proibidos no
+  domínio e nos casos de uso, e passa limpo.
+- [x] **spec, plan e tasks atualizados.** O plan §8 lista tudo o que mudou em relação ao aprovado.
+
+Os testes de mutação feitos ao longo das tasks confirmaram que cada suíte pega o bug que
+deveria pegar: diagonal, limite de chat, expiração, heartbeat, Hub e WASD no chat.
+
+### Segurança das dependências
+
+- `npm audit fix` atualizou o `sharp`. O `govulncheck` levou o `golang.org/x/net` para v0.60.0
+  e o `quic-go` para v0.59.1.
+- **Pendente:** o `postcss` embutido no Next 15 tem alertas, e a correção exige o **Next 16**
+  (versão major). O risco é baixo, porque o postcss só processa o CSS do próprio projeto no build.
+- **Pendente:** a biblioteca padrão do **Go 1.27.0** tem 7 alertas (`net/http`, `crypto/tls`,
+  `crypto/x509`). A correção é instalar o Go 1.27.3 ou mais novo.
+
+### Limitações conhecidas
+
+- **Reconexão:** se a rede cai sem o servidor perceber, o guaxinim antigo fica até 10 s na sala,
+  e a reconexão nesse intervalo recebe "apelido em uso". A próxima tentativa funciona.
+- **Race detector (`go test -race`)** não foi rodado, porque precisa de cgo e de um compilador C.
+- **Suavidade da interpolação** não foi conferida a olho. O painel do navegador usado nos testes
+  renderizava a 2 quadros por segundo. A lógica está coberta pelos testes unitários.
+- Arte provisória (formas simples) e uma sala só.
+
+### Próximas specs sugeridas
+
+- Chat restrito (filtro ou frases prontas), já previsto na spec.
+- Autenticação: Firebase, Sign in with Apple e cadastro manual (constituição §6).
+- Predição local do movimento, se o atraso incomodar (plan §7).

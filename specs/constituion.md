@@ -1,6 +1,6 @@
 # Raccoons World — Constitution
 
-Versão: 1.3.0 · Ratificada: 2026-10-25 · Última emenda: 2026-10-25 (idioma do código)
+Versão: 1.3.1 · Ratificada: 2026-10-25 · Última emenda: 2026-10-25 (estrutura do monorepo)
 
 Esta constituição define as regras inegociáveis do projeto. Ela prevalece sobre
 qualquer outra instrução, spec ou conveniência de implementação.
@@ -115,4 +115,5 @@ Restrições:
 - [ ] Autenticação: **adiada**. Direção provável: Firebase Auth com Sign in with Apple
       e cadastro manual (e-mail/senha). Até lá, o código depende só de uma interface
       de identidade no domínio, sem acoplar a nenhum provedor.
-- [ ] Monorepo e estrutura de pastas
+- [x] Monorepo e estrutura de pastas → **monorepo** com `server/` (Go), `web/` (Next.js) e
+      `specs/`, conforme a RW-001 (v1.3.1)

@@ -1,6 +1,6 @@
 # RW-001 — Plano técnico: Sala inicial
 
-Status: **Aprovado** (2026-10-25) · Spec: [spec.md](spec.md) · Criado: 2026-10-25
+Status: **Implementado** (2026-10-25) · Aprovado: 2026-10-25 · Spec: [spec.md](spec.md) · Criado: 2026-10-25
 
 ## 1. Visão geral
 
@@ -195,7 +195,24 @@ O cenário "desconexão em até 10 s" usa o `FakeClock` no nível de caso de uso
 - **Uma instância só**: as salas vivem em memória, então reiniciar o servidor desconecta todos
   os jogadores. Isso é aceitável nesta fase.
 
-## 8. Decisões deste plano que precisam do seu OK
+## 8. O que mudou durante a implementação
+
+As seções acima já estão atualizadas. Esta lista resume o que **não** estava no plano aprovado:
+
+| Mudança | Task | Por quê |
+|---|---|---|
+| Apelido único **sem diferenciar maiúsculas** (`Nickname.Key()`) | T5 | Decisão do dono do projeto, para impedir que alguém se passe por outro |
+| Mensagem vazia descartada; descartadas não contam no limite de 1/s | T9 | A spec não definia esses casos |
+| Presença (timeout de 10 s) como regra **do domínio** (`Touch`/`Expire`) + `KeepAlive` | T14 | Torna o timeout testável com relógio falso |
+| `Join` com prioridade: já na sala → sala cheia → apelido em uso; motivo `already_joined` | T16 | Pedido repetido recebia "apelido em uso" |
+| Montagem extraída para `internal/app` | T17 | O smoke test usa o mesmo servidor do `main` |
+| `GET /maps/:name` com CORS | T20 | O cliente desenha com o mesmo mapa da colisão, sem cópia |
+| Lista oculta de jogadores (com posição) e de mensagens | T20/T23/T24 | Acessibilidade e asserções dos testes de UI |
+| `vitest` para testes unitários do frontend | T18 | O plano só previa BDD no navegador |
+| `playwright-bdd` 9.2.1 (e não 8.x) | T24 | A 8.x não suporta o Playwright 1.64 |
+| Tags `@smoke` (servidor real) e `@e2e` (navegador) nos `.feature` | T17/T24 | Escolher quais cenários rodam em cada suíte |
+
+## 9. Decisões deste plano que precisam do seu OK
 
 1. ~~**Monorepo** com `server/` e `web/`~~ → **aprovado** (2026-10-25).
 2. **PixiJS** como renderizador → **aprovado** (2026-10-25).

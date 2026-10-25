@@ -1,6 +1,6 @@
 # RW-001 — Sala inicial com jogadores em tempo real
 
-Status: **Aprovada** (2026-10-25) · Criada: 2026-10-25
+Status: **Implementada** (2026-10-25) · Aprovada: 2026-10-25 · Criada: 2026-10-25
 
 ## Problema
 
