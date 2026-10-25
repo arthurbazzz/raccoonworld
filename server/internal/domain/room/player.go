@@ -1,5 +1,7 @@
 package room
 
+import "time"
+
 // PlayerID identifies a connected player. It is assigned by the caller
 // (use case layer), not by the room.
 type PlayerID string
@@ -18,6 +20,8 @@ type player struct {
 	nickname Nickname
 	position Vec // feet, in room pixels
 	input    Input
+
+	lastMessageAt time.Time // zero until the first accepted chat message
 }
 
 func (p *player) hitbox() Rect {

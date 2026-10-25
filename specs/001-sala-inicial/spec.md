@@ -44,6 +44,9 @@ Um jogador abre o jogo, escolhe um apelido, entra na sala inicial (a "Praça") e
   e os personagens e objetos aparecem levemente de frente, com profundidade pela posição vertical
   (quem está mais abaixo é desenhado na frente).
 - RN4. Mensagens de chat têm no máximo 120 caracteres, com no máximo 1 mensagem por segundo por jogador.
+  - O limite conta **caracteres**, não bytes ("é" vale 1).
+  - Mensagens vazias ou só com espaços são descartadas.
+  - Mensagens descartadas não contam para o limite de 1 por segundo.
 - RN5. Se a conexão cair, o guaxinim some para os outros em até 10 segundos.
 
 ## Critérios de aceitação
