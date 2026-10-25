@@ -32,7 +32,7 @@ raccoons-world/
     cmd/server/main.go            # composição: config, Gin, salas
     internal/
       domain/room/                # entidades e regras puras (sem import externo)
-        nickname.go  player.go  room.go  vec.go  tilemap.go  chat.go
+        nickname.go  player.go  room.go  vec.go  input.go  tilemap.go  chat.go
       usecase/                    # orquestra o domínio e define as portas
         join_room.go  set_input.go  send_chat.go  leave_room.go
         ports.go                  # Broadcaster, Clock
