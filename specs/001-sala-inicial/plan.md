@@ -81,6 +81,13 @@ type Broadcaster interface {
 type Clock interface { Now() time.Time }
 ```
 
+`Event` é uma interface fechada: só os tipos do pacote `usecase` a implementam (ex.: `Snapshot`).
+
+O `RoomRunner` é dono da `Room` e roda numa goroutine. Comandos (`Exec`) e ticks passam pelo
+mesmo loop, então a sala não precisa de locks. Cada tick avança exatamente `TickInterval`
+(50 ms), sem medir o tempo real, e isso mantém a simulação determinística. Os ticks chegam
+por um channel: em produção vêm de um `time.Ticker`, e nos testes são enviados à mão.
+
 `JoinRoom`, `SetInput`, `SendChat` e `LeaveRoom` recebem DTOs próprios e nunca `*gin.Context`.
 Os erros de domínio são `ErrNicknameTaken`, `ErrNicknameInvalid` e `ErrRoomFull`.
 
