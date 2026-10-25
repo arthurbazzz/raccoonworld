@@ -104,7 +104,11 @@ Os erros de domínio são `ErrNicknameTaken`, `ErrNicknameInvalid` e `ErrRoomFul
 
 ### 3.4 Protocolo WebSocket (v1)
 
-Envelope: `{"type": "<nome>", "v": 1, "data": {...}}`
+Envelope: `{"type": "<nome>", "v": 1, "data": {...}}`. Implementado em
+`server/internal/adapter/ws/protocol.go`. Os testes de lá fixam o JSON exato de cada mensagem.
+- Campos desconhecidos são ignorados, para que clientes mais novos possam mandar dados opcionais.
+- `v` ausente ou diferente de 1, `type` desconhecido ou `data` ausente/inválido são recusados.
+- Listas vazias são enviadas como `[]`, nunca `null`.
 
 **Cliente → servidor**
 
