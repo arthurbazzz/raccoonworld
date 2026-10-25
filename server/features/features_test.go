@@ -5,10 +5,15 @@
 package features
 
 import (
+	"context"
 	"os"
 	"testing"
+	"time"
 
 	"github.com/cucumber/godog"
+
+	"raccoons-world/server/internal/domain/room"
+	"raccoons-world/server/internal/usecase"
 )
 
 // featurePaths are relative to this package directory (go test runs here).
@@ -43,13 +48,30 @@ func TestFeatures(t *testing.T) {
 type world struct {
 	clock       *fakeClock
 	broadcaster *fakeBroadcaster
+
+	runner *usecase.RoomRunner
+	ticks  chan time.Time
+	stop   context.CancelFunc
+	done   chan struct{}
+
+	join *usecase.JoinRoom
+
+	nextVisitor int
+	ids         map[string]room.PlayerID // nickname -> id of players who joined
+	lastAttempt room.PlayerID            // id used by the last join attempt
+	lastErr     error                    // error of the last join attempt
 }
 
 func initializeScenario(sc *godog.ScenarioContext) {
 	w := &world{
 		clock:       newFakeClock(),
 		broadcaster: &fakeBroadcaster{},
+		ids:         map[string]room.PlayerID{},
 	}
+	sc.After(func(ctx context.Context, _ *godog.Scenario, err error) (context.Context, error) {
+		w.closeRoom()
+		return ctx, err
+	})
 	w.registerJoinSteps(sc)
 	w.registerMovementSteps(sc)
 	w.registerChatSteps(sc)

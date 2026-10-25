@@ -36,4 +36,27 @@ type Snapshot struct {
 	Players []room.PlayerView
 }
 
-func (Snapshot) isEvent() {}
+// Joined is sent to a player who entered a room: who they are and who is
+// there, themselves included.
+type Joined struct {
+	RoomID  string
+	MapName string
+	You     room.PlayerView
+	Players []room.PlayerView
+}
+
+// JoinRejected is sent to a visitor whose join attempt failed.
+type JoinRejected struct {
+	Reason RejectReason
+}
+
+// PlayerJoined is broadcast to the room when someone enters. The newcomer
+// receives it too; clients ignore the event for their own ID.
+type PlayerJoined struct {
+	Player room.PlayerView
+}
+
+func (Snapshot) isEvent()     {}
+func (Joined) isEvent()       {}
+func (JoinRejected) isEvent() {}
+func (PlayerJoined) isEvent() {}

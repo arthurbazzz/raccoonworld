@@ -117,7 +117,7 @@ Envelope: `{"type": "<nome>", "v": 1, "data": {...}}`
 |---|---|
 | `room.joined` | `{ "you": id, "players": [{id, nickname, x, y}], "map": "praca" }` |
 | `room.join_rejected` | `{ "reason": "nickname_taken" \| "nickname_invalid" \| "room_full" }` |
-| `player.joined` | `{ id, nickname, x, y }` |
+| `player.joined` | `{ id, nickname, x, y }` (vai para a sala toda, inclusive quem entrou; o cliente ignora o próprio `id`) |
 | `player.left` | `{ id }` |
 | `room.snapshot` | `{ "tick": int, "players": [{id, x, y}] }` (a cada tick, só se algo mudou) |
 | `chat.message` | `{ "from": id, "text": "olá!" }` |
