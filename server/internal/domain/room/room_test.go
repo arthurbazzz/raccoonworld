@@ -28,7 +28,7 @@ func nick(t *testing.T, s string) room.Nickname {
 
 func mustJoin(t *testing.T, r *room.Room, id, name string) room.PlayerView {
 	t.Helper()
-	p, err := r.Join(room.PlayerID(id), nick(t, name))
+	p, err := r.Join(room.PlayerID(id), nick(t, name), t0)
 	if err != nil {
 		t.Fatalf("Join(%s): %v", name, err)
 	}
@@ -61,7 +61,7 @@ func TestJoinRejectsNicknameInUseIgnoringCase(t *testing.T) {
 	mustJoin(t, r, "p1", "rocky")
 
 	for _, name := range []string{"rocky", "Rocky", "ROCKY"} {
-		_, err := r.Join("p2", nick(t, name))
+		_, err := r.Join("p2", nick(t, name), t0)
 		if !errors.Is(err, room.ErrNicknameTaken) {
 			t.Fatalf("Join(%q) error = %v, want ErrNicknameTaken", name, err)
 		}
@@ -74,7 +74,7 @@ func TestJoinRejectsWhenFull(t *testing.T) {
 		mustJoin(t, r, fmt.Sprintf("p%d", i), fmt.Sprintf("player%d", i))
 	}
 
-	_, err := r.Join("extra", nick(t, "bandit"))
+	_, err := r.Join("extra", nick(t, "bandit"), t0)
 	if !errors.Is(err, room.ErrRoomFull) {
 		t.Fatalf("Join() error = %v, want ErrRoomFull", err)
 	}
@@ -86,7 +86,7 @@ func TestJoinRejectsWhenFull(t *testing.T) {
 func TestJoinRejectsDuplicateID(t *testing.T) {
 	r := newTestRoom(t)
 	mustJoin(t, r, "p1", "rocky")
-	if _, err := r.Join("p1", nick(t, "bandit")); !errors.Is(err, room.ErrPlayerExists) {
+	if _, err := r.Join("p1", nick(t, "bandit"), t0); !errors.Is(err, room.ErrPlayerExists) {
 		t.Fatalf("Join() error = %v, want ErrPlayerExists", err)
 	}
 }

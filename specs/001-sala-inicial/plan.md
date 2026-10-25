@@ -95,8 +95,11 @@ Os erros de domínio são `ErrNicknameTaken`, `ErrNicknameInvalid` e `ErrRoomFul
 
 - Gin expõe `GET /ws`, e o upgrade para WebSocket é feito com **`github.com/coder/websocket`**.
   O Gin não tem WebSocket nativo, e essa biblioteca é mantida e usa `context`.
-- Heartbeat: o servidor envia ping a cada 5 s. Sem pong em 10 s, a conexão é fechada e o
-  `LeaveRoom` é chamado (RN5).
+- Heartbeat: o servidor envia ping a cada 5 s, e cada pong (ou qualquer mensagem) chama o
+  `KeepAlive`. Quem fica 10 s sem sinal de vida (`room.PresenceTimeout`) é removido pela
+  própria sala no próximo tick, e a sala recebe `PlayerLeft` (RN5). Quando o socket fecha
+  normalmente, o adapter chama `LeaveRoom` na hora. Com a regra no domínio, o timeout é
+  testável com o relógio falso, sem esperar 10 s reais.
 - Origem permitida por config, para evitar uso cross-site.
 
 ### 3.4 Protocolo WebSocket (v1)

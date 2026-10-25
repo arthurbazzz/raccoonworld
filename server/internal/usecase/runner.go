@@ -27,16 +27,19 @@ type command struct {
 type RoomRunner struct {
 	room        *room.Room
 	broadcaster Broadcaster
+	clock       Clock
 	cmds        chan command
 	stopped     chan struct{}
 	tick        uint64 // only touched by the loop goroutine
 }
 
-// NewRoomRunner wraps r. Call Run to start processing.
-func NewRoomRunner(r *room.Room, b Broadcaster) *RoomRunner {
+// NewRoomRunner wraps r. Call Run to start processing. c is used on each
+// tick to expire silent players (RN5).
+func NewRoomRunner(r *room.Room, b Broadcaster, c Clock) *RoomRunner {
 	return &RoomRunner{
 		room:        r,
 		broadcaster: b,
+		clock:       c,
 		cmds:        make(chan command),
 		stopped:     make(chan struct{}),
 	}
@@ -78,6 +81,9 @@ func (rr *RoomRunner) Exec(fn func(*room.Room)) error {
 
 func (rr *RoomRunner) step() {
 	rr.tick++
+	for _, p := range rr.room.Expire(rr.clock.Now()) {
+		rr.broadcaster.ToRoom(rr.room.ID(), PlayerLeft{ID: p.ID})
+	}
 	moved := rr.room.Step(TickInterval)
 	if len(moved) == 0 {
 		return

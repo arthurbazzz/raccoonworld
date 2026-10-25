@@ -22,6 +22,7 @@ type player struct {
 	input    Input
 
 	lastMessageAt time.Time // zero until the first accepted chat message
+	lastSeenAt    time.Time // last sign of life from the connection (RN5)
 }
 
 func (p *player) hitbox() Rect {

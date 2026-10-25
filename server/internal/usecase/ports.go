@@ -56,6 +56,11 @@ type PlayerJoined struct {
 	Player room.PlayerView
 }
 
+// PlayerLeft is broadcast to the room when someone leaves or times out.
+type PlayerLeft struct {
+	ID room.PlayerID
+}
+
 // ChatMessage is broadcast to the room when a chat line is accepted.
 type ChatMessage struct {
 	From room.PlayerID
@@ -64,6 +69,7 @@ type ChatMessage struct {
 
 func (Snapshot) isEvent()     {}
 func (ChatMessage) isEvent()  {}
+func (PlayerLeft) isEvent()   {}
 func (Joined) isEvent()       {}
 func (JoinRejected) isEvent() {}
 func (PlayerJoined) isEvent() {}

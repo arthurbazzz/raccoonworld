@@ -23,7 +23,7 @@ func (w *world) openRoom(name string) error {
 	if err != nil {
 		return err
 	}
-	w.runner = usecase.NewRoomRunner(room.New(id, tiles), w.broadcaster)
+	w.runner = usecase.NewRoomRunner(room.New(id, tiles), w.broadcaster, w.clock)
 	w.ticks = make(chan time.Time)
 	w.done = make(chan struct{})
 
@@ -34,7 +34,8 @@ func (w *world) openRoom(name string) error {
 		w.runner.Run(ctx, w.ticks)
 	}()
 
-	w.join = usecase.NewJoinRoom(w.runner, w.broadcaster)
+	w.join = usecase.NewJoinRoom(w.runner, w.broadcaster, w.clock)
+	w.keepAlive = usecase.NewKeepAlive(w.runner, w.clock)
 	w.setInput = usecase.NewSetInput(w.runner)
 	w.sendChat = usecase.NewSendChat(w.runner, w.broadcaster, w.clock)
 	return nil

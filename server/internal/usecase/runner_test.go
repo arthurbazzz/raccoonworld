@@ -12,6 +12,14 @@ import (
 	"raccoons-world/server/maps"
 )
 
+// epoch is the time every test player joins; fixedClock never moves past it,
+// so nobody times out in these tests.
+var epoch = time.Date(2026, 1, 1, 12, 0, 0, 0, time.UTC)
+
+type fixedClock struct{}
+
+func (fixedClock) Now() time.Time { return epoch }
+
 type recordingBroadcaster struct {
 	mu     sync.Mutex
 	toRoom []usecase.Event
@@ -39,7 +47,7 @@ func startRunner(t *testing.T) (*usecase.RoomRunner, chan time.Time, *recordingB
 		t.Fatal(err)
 	}
 	b := &recordingBroadcaster{}
-	runner := usecase.NewRoomRunner(room.New("praca", tiles), b)
+	runner := usecase.NewRoomRunner(room.New("praca", tiles), b, fixedClock{})
 	ticks := make(chan time.Time)
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -66,7 +74,7 @@ func TestExecRunsOnRoomLoop(t *testing.T) {
 	nick, _ := room.NewNickname("rocky")
 
 	var joinErr error
-	if err := r.Exec(func(rm *room.Room) { _, joinErr = rm.Join("p1", nick) }); err != nil {
+	if err := r.Exec(func(rm *room.Room) { _, joinErr = rm.Join("p1", nick, epoch) }); err != nil {
 		t.Fatal(err)
 	}
 	if joinErr != nil {
@@ -84,7 +92,7 @@ func TestTickBroadcastsSnapshotOfMovedPlayers(t *testing.T) {
 	r, ticks, b := startRunner(t)
 	nick, _ := room.NewNickname("rocky")
 	_ = r.Exec(func(rm *room.Room) {
-		_, _ = rm.Join("p1", nick)
+		_, _ = rm.Join("p1", nick, epoch)
 		_ = rm.SetInput("p1", room.Input{Right: true})
 	})
 
@@ -111,7 +119,7 @@ func TestTickBroadcastsSnapshotOfMovedPlayers(t *testing.T) {
 func TestIdleTickBroadcastsNothing(t *testing.T) {
 	r, ticks, b := startRunner(t)
 	nick, _ := room.NewNickname("rocky")
-	_ = r.Exec(func(rm *room.Room) { _, _ = rm.Join("p1", nick) })
+	_ = r.Exec(func(rm *room.Room) { _, _ = rm.Join("p1", nick, epoch) })
 
 	tick(t, r, ticks)
 
@@ -122,7 +130,7 @@ func TestIdleTickBroadcastsNothing(t *testing.T) {
 
 func TestExecAfterStopFails(t *testing.T) {
 	tiles, _ := room.ParseTileMap(maps.Praca)
-	r := usecase.NewRoomRunner(room.New("praca", tiles), &recordingBroadcaster{})
+	r := usecase.NewRoomRunner(room.New("praca", tiles), &recordingBroadcaster{}, fixedClock{})
 	ctx, cancel := context.WithCancel(context.Background())
 	done := make(chan struct{})
 	go func() { defer close(done); r.Run(ctx, nil) }()
@@ -131,6 +139,32 @@ func TestExecAfterStopFails(t *testing.T) {
 
 	if err := r.Exec(func(*room.Room) {}); !errors.Is(err, usecase.ErrRoomStopped) {
 		t.Fatalf("Exec() error = %v, want ErrRoomStopped", err)
+	}
+}
+
+func TestLeaveRoomBroadcastsOnce(t *testing.T) {
+	r, _, b := startRunner(t)
+	nick, _ := room.NewNickname("rocky")
+	_ = r.Exec(func(rm *room.Room) { _, _ = rm.Join("p1", nick, epoch) })
+	leave := usecase.NewLeaveRoom(r, b)
+
+	for range 2 { // a clean close after a timeout must not announce twice
+		if err := leave.Execute("p1"); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	events := b.roomEvents()
+	if len(events) != 1 || events[0] != (usecase.PlayerLeft{ID: "p1"}) {
+		t.Fatalf("events = %+v, want one PlayerLeft{p1}", events)
+	}
+}
+
+func TestKeepAliveUnknownPlayer(t *testing.T) {
+	r, _, _ := startRunner(t)
+	err := usecase.NewKeepAlive(r, fixedClock{}).Execute("ghost")
+	if !errors.Is(err, room.ErrPlayerNotFound) {
+		t.Fatalf("Execute() error = %v, want room.ErrPlayerNotFound", err)
 	}
 }
 

@@ -35,7 +35,7 @@ os cenários ou testes indicados passam. Commits no formato `RW-001/Tn: <descri�
   apelido inválido, sala cheia, aviso aos outros). Pronto quando esses cenários passam.
 - [x] **T12** `SetInput`: steps de `movimento.feature` (andar, diagonal, parar, obstáculo, limite).
 - [x] **T13** `SendChat`: steps de `chat.feature` (mensagem, mensagens rápidas demais).
-- [ ] **T14** `LeaveRoom` + timeout: steps de `conexao.feature` (desconexão em até 10 s, com `FakeClock`).
+- [x] **T14** `LeaveRoom` + timeout: steps de `conexao.feature` (desconexão em até 10 s, com `FakeClock`).
 
 ## Fase 3 — Transporte
 

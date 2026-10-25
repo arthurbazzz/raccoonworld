@@ -54,9 +54,12 @@ type world struct {
 	stop   context.CancelFunc
 	done   chan struct{}
 
-	join     *usecase.JoinRoom
-	setInput *usecase.SetInput
-	sendChat *usecase.SendChat
+	join      *usecase.JoinRoom
+	setInput  *usecase.SetInput
+	sendChat  *usecase.SendChat
+	keepAlive *usecase.KeepAlive
+
+	dropped map[string]bool // nickname -> connection dropped (no more heartbeats)
 
 	lastChatText string // text of the last chat attempt
 	lastChatErr  error  // error of the last chat attempt
@@ -76,6 +79,7 @@ func initializeScenario(sc *godog.ScenarioContext) {
 		ids:         map[string]room.PlayerID{},
 		held:        map[string]room.Input{},
 		mark:        map[string]room.Vec{},
+		dropped:     map[string]bool{},
 	}
 	sc.After(func(ctx context.Context, _ *godog.Scenario, _ error) (context.Context, error) {
 		w.closeRoom()

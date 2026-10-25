@@ -39,11 +39,12 @@ type JoinInput struct {
 type JoinRoom struct {
 	runner      *RoomRunner
 	broadcaster Broadcaster
+	clock       Clock
 }
 
 // NewJoinRoom builds the use case for one room.
-func NewJoinRoom(runner *RoomRunner, b Broadcaster) *JoinRoom {
-	return &JoinRoom{runner: runner, broadcaster: b}
+func NewJoinRoom(runner *RoomRunner, b Broadcaster, c Clock) *JoinRoom {
+	return &JoinRoom{runner: runner, broadcaster: b, clock: c}
 }
 
 // Execute validates the nickname and joins the room. On success the
@@ -55,10 +56,11 @@ func (uc *JoinRoom) Execute(in JoinInput) error {
 		return uc.reject(in.PlayerID, RejectNicknameInvalid)
 	}
 
+	now := uc.clock.Now()
 	var joinErr error
 	execErr := uc.runner.Exec(func(r *room.Room) {
 		var me room.PlayerView
-		me, joinErr = r.Join(in.PlayerID, nickname)
+		me, joinErr = r.Join(in.PlayerID, nickname, now)
 		if joinErr != nil {
 			return
 		}
