@@ -67,8 +67,14 @@ npm run build
 ```
 
 ```bash
+npm test
+```
+
+```bash
 npm run lint
 ```
+
+O endereço do servidor vem de `NEXT_PUBLIC_WS_URL` (padrão `ws://localhost:8080/ws`).
 
 ```bash
 npm run format

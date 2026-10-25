@@ -157,6 +157,7 @@ As mensagens de chat descartadas pelo limite de frequência não geram resposta,
 | Smoke do transporte | godog + servidor real | 2–3 cenários (entrar e chat) via WebSocket de verdade |
 | Cenários de UI | **playwright-bdd** | 2 navegadores (dois jogadores): entrar, andar, chat, digitar sem mover |
 | Domínio | `go test` | Tabela de casos para `Nickname`, colisão e normalização da diagonal |
+| Frontend (unidade) | `vitest` | Protocolo (os mesmos payloads dos testes Go) e cliente WS com socket falso |
 
 O cenário "desconexão em até 10 s" usa o `FakeClock` no nível de caso de uso, sem esperar 10 s reais.
 
@@ -169,6 +170,7 @@ O cenário "desconexão em até 10 s" usa o `FakeClock` no nível de caso de uso
 | `github.com/cucumber/godog` | BDD no backend (constituição) |
 | `pixi.js` | Renderização 2D em canvas |
 | `playwright-bdd` + `@playwright/test` | BDD no frontend (constituição) |
+| `vitest` | Testes unitários do frontend (protocolo, cliente WS, lógica do jogo), sem navegador. Entrou na T18 |
 
 ## 7. Riscos
 

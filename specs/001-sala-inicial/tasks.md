@@ -46,7 +46,7 @@ os cenários ou testes indicados passam. Commits no formato `RW-001/Tn: <descri�
 
 ## Fase 4 — Frontend
 
-- [ ] **T18** [P] Cliente WS tipado em `web/src/net/` (tipos do protocolo v1, reconexão simples).
+- [x] **T18** [P] Cliente WS tipado em `web/src/net/` (tipos do protocolo v1, reconexão simples).
 - [ ] **T19** Tela de apelido, com as mensagens para cada `join_rejected`.
 - [ ] **T20** Render PixiJS: tilemap da Praça, sprite placeholder do guaxinim, ordenação por `y` (RN6).
 - [ ] **T21** Input WASD (enviado só quando muda) e bloqueio enquanto o chat tem foco (RN3.1).
