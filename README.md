@@ -32,6 +32,17 @@ go run ./cmd/server
 go test ./...
 ```
 
+```bash
+go tool -modfile=tools/go.mod golangci-lint run ./...
+```
+
+```bash
+go tool -modfile=tools/go.mod golangci-lint fmt ./...
+```
+
+O golangci-lint fica num módulo separado (`server/tools/`), para as dependências dele
+não entrarem no `go.mod` do servidor.
+
 ### Frontend (`web/`)
 
 ```bash
@@ -44,4 +55,12 @@ npm run dev
 
 ```bash
 npm run build
+```
+
+```bash
+npm run lint
+```
+
+```bash
+npm run format
 ```

@@ -44,5 +44,8 @@ Funcionalidade: Entrar em um minigame
 ## Comandos
 
 <!-- Preencher quando o projeto tiver código -->
-- Frontend: `npm run dev` · `npm test` · `npx bddgen && npx playwright test` (BDD) · `npm run lint`
-- Backend: `go run ./cmd/...` · `go test ./...` (inclui godog) · `golangci-lint run`
+- Frontend: `npm run dev` · `npm test` · `npx bddgen && npx playwright test` (BDD) · `npm run lint` · `npm run format:check`
+- Backend (em `server/`): `go run ./cmd/server` · `go test ./...` (inclui godog) ·
+  `go tool -modfile=tools/go.mod golangci-lint run ./...` · `go tool -modfile=tools/go.mod golangci-lint fmt ./...`
+- O golangci-lint também barra imports que violam a Clean Architecture (depguard em `server/.golangci.yml`).
+  Não desative essas regras: corrija a dependência.

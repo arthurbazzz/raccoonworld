@@ -1,0 +1,50 @@
+version: "2"
+
+linters:
+  default: standard # errcheck, govet, ineffassign, staticcheck, unused
+  enable:
+    - bodyclose
+    - depguard
+    - errorlint
+    - gocritic
+    - revive
+    - unconvert
+  settings:
+    depguard:
+      rules:
+        # Clean Architecture (constituição, princípio III): o domínio não conhece
+        # framework, transporte nem banco.
+        domain:
+          files:
+            - "**/internal/domain/**"
+          deny:
+            - pkg: github.com/gin-gonic/gin
+              desc: domínio não depende de framework HTTP
+            - pkg: github.com/coder/websocket
+              desc: domínio não depende de transporte
+            - pkg: database/sql
+              desc: domínio não depende de banco
+            - pkg: raccoons-world/server/internal/usecase
+              desc: dependências apontam para dentro
+            - pkg: raccoons-world/server/internal/adapter
+              desc: dependências apontam para dentro
+            - pkg: raccoons-world/server/internal/infra
+              desc: dependências apontam para dentro
+        # Casos de uso não recebem *gin.Context nem conhecem adapters/infra.
+        usecase:
+          files:
+            - "**/internal/usecase/**"
+          deny:
+            - pkg: github.com/gin-gonic/gin
+              desc: casos de uso recebem DTOs próprios
+            - pkg: github.com/coder/websocket
+              desc: casos de uso não conhecem o transporte
+            - pkg: raccoons-world/server/internal/adapter
+              desc: dependências apontam para dentro
+            - pkg: raccoons-world/server/internal/infra
+              desc: dependências apontam para dentro
+
+formatters:
+  enable:
+    - gofmt
+    - goimports
