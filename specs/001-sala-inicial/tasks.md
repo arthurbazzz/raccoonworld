@@ -21,7 +21,7 @@ os cenários ou testes indicados passam. Commits no formato `RW-001/Tn: <descri�
 
 ## Fase 1 — Domínio (go test, TDD)
 
-- [ ] **T5** `Nickname`: value object com validação (RN1). Testes de tabela.
+- [x] **T5** `Nickname`: value object com validação (RN1). Testes de tabela.
 - [ ] **T6** `Vec` e `Input`: vetor a partir de WASD, com a diagonal normalizada (RN3).
 - [ ] **T7** `TileMap`: carregar `maps/praca.json`, colisão eixo a eixo e limites da sala.
 - [ ] **T8** `Room`: entrar e sair, capacidade de 10, apelido único e `Step(dt)` aplicando
