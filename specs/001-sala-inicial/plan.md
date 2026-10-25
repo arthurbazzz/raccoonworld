@@ -44,7 +44,7 @@ raccoons-world/
     maps/praca.json               # tilemap da Praça (colisão)
     features/                     # runner godog + steps (lê specs/*/features)
   web/                            # Next.js (TypeScript)
-    app/page.tsx                  # tela de apelido + jogo
+    src/app/page.tsx              # tela de apelido + jogo
     src/game/                     # PixiJS: render, interpolação, input
     src/net/                      # cliente WS e tipos do protocolo
     e2e/                          # playwright-bdd

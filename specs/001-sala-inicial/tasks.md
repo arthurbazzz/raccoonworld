@@ -8,7 +8,7 @@ os cenários ou testes indicados passam. Commits no formato `RW-001/Tn: <descri�
 
 ## Fase 0 — Fundação
 
-- [ ] **T1** Criar o esqueleto do monorepo: `server/` (`go mod init`), `web/` (Next.js + TS),
+- [x] **T1** Criar o esqueleto do monorepo: `server/` (`go mod init`), `web/` (Next.js + TS),
   README com os comandos. Pronto quando: `go build ./...` e `npm run build` passam vazios.
 - [ ] **T2** Configurar lint e formatação: `golangci-lint` no server, `eslint` e `prettier` no web.
 - [ ] **T3** Escrever os `.feature` em `specs/001-sala-inicial/features/`, a partir dos 14 cenários
