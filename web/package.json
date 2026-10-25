@@ -1,0 +1,36 @@
+{
+  "name": "web",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:e2e": "bddgen && playwright test"
+  },
+  "dependencies": {
+    "next": "^15.5.28",
+    "pixi.js": "8.22.0",
+    "react": "19.1.0",
+    "react-dom": "19.1.0"
+  },
+  "devDependencies": {
+    "@eslint/eslintrc": "^3",
+    "@playwright/test": "1.64.1",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "eslint": "^9",
+    "eslint-config-next": "^15.5.28",
+    "eslint-config-prettier": "10.1.8",
+    "playwright-bdd": "9.2.1",
+    "prettier": "3.9.10",
+    "typescript": "^5",
+    "vitest": "3.2.7"
+  }
+}

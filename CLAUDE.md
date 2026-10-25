@@ -12,8 +12,10 @@ Leia e siga `specs/constituion.md`. Ela prevalece sobre este arquivo.
 6. **BDD**: escreva os critérios de aceitação da spec como cenários Gherkin em pt,
    crie os `.feature` e os steps **antes** do código e confirme que falham primeiro.
    Backend com godog, frontend com playwright-bdd.
-7. Gin só nos handlers e adapters. Os casos de uso recebem DTOs próprios, nunca `*gin.Context`.
-8. Decisões listadas como "em aberto" na constituição (ex.: framework Go) são
+7. **Código em inglês** (identificadores, comentários, logs, JSON). Specs e `.feature`
+   ficam em português.
+8. Gin só nos handlers e adapters. Os casos de uso recebem DTOs próprios, nunca `*gin.Context`.
+9. Decisões listadas como "em aberto" na constituição (ex.: framework Go) são
    discutidas com o usuário antes de qualquer escolha.
 
 ## Estrutura de specs
@@ -44,5 +46,16 @@ Funcionalidade: Entrar em um minigame
 ## Comandos
 
 <!-- Preencher quando o projeto tiver código -->
-- Frontend: `npm run dev` · `npm test` · `npx bddgen && npx playwright test` (BDD) · `npm run lint`
-- Backend: `go run ./cmd/...` · `go test ./...` (inclui godog) · `golangci-lint run`
+- Frontend (em `web/`): `npm run dev` · `npm test` (Vitest) · `npm run test:e2e` (playwright-bdd,
+  cenários `@ui`/`@e2e`; sobe os dois servidores sozinho) · `npm run lint` · `npm run format:check`
+- O BDD de UI usa um único servidor compartilhado. Feche abas do jogo abertas em outro navegador
+  antes de rodar: elas reconectam sozinhas e ocupam os apelidos dos cenários.
+- Backend (em `server/`): `go run ./cmd/server` · `go test ./...` (inclui godog) ·
+  `go tool -modfile=tools/go.mod golangci-lint run ./...` · `go tool -modfile=tools/go.mod golangci-lint fmt ./...`
+- BDD do backend: `go test ./features/...`. Ele roda em modo strict, então steps pendentes falham:
+  uma spec nova começa vermelha e fica verde conforme as tasks avançam. São duas suítes:
+  `TestFeatures`, contra os casos de uso com relógio falso, e `TestSmokeOverWebSocket`, que roda os
+  cenários `@smoke` contra o servidor real (`internal/app`). Para filtrar
+  cenários, use `GODOG_TAGS` (ex.: `$env:GODOG_TAGS="@RW-001"`).
+- O golangci-lint também barra imports que violam a Clean Architecture (depguard em `server/.golangci.yml`).
+  Não desative essas regras: corrija a dependência.

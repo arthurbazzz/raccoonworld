@@ -1,6 +1,6 @@
 # RW-001 — Sala inicial com jogadores em tempo real
 
-Status: **Aprovada** (2026-10-25) · Criada: 2026-10-25
+Status: **Implementada** (2026-10-25) · Aprovada: 2026-10-25 · Criada: 2026-10-25
 
 ## Problema
 
@@ -32,7 +32,9 @@ Um jogador abre o jogo, escolhe um apelido, entra na sala inicial (a "Praça") e
 ## Regras de negócio
 
 - RN1. O apelido tem de 3 a 16 caracteres (letras, números e `_`) e é único **entre
-  os jogadores conectados** à sala.
+  os jogadores conectados** à sala. A unicidade **ignora maiúsculas e minúsculas**:
+  com "rocky" na sala, "Rocky" e "ROCKY" são recusados. O apelido é exibido como o
+  jogador digitou.
 - RN2. A Praça tem capacidade máxima de **10** jogadores.
 - RN3. O movimento é feito com WASD: W para cima, A para a esquerda, S para baixo e D para a direita,
   e as diagonais combinam teclas. O cliente envia só as teclas pressionadas. O servidor
@@ -42,9 +44,29 @@ Um jogador abre o jogo, escolhe um apelido, entra na sala inicial (a "Praça") e
   e os personagens e objetos aparecem levemente de frente, com profundidade pela posição vertical
   (quem está mais abaixo é desenhado na frente).
 - RN4. Mensagens de chat têm no máximo 120 caracteres, com no máximo 1 mensagem por segundo por jogador.
+  - O limite conta **caracteres**, não bytes ("é" vale 1).
+  - Mensagens vazias ou só com espaços são descartadas.
+  - Mensagens descartadas não contam para o limite de 1 por segundo.
 - RN5. Se a conexão cair, o guaxinim some para os outros em até 10 segundos.
 
 ## Critérios de aceitação
+
+Os cenários executáveis ficam em [`features/`](features/). Na T3 entraram três
+cenários que detalham regras desta spec:
+- **Apelido inválido** virou um Esquema do Cenário com 5 exemplos (RN1).
+- **Cada tecla move em uma direção** cobre W, A, S e D separadamente (RN3).
+- **Mensagem longa demais** cobre o limite de 120 caracteres (RN4).
+
+O cenário "Digitar no chat não move o guaxinim" tem a tag `@ui`, porque só existe
+no navegador. Ele roda no playwright-bdd e o godog o ignora.
+
+Os cenários com a tag `@smoke` ("Visitante entra na Praça", "Apelido já em uso" e
+"Mensagem de chat") também rodam contra o **servidor real**, por WebSocket de verdade.
+
+Os cenários com `@ui` ou `@e2e` ("Visitante entra na Praça", "Andar com WASD", "Mensagem de chat"
+e "Digitar no chat não move o guaxinim") rodam também **no navegador**, com o playwright-bdd, um
+contexto de navegador por jogador e os dois servidores reais. O balão é desenhado no canvas, então
+o teste confere a mesma mensagem na lista acessível de mensagens.
 
 ```gherkin
 # language: pt
