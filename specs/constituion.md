@@ -1,6 +1,6 @@
 # Raccoons World — Constitution
 
-Versão: 1.2.0 · Ratificada: 2026-10-25 · Última emenda: 2026-10-25 (tempo real)
+Versão: 1.3.0 · Ratificada: 2026-10-25 · Última emenda: 2026-10-25 (idioma do código)
 
 Esta constituição define as regras inegociáveis do projeto. Ela prevalece sobre
 qualquer outra instrução, spec ou conveniência de implementação.
@@ -60,7 +60,17 @@ Quebrar um contrato exige uma spec própria.
 Implementar só o que a spec pede. Nada de abstrações especulativas.
 Uma dependência nova só entra com justificativa registrada no `plan.md`.
 
-### VIII. Rastreabilidade
+### VIII. Idioma
+- **Código em inglês**: identificadores (variáveis, funções, tipos, pacotes, arquivos),
+  comentários, mensagens de log e de erro internas, chaves de JSON e nomes de tabelas e colunas.
+- **Documentação de produto em português**: specs, plans, tasks, a constituição e os
+  cenários Gherkin (`.feature`, `# language: pt`), porque descrevem o negócio.
+- Os steps BDD seguem o texto em português do `.feature`, mas a implementação
+  (funções e variáveis) é em inglês.
+- Textos exibidos ao jogador são conteúdo de UI e ficam fora desta regra. Por enquanto,
+  em português.
+
+### IX. Rastreabilidade
 Branches, commits e PRs referenciam a spec e a task (ex.: `RW-003/T2`).
 Se a implementação divergir da spec, a spec é atualizada no mesmo PR.
 

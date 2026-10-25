@@ -12,8 +12,10 @@ Leia e siga `specs/constituion.md`. Ela prevalece sobre este arquivo.
 6. **BDD**: escreva os critérios de aceitação da spec como cenários Gherkin em pt,
    crie os `.feature` e os steps **antes** do código e confirme que falham primeiro.
    Backend com godog, frontend com playwright-bdd.
-7. Gin só nos handlers e adapters. Os casos de uso recebem DTOs próprios, nunca `*gin.Context`.
-8. Decisões listadas como "em aberto" na constituição (ex.: framework Go) são
+7. **Código em inglês** (identificadores, comentários, logs, JSON). Specs e `.feature`
+   ficam em português.
+8. Gin só nos handlers e adapters. Os casos de uso recebem DTOs próprios, nunca `*gin.Context`.
+9. Decisões listadas como "em aberto" na constituição (ex.: framework Go) são
    discutidas com o usuário antes de qualquer escolha.
 
 ## Estrutura de specs

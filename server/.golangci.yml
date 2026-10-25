@@ -7,42 +7,45 @@ linters:
     - depguard
     - errorlint
     - gocritic
+    - misspell
     - revive
     - unconvert
   settings:
+    misspell:
+      locale: US
     depguard:
       rules:
-        # Clean Architecture (constituição, princípio III): o domínio não conhece
-        # framework, transporte nem banco.
+        # Clean Architecture (constitution, principle III): the domain knows
+        # nothing about frameworks, transport or storage.
         domain:
           files:
             - "**/internal/domain/**"
           deny:
             - pkg: github.com/gin-gonic/gin
-              desc: domínio não depende de framework HTTP
+              desc: domain must not depend on the HTTP framework
             - pkg: github.com/coder/websocket
-              desc: domínio não depende de transporte
+              desc: domain must not depend on transport
             - pkg: database/sql
-              desc: domínio não depende de banco
+              desc: domain must not depend on storage
             - pkg: raccoons-world/server/internal/usecase
-              desc: dependências apontam para dentro
+              desc: dependencies point inward
             - pkg: raccoons-world/server/internal/adapter
-              desc: dependências apontam para dentro
+              desc: dependencies point inward
             - pkg: raccoons-world/server/internal/infra
-              desc: dependências apontam para dentro
-        # Casos de uso não recebem *gin.Context nem conhecem adapters/infra.
+              desc: dependencies point inward
+        # Use cases never receive *gin.Context nor know adapters/infra.
         usecase:
           files:
             - "**/internal/usecase/**"
           deny:
             - pkg: github.com/gin-gonic/gin
-              desc: casos de uso recebem DTOs próprios
+              desc: use cases take their own DTOs
             - pkg: github.com/coder/websocket
-              desc: casos de uso não conhecem o transporte
+              desc: use cases must not know the transport
             - pkg: raccoons-world/server/internal/adapter
-              desc: dependências apontam para dentro
+              desc: dependencies point inward
             - pkg: raccoons-world/server/internal/infra
-              desc: dependências apontam para dentro
+              desc: dependencies point inward
 
 formatters:
   enable:

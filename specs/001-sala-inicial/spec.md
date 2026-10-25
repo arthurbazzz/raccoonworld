@@ -46,6 +46,15 @@ Um jogador abre o jogo, escolhe um apelido, entra na sala inicial (a "Praça") e
 
 ## Critérios de aceitação
 
+Os cenários executáveis ficam em [`features/`](features/). Na T3 entraram três
+cenários que detalham regras desta spec:
+- **Apelido inválido** virou um Esquema do Cenário com 5 exemplos (RN1).
+- **Cada tecla move em uma direção** cobre W, A, S e D separadamente (RN3).
+- **Mensagem longa demais** cobre o limite de 120 caracteres (RN4).
+
+O cenário "Digitar no chat não move o guaxinim" tem a tag `@ui`, porque só existe
+no navegador. Ele roda no playwright-bdd e o godog o ignora.
+
 ```gherkin
 # language: pt
 Funcionalidade: Sala inicial em tempo real
