@@ -16,6 +16,8 @@ const (
 	RejectNicknameTaken   RejectReason = "nickname_taken"
 	RejectNicknameInvalid RejectReason = "nickname_invalid"
 	RejectRoomFull        RejectReason = "room_full"
+	// RejectAlreadyJoined: this connection is already in the room.
+	RejectAlreadyJoined RejectReason = "already_joined"
 )
 
 // JoinRejectedError is returned by JoinRoom.Execute when the room refuses
@@ -84,6 +86,8 @@ func (uc *JoinRoom) Execute(in JoinInput) error {
 		return uc.reject(in.PlayerID, RejectNicknameTaken)
 	case errors.Is(joinErr, room.ErrRoomFull):
 		return uc.reject(in.PlayerID, RejectRoomFull)
+	case errors.Is(joinErr, room.ErrPlayerExists):
+		return uc.reject(in.PlayerID, RejectAlreadyJoined)
 	default:
 		return joinErr
 	}

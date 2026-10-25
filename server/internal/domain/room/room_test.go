@@ -85,8 +85,24 @@ func TestJoinRejectsWhenFull(t *testing.T) {
 
 func TestJoinRejectsDuplicateID(t *testing.T) {
 	r := newTestRoom(t)
+	mustJoin(t, r, "p0", "alpha")
 	mustJoin(t, r, "p1", "rocky")
-	if _, err := r.Join("p1", nick(t, "bandit"), t0); !errors.Is(err, room.ErrPlayerExists) {
+
+	// Already joined wins over every other reason, even when the nickname
+	// belongs to someone else.
+	for _, name := range []string{"bandit", "rocky", "ALPHA"} {
+		if _, err := r.Join("p1", nick(t, name), t0); !errors.Is(err, room.ErrPlayerExists) {
+			t.Fatalf("Join(p1, %q) error = %v, want ErrPlayerExists", name, err)
+		}
+	}
+}
+
+func TestJoinAlreadyJoinedWinsOverFullRoom(t *testing.T) {
+	r := newTestRoom(t)
+	for i := range room.MaxPlayers {
+		mustJoin(t, r, fmt.Sprintf("p%d", i), fmt.Sprintf("player%d", i))
+	}
+	if _, err := r.Join("p0", nick(t, "player0"), t0); !errors.Is(err, room.ErrPlayerExists) {
 		t.Fatalf("Join() error = %v, want ErrPlayerExists", err)
 	}
 }

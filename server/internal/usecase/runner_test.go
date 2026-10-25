@@ -168,6 +168,21 @@ func TestKeepAliveUnknownPlayer(t *testing.T) {
 	}
 }
 
+func TestJoinTwiceIsRejectedAsAlreadyJoined(t *testing.T) {
+	r, _, b := startRunner(t)
+	join := usecase.NewJoinRoom(r, b, fixedClock{})
+	if err := join.Execute(usecase.JoinInput{PlayerID: "p1", Nickname: "rocky"}); err != nil {
+		t.Fatal(err)
+	}
+
+	err := join.Execute(usecase.JoinInput{PlayerID: "p1", Nickname: "rocky"})
+
+	var rejected *usecase.JoinRejectedError
+	if !errors.As(err, &rejected) || rejected.Reason != usecase.RejectAlreadyJoined {
+		t.Fatalf("second Execute() error = %v, want rejection %q", err, usecase.RejectAlreadyJoined)
+	}
+}
+
 func TestTickIntervalIs20Hz(t *testing.T) {
 	if usecase.TickInterval != 50*time.Millisecond {
 		t.Fatalf("TickInterval = %v, want 50ms", usecase.TickInterval)

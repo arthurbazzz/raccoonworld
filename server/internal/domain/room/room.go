@@ -45,16 +45,16 @@ func (r *Room) ID() string { return r.id }
 func (r *Room) Map() *TileMap { return r.tiles }
 
 // Join adds a player at the spawn point; now counts as their first sign of
-// life (RN5). Capacity is checked before the nickname, so a full room
-// always answers ErrRoomFull.
+// life (RN5). Checks run from most to least specific: already in the room,
+// room full, nickname taken.
 func (r *Room) Join(id PlayerID, nickname Nickname, now time.Time) (PlayerView, error) {
+	if r.index(id) >= 0 {
+		return PlayerView{}, ErrPlayerExists
+	}
 	if len(r.players) >= MaxPlayers {
 		return PlayerView{}, ErrRoomFull
 	}
 	for _, p := range r.players {
-		if p.id == id {
-			return PlayerView{}, ErrPlayerExists
-		}
 		if p.nickname.Key() == nickname.Key() {
 			return PlayerView{}, ErrNicknameTaken
 		}
