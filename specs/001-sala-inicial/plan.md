@@ -1,0 +1,166 @@
+# RW-001 — Plano técnico: Sala inicial
+
+Status: **Aprovado** (2026-10-25) · Spec: [spec.md](spec.md) · Criado: 2026-10-25
+
+## 1. Visão geral
+
+```
+Navegador (Next.js + PixiJS)            Servidor Go (Gin)
+┌──────────────────────────┐   WS    ┌──────────────────────────────────┐
+│ captura WASD / chat      │ ──────► │ adapter/ws  (decodifica JSON)    │
+│ renderiza sala 3/4       │         │        │                         │
+│ interpola outros players │ ◄────── │ usecase  (Join, Input, Chat...)  │
+└──────────────────────────┘ snapshot│        │                         │
+                                     │ domain/room (regras, física)     │
+                                     │   loop de tick 20 Hz por sala    │
+                                     └──────────────────────────────────┘
+```
+
+- O servidor é autoritativo: o cliente envia apenas as **teclas pressionadas** e as **mensagens**.
+- Cada sala roda numa goroutine própria, que recebe comandos por um channel. Isso evita locks
+  e race conditions no estado da sala.
+- **Postgres não é usado nesta spec**: o estado da sala existe só em memória e o visitante não
+  é persistido. O banco entra quando houver contas ou inventário.
+
+## 2. Estrutura do repositório (monorepo)
+
+```
+raccoons-world/
+  CLAUDE.md
+  specs/
+  server/                         # Go
+    cmd/server/main.go            # composição: config, Gin, salas
+    internal/
+      domain/room/                # entidades e regras puras (sem import externo)
+        nickname.go  player.go  room.go  vec.go  tilemap.go  chat.go
+      usecase/                    # orquestra o domínio e define as portas
+        join_room.go  set_input.go  send_chat.go  leave_room.go
+        ports.go                  # Broadcaster, Clock
+      adapter/
+        ws/                       # protocolo JSON <-> DTOs dos casos de uso
+        httpapi/                  # rotas Gin: GET /health, GET /ws
+      infra/
+        config/  clock/           # relógio real
+    maps/praca.json               # tilemap da Praça (colisão)
+    features/                     # runner godog + steps (lê specs/*/features)
+  web/                            # Next.js (TypeScript)
+    app/page.tsx                  # tela de apelido + jogo
+    src/game/                     # PixiJS: render, interpolação, input
+    src/net/                      # cliente WS e tipos do protocolo
+    e2e/                          # playwright-bdd
+```
+
+Os arquivos `.feature` ficam em `specs/001-sala-inicial/features/` e são a fonte única.
+O godog (backend) e o playwright-bdd (frontend) os leem diretamente desse lugar.
+
+## 3. Backend
+
+### 3.1 Domínio (`domain/room`)
+
+| Conceito | Regra (spec) |
+|---|---|
+| `Nickname` | Value object: valida `^[A-Za-z0-9_]{3,16}$` (RN1) |
+| `Room` | Capacidade de 10 jogadores (RN2), unicidade de apelido (RN1), lista de jogadores |
+| `Player` | id, apelido, posição, input atual, horário da última mensagem |
+| `Input` | Flags W/A/S/D. O vetor é normalizado para a diagonal ter a mesma velocidade (RN3) |
+| `TileMap` | Grade de colisão (tiles de 32 px). Movimento resolvido eixo a eixo, para o jogador deslizar na parede |
+| `Chat` | Até 120 caracteres e intervalo mínimo de 1 s entre mensagens (RN4) |
+
+O método `Room.Step(dt)` avança a física. Ele é determinístico, recebe `dt` e não lê o relógio.
+
+Constantes iniciais: velocidade de 160 px/s, tick de 20 Hz (50 ms) e sala de 30×20 tiles.
+
+### 3.2 Casos de uso e portas
+
+```go
+type Broadcaster interface {
+    ToRoom(roomID string, ev Event)
+    ToPlayer(playerID string, ev Event)
+}
+type Clock interface { Now() time.Time }
+```
+
+`JoinRoom`, `SetInput`, `SendChat` e `LeaveRoom` recebem DTOs próprios e nunca `*gin.Context`.
+Os erros de domínio são `ErrNicknameTaken`, `ErrNicknameInvalid` e `ErrRoomFull`.
+
+### 3.3 Transporte
+
+- Gin expõe `GET /ws`, e o upgrade para WebSocket é feito com **`github.com/coder/websocket`**.
+  O Gin não tem WebSocket nativo, e essa biblioteca é mantida e usa `context`.
+- Heartbeat: o servidor envia ping a cada 5 s. Sem pong em 10 s, a conexão é fechada e o
+  `LeaveRoom` é chamado (RN5).
+- Origem permitida por config, para evitar uso cross-site.
+
+### 3.4 Protocolo WebSocket (v1)
+
+Envelope: `{"type": "<nome>", "v": 1, "data": {...}}`
+
+**Cliente → servidor**
+
+| type | data |
+|---|---|
+| `room.join` | `{ "nickname": "rocky" }` |
+| `player.input` | `{ "up": bool, "down": bool, "left": bool, "right": bool, "seq": int }` (só quando muda) |
+| `chat.send` | `{ "text": "olá!" }` |
+
+**Servidor → cliente**
+
+| type | data |
+|---|---|
+| `room.joined` | `{ "you": id, "players": [{id, nickname, x, y}], "map": "praca" }` |
+| `room.join_rejected` | `{ "reason": "nickname_taken" \| "nickname_invalid" \| "room_full" }` |
+| `player.joined` | `{ id, nickname, x, y }` |
+| `player.left` | `{ id }` |
+| `room.snapshot` | `{ "tick": int, "players": [{id, x, y}] }` (a cada tick, só se algo mudou) |
+| `chat.message` | `{ "from": id, "text": "olá!" }` |
+
+As mensagens de chat descartadas pelo limite de frequência não geram resposta, como diz a spec.
+
+## 4. Frontend
+
+- **Next.js (App Router)**: uma página com o formulário de apelido e o jogo como client component.
+- **PixiJS v8** para renderizar em canvas. É leve, 2D e mais simples que o Phaser para o escopo atual.
+- **Perspectiva 3/4** (RN6): tiles do chão desenhados de cima e sprites com âncora nos pés.
+  A cada frame, os sprites são ordenados por `y` (`zIndex = y`).
+- **Input**: `keydown`/`keyup` mudam o estado de WASD, e o cliente só envia `player.input`
+  quando esse estado muda. Os eventos são ignorados enquanto o campo de chat tem foco (RN3.1).
+- **Suavidade**: os outros jogadores são **interpolados** entre os dois últimos snapshots,
+  com cerca de 100 ms de atraso. O próprio jogador também segue o servidor nesta versão,
+  sem predição local. Se o atraso incomodar, a predição local fica para uma spec futura.
+- Os balões de chat ficam sobre o sprite por 5 s.
+- Os sprites iniciais são placeholders (um guaxinim simples), e a arte final vem depois.
+
+## 5. Estratégia de testes (BDD)
+
+| Camada | Ferramenta | Como |
+|---|---|---|
+| Cenários da spec (backend) | **godog** | Os steps chamam os **casos de uso** com `FakeClock` e `FakeBroadcaster`. Ex.: "segura D" vira `SetInput` seguido de N × `Step`. Os testes são determinísticos e rápidos |
+| Smoke do transporte | godog + servidor real | 2–3 cenários (entrar e chat) via WebSocket de verdade |
+| Cenários de UI | **playwright-bdd** | 2 navegadores (dois jogadores): entrar, andar, chat, digitar sem mover |
+| Domínio | `go test` | Tabela de casos para `Nickname`, colisão e normalização da diagonal |
+
+O cenário "desconexão em até 10 s" usa o `FakeClock` no nível de caso de uso, sem esperar 10 s reais.
+
+## 6. Dependências novas (justificativa)
+
+| Dependência | Motivo |
+|---|---|
+| `github.com/gin-gonic/gin` | Definido na constituição |
+| `github.com/coder/websocket` | WebSocket para Go (o Gin não tem) |
+| `github.com/cucumber/godog` | BDD no backend (constituição) |
+| `pixi.js` | Renderização 2D em canvas |
+| `playwright-bdd` + `@playwright/test` | BDD no frontend (constituição) |
+
+## 7. Riscos
+
+- **Latência sem predição**: com mais de 150 ms de ping, o movimento do próprio jogador vai
+  parecer atrasado. A mitigação, se necessária, é predição local com reconciliação, numa spec futura.
+- **Uma instância só**: as salas vivem em memória, então reiniciar o servidor desconecta todos
+  os jogadores. Isso é aceitável nesta fase.
+
+## 8. Decisões deste plano que precisam do seu OK
+
+1. ~~**Monorepo** com `server/` e `web/`~~ → **aprovado** (2026-10-25).
+2. **PixiJS** como renderizador → **aprovado** (2026-10-25).
+3. **Sem Postgres** nesta spec → **aprovado** (2026-10-25).
+4. **Sem predição local** do movimento na v1 → **aprovado** (2026-10-25).
