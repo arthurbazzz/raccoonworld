@@ -46,3 +46,19 @@ func TestNewNickname(t *testing.T) {
 		})
 	}
 }
+
+func TestNicknameKeyIgnoresCase(t *testing.T) {
+	a, _ := room.NewNickname("rocky")
+	b, _ := room.NewNickname("RoCkY")
+	c, _ := room.NewNickname("bandit")
+
+	if a.Key() != b.Key() {
+		t.Fatalf("Key() differs for %q and %q", a, b)
+	}
+	if a.Key() == c.Key() {
+		t.Fatalf("Key() equal for %q and %q", a, c)
+	}
+	if b.String() != "RoCkY" {
+		t.Fatalf("String() = %q, want original casing", b.String())
+	}
+}

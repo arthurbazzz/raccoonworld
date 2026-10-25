@@ -18,6 +18,16 @@ Funcionalidade: Entrar na Praça
     Quando outro visitante tenta entrar com o apelido "rocky"
     Então a entrada é recusada com o motivo "apelido em uso"
 
+  Esquema do Cenário: Apelido em uso com outra capitalização
+    Dado que "rocky" está na Praça
+    Quando outro visitante tenta entrar com o apelido "<apelido>"
+    Então a entrada é recusada com o motivo "apelido em uso"
+
+    Exemplos:
+      | apelido |
+      | Rocky   |
+      | ROCKY   |
+
   Esquema do Cenário: Apelido inválido
     Quando o visitante tenta entrar com o apelido "<apelido>"
     Então a entrada é recusada com o motivo "apelido inválido"

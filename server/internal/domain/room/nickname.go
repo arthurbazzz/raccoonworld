@@ -5,6 +5,7 @@ package room
 import (
 	"errors"
 	"regexp"
+	"strings"
 )
 
 // ErrNicknameInvalid is returned when a nickname breaks RN1.
@@ -30,4 +31,10 @@ func NewNickname(raw string) (Nickname, error) {
 // String returns the nickname exactly as the player typed it.
 func (n Nickname) String() string {
 	return n.value
+}
+
+// Key is the case-insensitive identity used for uniqueness in a room (RN1):
+// "rocky" and "Rocky" share the same key.
+func (n Nickname) Key() string {
+	return strings.ToLower(n.value)
 }

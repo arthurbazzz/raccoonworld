@@ -32,7 +32,9 @@ Um jogador abre o jogo, escolhe um apelido, entra na sala inicial (a "Praça") e
 ## Regras de negócio
 
 - RN1. O apelido tem de 3 a 16 caracteres (letras, números e `_`) e é único **entre
-  os jogadores conectados** à sala.
+  os jogadores conectados** à sala. A unicidade **ignora maiúsculas e minúsculas**:
+  com "rocky" na sala, "Rocky" e "ROCKY" são recusados. O apelido é exibido como o
+  jogador digitou.
 - RN2. A Praça tem capacidade máxima de **10** jogadores.
 - RN3. O movimento é feito com WASD: W para cima, A para a esquerda, S para baixo e D para a direita,
   e as diagonais combinam teclas. O cliente envia só as teclas pressionadas. O servidor
