@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 
+import type { Interpolator } from "@/game/interpolation";
 import type { RoomScene } from "@/game/scene";
 import { loadTileMap } from "@/game/tilemap";
 import type { PlayerId, PlayerState } from "@/net/protocol";
@@ -11,10 +12,11 @@ interface Props {
   mapName: string;
   players: Record<PlayerId, PlayerState>;
   you: PlayerId | null;
+  interpolator: Interpolator;
 }
 
 /** Hosts the PixiJS scene. PixiJS is loaded client-side only. */
-export function GameCanvas({ wsUrl, mapName, players, you }: Props) {
+export function GameCanvas({ wsUrl, mapName, players, you, interpolator }: Props) {
   const hostRef = useRef<HTMLDivElement>(null);
   const sceneRef = useRef<RoomScene | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -34,7 +36,7 @@ export function GameCanvas({ wsUrl, mapName, players, you }: Props) {
           loadTileMap(wsUrl, mapName),
         ]);
         if (cancelled) return;
-        const created = await RoomScene.create(host, map);
+        const created = await RoomScene.create(host, map, interpolator);
         if (cancelled) {
           created.destroy();
           return;
@@ -52,7 +54,7 @@ export function GameCanvas({ wsUrl, mapName, players, you }: Props) {
       sceneRef.current = null;
       scene?.destroy();
     };
-  }, [wsUrl, mapName]);
+  }, [wsUrl, mapName, interpolator]);
 
   useEffect(() => {
     sceneRef.current?.sync(players, you);

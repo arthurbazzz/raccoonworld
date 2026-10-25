@@ -151,7 +151,11 @@ As mensagens de chat descartadas pelo limite de frequência não geram resposta,
 - **Input**: `keydown`/`keyup` mudam o estado de WASD, e o cliente só envia `player.input`
   quando esse estado muda. Os eventos são ignorados enquanto o campo de chat tem foco (RN3.1).
 - **Suavidade**: os outros jogadores são **interpolados** entre os dois últimos snapshots,
-  com cerca de 100 ms de atraso. O próprio jogador também segue o servidor nesta versão,
+  com cerca de 100 ms de atraso (`web/src/game/interpolation.ts`).
+  - Cada snapshot recebe a hora de chegada no `onMessage`, fora do React.
+  - Não há extrapolação: depois do último snapshot, o guaxinim fica parado.
+  - Ao sair do repouso, é inserida uma amostra parada um tick antes. Assim o guaxinim
+    começa a andar de onde estava, em vez de deslizar devagar a partir de uma amostra antiga. O próprio jogador também segue o servidor nesta versão,
   sem predição local. Se o atraso incomodar, a predição local fica para uma spec futura.
 - Os balões de chat ficam sobre o sprite por 5 s.
 - Os sprites iniciais são placeholders (um guaxinim simples), e a arte final vem depois.

@@ -50,7 +50,7 @@ os cenários ou testes indicados passam. Commits no formato `RW-001/Tn: <descri�
 - [x] **T19** Tela de apelido, com as mensagens para cada `join_rejected`.
 - [x] **T20** Render PixiJS: tilemap da Praça, sprite placeholder do guaxinim, ordenação por `y` (RN6).
 - [x] **T21** Input WASD (enviado só quando muda) e bloqueio enquanto o chat tem foco (RN3.1).
-- [ ] **T22** Interpolação dos snapshots, com cerca de 100 ms de atraso.
+- [x] **T22** Interpolação dos snapshots, com cerca de 100 ms de atraso.
 - [ ] **T23** Chat: campo de texto e balão sobre o sprite por 5 s.
 
 ## Fase 5 — BDD de UI e fechamento

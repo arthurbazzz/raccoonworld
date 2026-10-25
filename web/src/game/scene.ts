@@ -3,6 +3,7 @@ import { Application, Container, Graphics, Text } from "pixi.js";
 import type { PlayerId, PlayerState } from "@/net/protocol";
 
 import { playerDepth, tileDepth } from "./depth";
+import type { Interpolator } from "./interpolation";
 import { fitScale, type SolidTile, type TileMap } from "./tilemap";
 
 // Placeholder art (plan §4): flat shapes until the real sprites arrive.
@@ -33,20 +34,27 @@ export class RoomScene {
   private readonly entities = new Container({ sortableChildren: true });
   private readonly raccoons = new Map<PlayerId, Container>();
   private readonly onResize = () => this.layout();
+  private readonly onFrame = () => this.place(performance.now());
 
   private constructor(
     private readonly app: Application,
     private readonly map: TileMap,
+    private readonly interpolator: Interpolator,
   ) {
     this.world.addChild(this.floor, this.entities);
     app.stage.addChild(this.world);
     this.drawFloor();
     for (const tile of map.solidTiles()) this.entities.addChild(drawBlock(tile));
     app.renderer.on("resize", this.onResize);
+    app.ticker.add(this.onFrame);
     this.layout();
   }
 
-  static async create(parent: HTMLElement, map: TileMap): Promise<RoomScene> {
+  static async create(
+    parent: HTMLElement,
+    map: TileMap,
+    interpolator: Interpolator,
+  ): Promise<RoomScene> {
     const app = new Application();
     await app.init({
       resizeTo: parent,
@@ -56,10 +64,14 @@ export class RoomScene {
       resolution: Math.min(window.devicePixelRatio || 1, 2),
     });
     parent.appendChild(app.canvas);
-    return new RoomScene(app, map);
+    return new RoomScene(app, map, interpolator);
   }
 
-  /** Mirrors the players in state: adds, moves and removes raccoons. */
+  /**
+   * Mirrors who is in the room: adds and removes raccoons. Positions are
+   * set every frame from the interpolator; the state position is only the
+   * fallback for a player the interpolator has not seen.
+   */
   sync(players: Record<PlayerId, PlayerState>, you: PlayerId | null): void {
     for (const [id, sprite] of this.raccoons) {
       if (!(id in players)) {
@@ -73,15 +85,27 @@ export class RoomScene {
         sprite = drawRaccoon(p.nickname, p.id === you);
         this.raccoons.set(p.id, sprite);
         this.entities.addChild(sprite);
+        sprite.position.set(p.x, p.y);
+        sprite.zIndex = playerDepth(p.y);
       }
-      sprite.position.set(p.x, p.y);
-      sprite.zIndex = playerDepth(p.y);
     }
+    this.place(performance.now());
   }
 
   destroy(): void {
+    this.app.ticker.remove(this.onFrame);
     this.app.renderer.off("resize", this.onResize);
     this.app.destroy({ removeView: true }, { children: true });
+  }
+
+  /** Moves every raccoon to its interpolated position and depth. */
+  private place(now: number): void {
+    for (const [id, sprite] of this.raccoons) {
+      const pos = this.interpolator.position(id, now);
+      if (!pos) continue;
+      sprite.position.set(pos.x, pos.y);
+      sprite.zIndex = playerDepth(pos.y);
+    }
   }
 
   /** Scales the room to fit the canvas and centers it. */

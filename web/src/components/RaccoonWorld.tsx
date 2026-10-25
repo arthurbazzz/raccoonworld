@@ -11,7 +11,7 @@ import styles from "./RaccoonWorld.module.css";
 const wsUrl = defaultServerUrl();
 
 export function RaccoonWorld() {
-  const { state, status, join, sendInput } = useRoom(wsUrl);
+  const { state, status, join, sendInput, interpolator } = useRoom(wsUrl);
   useMovementKeys(state.phase === "playing", sendInput);
 
   if (state.phase !== "playing" || !state.map) {
@@ -29,7 +29,13 @@ export function RaccoonWorld() {
   const players = Object.values(state.players);
   return (
     <main className={styles.stage}>
-      <GameCanvas wsUrl={wsUrl} mapName={state.map} players={state.players} you={state.you} />
+      <GameCanvas
+        wsUrl={wsUrl}
+        mapName={state.map}
+        players={state.players}
+        you={state.you}
+        interpolator={interpolator}
+      />
       <header className={styles.hud}>
         <strong>Praça</strong>
         <span>
