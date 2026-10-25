@@ -93,6 +93,9 @@ Os erros de domínio são `ErrNicknameTaken`, `ErrNicknameInvalid` e `ErrRoomFul
 
 ### 3.3 Transporte
 
+- Gin expõe `GET /maps/:name`, com o JSON do tilemap. É **a mesma fonte** que o servidor usa
+  para colisão, e o cliente baixa o mapa daí para desenhar a sala, sem cópia no frontend.
+  O CORS segue o `RW_ALLOWED_ORIGINS`. Entrou na T20.
 - Gin expõe `GET /ws`, e o upgrade para WebSocket é feito com **`github.com/coder/websocket`**.
   O Gin não tem WebSocket nativo, e essa biblioteca é mantida e usa `context`.
 - Heartbeat: o servidor envia ping a cada 5 s, e cada pong (ou qualquer mensagem) chama o
@@ -140,7 +143,11 @@ As mensagens de chat descartadas pelo limite de frequência não geram resposta,
 - **Next.js (App Router)**: uma página com o formulário de apelido e o jogo como client component.
 - **PixiJS v8** para renderizar em canvas. É leve, 2D e mais simples que o Phaser para o escopo atual.
 - **Perspectiva 3/4** (RN6): tiles do chão desenhados de cima e sprites com âncora nos pés.
-  A cada frame, os sprites são ordenados por `y` (`zIndex = y`).
+  Os tiles sólidos viram blocos (face de cima e face da frente) e entram na mesma ordenação dos
+  guaxinins: o bloco usa a borda de baixo e o guaxinim usa os pés + 0,5 (`web/src/game/depth.ts`).
+  Assim, um guaxinim acima da fonte aparece atrás dela.
+- O PixiJS é carregado só no cliente e sob demanda (`import()` dinâmico), depois do login.
+  A primeira carga da página fica em cerca de 107 kB.
 - **Input**: `keydown`/`keyup` mudam o estado de WASD, e o cliente só envia `player.input`
   quando esse estado muda. Os eventos são ignorados enquanto o campo de chat tem foco (RN3.1).
 - **Suavidade**: os outros jogadores são **interpolados** entre os dois últimos snapshots,

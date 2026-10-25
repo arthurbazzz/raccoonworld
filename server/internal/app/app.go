@@ -46,7 +46,12 @@ func New(opts Options) (*App, error) {
 		KeepAlive: usecase.NewKeepAlive(runner, opts.Clock),
 	}, ws.Options{AllowedOrigins: opts.AllowedOrigins, Logger: opts.Logger})
 
-	return &App{Handler: httpapi.NewRouter(wsHandler), runner: runner}, nil
+	router := httpapi.NewRouter(httpapi.Config{
+		WebSocket:      wsHandler,
+		Maps:           map[string][]byte{tiles.Name(): maps.Praca},
+		AllowedOrigins: opts.AllowedOrigins,
+	})
+	return &App{Handler: router, runner: runner}, nil
 }
 
 // RunRoom runs the room loop at usecase.TickInterval until ctx is done.
