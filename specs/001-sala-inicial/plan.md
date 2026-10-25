@@ -63,7 +63,8 @@ O godog (backend) e o playwright-bdd (frontend) os leem diretamente desse lugar.
 | `Room` | Capacidade de 10 jogadores (RN2), unicidade de apelido (RN1), lista de jogadores |
 | `Player` | id, apelido, posição, input atual, horário da última mensagem |
 | `Input` | Flags W/A/S/D. O vetor é normalizado para a diagonal ter a mesma velocidade (RN3) |
-| `TileMap` | Grade de colisão (tiles de 32 px). Movimento resolvido eixo a eixo, para o jogador deslizar na parede |
+| `TileMap` | Grade de colisão (tiles de 32 px) e ponto de nascimento (`spawn`). Movimento resolvido eixo a eixo, para o jogador deslizar na parede |
+| Hitbox | Caixa de 20×12 px nos pés do guaxinim: na visão 3/4 a cabeça pode passar na frente do cenário, mas os pés não |
 | `Chat` | Até 120 caracteres e intervalo mínimo de 1 s entre mensagens (RN4) |
 
 O método `Room.Step(dt)` avança a física. Ele é determinístico, recebe `dt` e não lê o relógio.

@@ -32,12 +32,19 @@ type TileMap struct {
 	cols     int
 	rows     int
 	solid    []bool // row-major, len = cols*rows
+	spawn    Vec
 }
 
 type tileMapJSON struct {
 	Name     string   `json:"name"`
 	TileSize float64  `json:"tileSize"`
+	Spawn    *vecJSON `json:"spawn"`
 	Rows     []string `json:"rows"`
+}
+
+type vecJSON struct {
+	X float64 `json:"x"`
+	Y float64 `json:"y"`
 }
 
 // ParseTileMap builds a TileMap from its JSON form. Each row is a string
@@ -77,8 +84,19 @@ func ParseTileMap(data []byte) (*TileMap, error) {
 			}
 		}
 	}
+
+	if raw.Spawn == nil {
+		return nil, fmt.Errorf("%w: missing spawn", ErrInvalidMap)
+	}
+	m.spawn = Vec{X: raw.Spawn.X, Y: raw.Spawn.Y}
+	if m.IsSolid(m.cell(m.spawn.X), m.cell(m.spawn.Y)) {
+		return nil, fmt.Errorf("%w: spawn %v is not on a floor tile", ErrInvalidMap, m.spawn)
+	}
 	return m, nil
 }
+
+// Spawn returns where new players appear, in room pixels.
+func (m *TileMap) Spawn() Vec { return m.spawn }
 
 // Name returns the map identifier (e.g. "praca").
 func (m *TileMap) Name() string { return m.name }

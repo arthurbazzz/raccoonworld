@@ -17,6 +17,7 @@ import (
 const testMap = `{
   "name": "test",
   "tileSize": 32,
+  "spawn": {"x": 64, "y": 80},
   "rows": [
     "######",
     "#..#.#",
@@ -39,6 +40,9 @@ func TestParseTileMap(t *testing.T) {
 
 	if m.Name() != "test" || m.Cols() != 6 || m.Rows() != 4 || m.TileSize() != 32 {
 		t.Fatalf("got name=%q cols=%d rows=%d tile=%v", m.Name(), m.Cols(), m.Rows(), m.TileSize())
+	}
+	if m.Spawn() != (room.Vec{X: 64, Y: 80}) {
+		t.Fatalf("Spawn() = %v, want {64 80}", m.Spawn())
 	}
 	if w, h := m.PixelSize(); w != 192 || h != 128 {
 		t.Fatalf("PixelSize() = %v,%v, want 192,128", w, h)
@@ -63,11 +67,13 @@ func TestOutsideMapIsSolid(t *testing.T) {
 
 func TestParseTileMapErrors(t *testing.T) {
 	tests := map[string]string{
-		"not json":      `{`,
-		"no rows":       `{"name":"x","tileSize":32,"rows":[]}`,
-		"ragged rows":   `{"name":"x","tileSize":32,"rows":["###","##"]}`,
-		"unknown tile":  `{"name":"x","tileSize":32,"rows":["#?#"]}`,
-		"bad tile size": `{"name":"x","tileSize":0,"rows":["###"]}`,
+		"not json":        `{`,
+		"no rows":         `{"name":"x","tileSize":32,"spawn":{"x":48,"y":48},"rows":[]}`,
+		"ragged rows":     `{"name":"x","tileSize":32,"spawn":{"x":48,"y":48},"rows":["###","##"]}`,
+		"unknown tile":    `{"name":"x","tileSize":32,"spawn":{"x":48,"y":48},"rows":["#?#"]}`,
+		"bad tile size":   `{"name":"x","tileSize":0,"spawn":{"x":48,"y":48},"rows":["###"]}`,
+		"missing spawn":   `{"name":"x","tileSize":32,"rows":["###","#.#","###"]}`,
+		"spawn on a wall": `{"name":"x","tileSize":32,"spawn":{"x":16,"y":16},"rows":["###","#.#","###"]}`,
 	}
 	for name, data := range tests {
 		t.Run(name, func(t *testing.T) {
