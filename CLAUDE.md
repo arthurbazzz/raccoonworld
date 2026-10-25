@@ -49,5 +49,8 @@ Funcionalidade: Entrar em um minigame
 - Frontend: `npm run dev` · `npm test` · `npx bddgen && npx playwright test` (BDD) · `npm run lint` · `npm run format:check`
 - Backend (em `server/`): `go run ./cmd/server` · `go test ./...` (inclui godog) ·
   `go tool -modfile=tools/go.mod golangci-lint run ./...` · `go tool -modfile=tools/go.mod golangci-lint fmt ./...`
+- BDD do backend: `go test ./features/...`. Ele roda em modo strict, então steps pendentes falham.
+  Até a T14, `go test ./...` fica vermelho **de propósito**. Para filtrar cenários, use
+  `GODOG_TAGS` (ex.: `$env:GODOG_TAGS="@RW-001"`).
 - O golangci-lint também barra imports que violam a Clean Architecture (depguard em `server/.golangci.yml`).
   Não desative essas regras: corrija a dependência.

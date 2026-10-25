@@ -13,7 +13,7 @@ os cenários ou testes indicados passam. Commits no formato `RW-001/Tn: <descri�
 - [x] **T2** Configurar lint e formatação: `golangci-lint` no server, `eslint` e `prettier` no web.
 - [x] **T3** Escrever os `.feature` em `specs/001-sala-inicial/features/`, a partir dos 14 cenários
   da spec: `entrar.feature`, `movimento.feature`, `chat.feature`, `conexao.feature`.
-- [ ] **T4** Montar o runner godog em `server/features/` lendo esses `.feature`, com
+- [x] **T4** Montar o runner godog em `server/features/` lendo esses `.feature`, com
   `FakeClock` e `FakeBroadcaster` e todos os steps pendentes.
   O godog roda com o filtro de tags `~@ui`.
   Pronto quando: `go test ./features/...` roda e mostra todos os cenários não-`@ui`
