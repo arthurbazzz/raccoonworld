@@ -60,6 +60,9 @@ cenários que detalham regras desta spec:
 O cenário "Digitar no chat não move o guaxinim" tem a tag `@ui`, porque só existe
 no navegador. Ele roda no playwright-bdd e o godog o ignora.
 
+Os cenários com a tag `@smoke` ("Visitante entra na Praça", "Apelido já em uso" e
+"Mensagem de chat") também rodam contra o **servidor real**, por WebSocket de verdade.
+
 ```gherkin
 # language: pt
 Funcionalidade: Sala inicial em tempo real

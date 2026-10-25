@@ -50,7 +50,7 @@ linters:
   exclusions:
     rules:
       # Step patterns must match the Portuguese .feature text verbatim.
-      - path: features[\\/].*_steps_test\.go
+      - path: features[\\/].*_test\.go
         linters:
           - misspell
 

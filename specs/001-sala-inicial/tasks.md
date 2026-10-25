@@ -42,7 +42,7 @@ os cenários ou testes indicados passam. Commits no formato `RW-001/Tn: <descri�
 - [x] **T15** Protocolo v1: DTOs de envelope, encode/decode e testes de ida e volta.
 - [x] **T16** Gin: `GET /health`, `GET /ws` com coder/websocket, checagem de origem e
   ping/pong (5 s / 10 s). Composição em `cmd/server/main.go`.
-- [ ] **T17** Smoke BDD com o servidor real: entrar e chat via WebSocket de verdade.
+- [x] **T17** Smoke BDD com o servidor real: entrar e chat via WebSocket de verdade.
 
 ## Fase 4 — Frontend
 

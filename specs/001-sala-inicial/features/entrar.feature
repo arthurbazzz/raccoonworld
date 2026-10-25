@@ -8,11 +8,13 @@ Funcionalidade: Entrar na Praça
   Contexto:
     Dado que a sala "Praça" está aberta
 
+  @smoke
   Cenário: Visitante entra na Praça
     Quando o visitante entra com o apelido "rocky"
     Então "rocky" aparece na Praça
     E "rocky" recebe a lista dos jogadores já presentes
 
+  @smoke
   Cenário: Apelido já em uso
     Dado que "rocky" está na Praça
     Quando outro visitante tenta entrar com o apelido "rocky"

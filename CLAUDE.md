@@ -50,7 +50,9 @@ Funcionalidade: Entrar em um minigame
 - Backend (em `server/`): `go run ./cmd/server` · `go test ./...` (inclui godog) ·
   `go tool -modfile=tools/go.mod golangci-lint run ./...` · `go tool -modfile=tools/go.mod golangci-lint fmt ./...`
 - BDD do backend: `go test ./features/...`. Ele roda em modo strict, então steps pendentes falham:
-  uma spec nova começa vermelha e fica verde conforme as tasks avançam. Para filtrar
+  uma spec nova começa vermelha e fica verde conforme as tasks avançam. São duas suítes:
+  `TestFeatures`, contra os casos de uso com relógio falso, e `TestSmokeOverWebSocket`, que roda os
+  cenários `@smoke` contra o servidor real (`internal/app`). Para filtrar
   cenários, use `GODOG_TAGS` (ex.: `$env:GODOG_TAGS="@RW-001"`).
 - O golangci-lint também barra imports que violam a Clean Architecture (depguard em `server/.golangci.yml`).
   Não desative essas regras: corrija a dependência.

@@ -13,13 +13,9 @@ import (
 	"syscall"
 	"time"
 
-	"raccoons-world/server/internal/adapter/httpapi"
-	"raccoons-world/server/internal/adapter/ws"
-	"raccoons-world/server/internal/domain/room"
+	"raccoons-world/server/internal/app"
 	"raccoons-world/server/internal/infra/clock"
 	"raccoons-world/server/internal/infra/config"
-	"raccoons-world/server/internal/usecase"
-	"raccoons-world/server/maps"
 )
 
 const shutdownTimeout = 5 * time.Second
@@ -42,34 +38,24 @@ func run(cfg config.Config, logger *slog.Logger) error {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 
-	tiles, err := room.ParseTileMap(maps.Praca)
+	a, err := app.New(app.Options{
+		AllowedOrigins: cfg.AllowedOrigins,
+		Clock:          clock.System{},
+		Logger:         logger,
+	})
 	if err != nil {
 		return err
 	}
 
-	clk := clock.System{}
-	hub := ws.NewHub(logger)
-	runner := usecase.NewRoomRunner(room.New("praca", tiles), hub, clk)
-
-	ticker := time.NewTicker(usecase.TickInterval)
-	defer ticker.Stop()
 	roomDone := make(chan struct{})
 	go func() {
 		defer close(roomDone)
-		runner.Run(ctx, ticker.C)
+		a.RunRoom(ctx)
 	}()
-
-	wsHandler := ws.NewHandler(hub, ws.UseCases{
-		Join:      usecase.NewJoinRoom(runner, hub, clk),
-		SetInput:  usecase.NewSetInput(runner),
-		SendChat:  usecase.NewSendChat(runner, hub, clk),
-		Leave:     usecase.NewLeaveRoom(runner, hub),
-		KeepAlive: usecase.NewKeepAlive(runner, clk),
-	}, ws.Options{AllowedOrigins: cfg.AllowedOrigins, Logger: logger})
 
 	srv := &http.Server{
 		Addr:              cfg.Addr,
-		Handler:           httpapi.NewRouter(wsHandler),
+		Handler:           a.Handler,
 		ReadHeaderTimeout: 5 * time.Second,
 		// Request contexts derive from ctx, so a shutdown signal also closes
 		// hijacked WebSocket connections, which Shutdown does not track.
