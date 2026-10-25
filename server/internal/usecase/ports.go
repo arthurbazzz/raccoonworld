@@ -56,7 +56,14 @@ type PlayerJoined struct {
 	Player room.PlayerView
 }
 
+// ChatMessage is broadcast to the room when a chat line is accepted.
+type ChatMessage struct {
+	From room.PlayerID
+	Text string
+}
+
 func (Snapshot) isEvent()     {}
+func (ChatMessage) isEvent()  {}
 func (Joined) isEvent()       {}
 func (JoinRejected) isEvent() {}
 func (PlayerJoined) isEvent() {}

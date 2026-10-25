@@ -56,6 +56,10 @@ type world struct {
 
 	join     *usecase.JoinRoom
 	setInput *usecase.SetInput
+	sendChat *usecase.SendChat
+
+	lastChatText string // text of the last chat attempt
+	lastChatErr  error  // error of the last chat attempt
 
 	held        map[string]room.Input // nickname -> keys being held
 	mark        map[string]room.Vec   // nickname -> position when keys last changed

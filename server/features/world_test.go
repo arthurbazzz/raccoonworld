@@ -36,6 +36,7 @@ func (w *world) openRoom(name string) error {
 
 	w.join = usecase.NewJoinRoom(w.runner, w.broadcaster)
 	w.setInput = usecase.NewSetInput(w.runner)
+	w.sendChat = usecase.NewSendChat(w.runner, w.broadcaster, w.clock)
 	return nil
 }
 
