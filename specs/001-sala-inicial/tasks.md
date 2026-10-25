@@ -33,7 +33,7 @@ os cenários ou testes indicados passam. Commits no formato `RW-001/Tn: <descri�
 - [x] **T10** Portas `Broadcaster` e `Clock`, mais a goroutine da sala (channel de comandos + tick de 20 Hz).
 - [x] **T11** `JoinRoom`: implementar os steps de `entrar.feature` (entrada, apelido em uso,
   apelido inválido, sala cheia, aviso aos outros). Pronto quando esses cenários passam.
-- [ ] **T12** `SetInput`: steps de `movimento.feature` (andar, diagonal, parar, obstáculo, limite).
+- [x] **T12** `SetInput`: steps de `movimento.feature` (andar, diagonal, parar, obstáculo, limite).
 - [ ] **T13** `SendChat`: steps de `chat.feature` (mensagem, mensagens rápidas demais).
 - [ ] **T14** `LeaveRoom` + timeout: steps de `conexao.feature` (desconexão em até 10 s, com `FakeClock`).
 

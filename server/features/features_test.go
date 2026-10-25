@@ -54,8 +54,11 @@ type world struct {
 	stop   context.CancelFunc
 	done   chan struct{}
 
-	join *usecase.JoinRoom
+	join     *usecase.JoinRoom
+	setInput *usecase.SetInput
 
+	held        map[string]room.Input // nickname -> keys being held
+	mark        map[string]room.Vec   // nickname -> position when keys last changed
 	nextVisitor int
 	ids         map[string]room.PlayerID // nickname -> id of players who joined
 	lastAttempt room.PlayerID            // id used by the last join attempt
@@ -67,10 +70,12 @@ func initializeScenario(sc *godog.ScenarioContext) {
 		clock:       newFakeClock(),
 		broadcaster: &fakeBroadcaster{},
 		ids:         map[string]room.PlayerID{},
+		held:        map[string]room.Input{},
+		mark:        map[string]room.Vec{},
 	}
-	sc.After(func(ctx context.Context, _ *godog.Scenario, err error) (context.Context, error) {
+	sc.After(func(ctx context.Context, _ *godog.Scenario, _ error) (context.Context, error) {
 		w.closeRoom()
-		return ctx, err
+		return ctx, nil // the step error is already reported by godog
 	})
 	w.registerJoinSteps(sc)
 	w.registerMovementSteps(sc)

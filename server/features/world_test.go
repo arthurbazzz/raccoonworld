@@ -35,7 +35,42 @@ func (w *world) openRoom(name string) error {
 	}()
 
 	w.join = usecase.NewJoinRoom(w.runner, w.broadcaster)
+	w.setInput = usecase.NewSetInput(w.runner)
 	return nil
+}
+
+// advance runs n simulation ticks and waits until the loop processed them.
+func (w *world) advance(n int) error {
+	for range n {
+		w.ticks <- time.Time{}
+	}
+	return w.runner.Exec(func(*room.Room) {}) // barrier
+}
+
+func (w *world) position(nickname string) (room.Vec, error) {
+	id, err := w.idOf(nickname)
+	if err != nil {
+		return room.Vec{}, err
+	}
+	var (
+		p  room.PlayerView
+		ok bool
+	)
+	if err := w.runner.Exec(func(r *room.Room) { p, ok = r.Player(id) }); err != nil {
+		return room.Vec{}, err
+	}
+	if !ok {
+		return room.Vec{}, fmt.Errorf("%q is not in the room", nickname)
+	}
+	return p.Position, nil
+}
+
+// ensureJoined joins nickname unless they are already in the room.
+func (w *world) ensureJoined(nickname string) error {
+	if _, ok := w.ids[nickname]; ok {
+		return nil
+	}
+	return w.mustJoin(nickname)
 }
 
 func (w *world) closeRoom() {
