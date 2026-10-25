@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useReducer, useRef, useState } from "react";
 
+import { ChatBalloons } from "@/game/chat";
 import { Interpolator } from "@/game/interpolation";
 import { initialRoomState, roomReducer, startJoin, type RoomState } from "@/game/roomState";
 
@@ -24,6 +25,8 @@ export interface Room {
   sendChat: (text: string) => void;
   /** Smoothed positions for rendering, fed as messages arrive. */
   interpolator: Interpolator;
+  /** Chat balloons above raccoons, fed as messages arrive. */
+  balloons: ChatBalloons;
 }
 
 /** Owns one RoomClient for the lifetime of the component. */
@@ -32,12 +35,15 @@ export function useRoom(url: string = defaultServerUrl()): Room {
   const [status, setStatus] = useState<Status | "idle">("idle");
   const clientRef = useRef<RoomClient | null>(null);
   const [interpolator] = useState(() => new Interpolator());
+  const [balloons] = useState(() => new ChatBalloons());
 
   useEffect(() => {
     const client = new RoomClient(url, {
       onMessage: (msg) => {
         // Timestamp on arrival, outside React, so render batching adds no jitter.
-        interpolator.ingest(msg, performance.now());
+        const now = performance.now();
+        interpolator.ingest(msg, now);
+        balloons.ingest(msg, now);
         dispatch({ kind: "server", msg });
       },
       onStatus: setStatus,
@@ -47,7 +53,7 @@ export function useRoom(url: string = defaultServerUrl()): Room {
       client.close();
       clientRef.current = null;
     };
-  }, [url, interpolator]);
+  }, [url, interpolator, balloons]);
 
   const join = useCallback((nickname: string) => {
     dispatch({ kind: "join", nickname });
@@ -56,5 +62,5 @@ export function useRoom(url: string = defaultServerUrl()): Room {
   const sendInput = useCallback((keys: Keys) => clientRef.current?.sendInput(keys), []);
   const sendChat = useCallback((text: string) => clientRef.current?.sendChat(text), []);
 
-  return { state, status, join, sendInput, sendChat, interpolator };
+  return { state, status, join, sendInput, sendChat, interpolator, balloons };
 }

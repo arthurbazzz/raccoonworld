@@ -75,6 +75,19 @@ describe("roomReducer", () => {
     expect(s.tick).toBe(7);
   });
 
+  it("keeps the latest chat messages with the sender's nickname", () => {
+    let s = apply(joining, {
+      type: "room.joined",
+      data: { you: "c1", map: "praca", players: [rocky, bandit] },
+    });
+    s = apply(s, { type: "chat.message", data: { from: "c1", text: "olá!" } });
+    for (let i = 0; i < 30; i++) {
+      s = apply(s, { type: "chat.message", data: { from: "c2", text: `msg ${i}` } });
+    }
+    expect(s.messages).toHaveLength(20);
+    expect(s.messages.at(-1)).toEqual({ from: "c2", nickname: "bandit", text: "msg 29" });
+  });
+
   it("ignores room events before joining", () => {
     const s = apply(joining, { type: "player.joined", data: bandit });
     expect(s).toBe(joining);

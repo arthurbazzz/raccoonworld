@@ -4,6 +4,7 @@ import { useMovementKeys } from "@/game/useMovementKeys";
 import { defaultServerUrl } from "@/net/client";
 import { useRoom } from "@/net/useRoom";
 
+import { ChatBox } from "./ChatBox";
 import { GameCanvas } from "./GameCanvas";
 import { NicknameForm } from "./NicknameForm";
 import styles from "./RaccoonWorld.module.css";
@@ -11,7 +12,7 @@ import styles from "./RaccoonWorld.module.css";
 const wsUrl = defaultServerUrl();
 
 export function RaccoonWorld() {
-  const { state, status, join, sendInput, interpolator } = useRoom(wsUrl);
+  const { state, status, join, sendInput, sendChat, interpolator, balloons } = useRoom(wsUrl);
   useMovementKeys(state.phase === "playing", sendInput);
 
   if (state.phase !== "playing" || !state.map) {
@@ -35,6 +36,7 @@ export function RaccoonWorld() {
         players={state.players}
         you={state.you}
         interpolator={interpolator}
+        balloons={balloons}
       />
       <header className={styles.hud}>
         <strong>Praça</strong>
@@ -43,12 +45,21 @@ export function RaccoonWorld() {
         </span>
         {status === "reconnecting" && <span role="status">Reconectando…</span>}
       </header>
-      {/* Screen readers and UI tests read who is in the room from here. */}
+      <ChatBox onSend={sendChat} />
+
+      {/* Screen readers and UI tests read the room from here. */}
       <ul className={styles.srOnly} aria-label="Jogadores na Praça">
         {players.map((p) => (
           <li key={p.id}>{p.nickname}</li>
         ))}
       </ul>
+      <ol className={styles.srOnly} aria-label="Mensagens" aria-live="polite">
+        {state.messages.map((m, i) => (
+          <li key={i}>
+            {m.nickname}: {m.text}
+          </li>
+        ))}
+      </ol>
     </main>
   );
 }

@@ -157,7 +157,12 @@ As mensagens de chat descartadas pelo limite de frequência não geram resposta,
   - Ao sair do repouso, é inserida uma amostra parada um tick antes. Assim o guaxinim
     começa a andar de onde estava, em vez de deslizar devagar a partir de uma amostra antiga. O próprio jogador também segue o servidor nesta versão,
   sem predição local. Se o atraso incomodar, a predição local fica para uma spec futura.
-- Os balões de chat ficam sobre o sprite por 5 s.
+- Os balões de chat ficam sobre o sprite por 5 s, numa camada acima do cenário, para nunca ficarem
+  escondidos atrás de uma árvore. Uma nova mensagem do mesmo jogador substitui o balão e reinicia o tempo.
+- O campo de chat fica embaixo. Enter foca o campo; dentro dele, Enter envia e devolve o teclado ao
+  WASD, e Esc sai sem enviar. Mensagens vazias ou com mais de 120 caracteres nem são enviadas, e um
+  contador mostra o limite. As últimas 20 mensagens ficam numa lista `aria-live` escondida, para
+  leitores de tela e para os testes de UI.
 - Os sprites iniciais são placeholders (um guaxinim simples), e a arte final vem depois.
 
 ## 5. Estratégia de testes (BDD)

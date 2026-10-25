@@ -2,6 +2,15 @@ import type { PlayerId, PlayerState, RejectReason, ServerMessage } from "@/net/p
 
 export type Phase = "nickname" | "joining" | "playing";
 
+export interface ChatLine {
+  from: PlayerId;
+  nickname: string;
+  text: string;
+}
+
+/** How many chat lines are kept for the accessible message log. */
+const MAX_CHAT_LINES = 20;
+
 /** What the client knows about the room, built only from server messages. */
 export interface RoomState {
   phase: Phase;
@@ -11,6 +20,7 @@ export interface RoomState {
   players: Record<PlayerId, PlayerState>;
   tick: number;
   rejection: RejectReason | null;
+  messages: ChatLine[];
 }
 
 export const initialRoomState: RoomState = {
@@ -21,6 +31,7 @@ export const initialRoomState: RoomState = {
   players: {},
   tick: 0,
   rejection: null,
+  messages: [],
 };
 
 /** The player submitted a nickname and is waiting for the server. */
@@ -41,6 +52,7 @@ export function roomReducer(state: RoomState, msg: ServerMessage): RoomState {
         map: msg.data.map,
         players,
         rejection: null,
+        messages: [],
       };
     }
     case "room.join_rejected":
@@ -71,6 +83,12 @@ function applyRoomEvent(state: RoomState, msg: ServerMessage): RoomState {
         if (known) players[p.id] = { ...known, x: p.x, y: p.y };
       }
       return { ...state, players, tick: msg.data.tick };
+    }
+    case "chat.message": {
+      const sender = state.players[msg.data.from];
+      if (!sender) return state;
+      const line = { from: msg.data.from, nickname: sender.nickname, text: msg.data.text };
+      return { ...state, messages: [...state.messages, line].slice(-MAX_CHAT_LINES) };
     }
     default:
       return state;

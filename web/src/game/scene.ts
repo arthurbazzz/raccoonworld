@@ -2,6 +2,7 @@ import { Application, Container, Graphics, Text } from "pixi.js";
 
 import type { PlayerId, PlayerState } from "@/net/protocol";
 
+import type { ChatBalloons } from "./chat";
 import { playerDepth, tileDepth } from "./depth";
 import type { Interpolator } from "./interpolation";
 import { fitScale, type SolidTile, type TileMap } from "./tilemap";
@@ -19,20 +20,34 @@ const COLORS = {
   mask: 0x2e2e33,
   label: 0xffffff,
   youLabel: 0xffe08a,
+  balloon: 0xffffff,
+  balloonText: 0x2b2622,
 };
 
 /** How tall a solid tile looks in the 3/4 view, in pixels. */
 const BLOCK_HEIGHT = 14;
+/** Chat balloons sit above the nickname label. */
+const BALLOON_BOTTOM = -54;
+const BALLOON_MAX_WIDTH = 160;
+
+interface RaccoonSprite {
+  body: Container;
+  balloon: Container | null;
+  balloonText: string | null;
+}
 
 /**
- * Renders one room with PixiJS. It only draws: positions come from server
- * state passed to sync(), never from local input.
+ * Renders one room with PixiJS. It only draws: who is in the room comes
+ * from sync(), positions from the interpolator and chat from the balloons,
+ * all fed by server messages, never by local input.
  */
 export class RoomScene {
   private readonly world = new Container();
   private readonly floor = new Container();
   private readonly entities = new Container({ sortableChildren: true });
-  private readonly raccoons = new Map<PlayerId, Container>();
+  // Balloons are drawn above everything so scenery never hides a message.
+  private readonly overlay = new Container();
+  private readonly raccoons = new Map<PlayerId, RaccoonSprite>();
   private readonly onResize = () => this.layout();
   private readonly onFrame = () => this.place(performance.now());
 
@@ -40,8 +55,9 @@ export class RoomScene {
     private readonly app: Application,
     private readonly map: TileMap,
     private readonly interpolator: Interpolator,
+    private readonly balloons: ChatBalloons,
   ) {
-    this.world.addChild(this.floor, this.entities);
+    this.world.addChild(this.floor, this.entities, this.overlay);
     app.stage.addChild(this.world);
     this.drawFloor();
     for (const tile of map.solidTiles()) this.entities.addChild(drawBlock(tile));
@@ -54,6 +70,7 @@ export class RoomScene {
     parent: HTMLElement,
     map: TileMap,
     interpolator: Interpolator,
+    balloons: ChatBalloons,
   ): Promise<RoomScene> {
     const app = new Application();
     await app.init({
@@ -64,7 +81,7 @@ export class RoomScene {
       resolution: Math.min(window.devicePixelRatio || 1, 2),
     });
     parent.appendChild(app.canvas);
-    return new RoomScene(app, map, interpolator);
+    return new RoomScene(app, map, interpolator, balloons);
   }
 
   /**
@@ -75,19 +92,18 @@ export class RoomScene {
   sync(players: Record<PlayerId, PlayerState>, you: PlayerId | null): void {
     for (const [id, sprite] of this.raccoons) {
       if (!(id in players)) {
-        sprite.destroy({ children: true });
+        sprite.body.destroy({ children: true });
+        sprite.balloon?.destroy({ children: true });
         this.raccoons.delete(id);
       }
     }
     for (const p of Object.values(players)) {
-      let sprite = this.raccoons.get(p.id);
-      if (!sprite) {
-        sprite = drawRaccoon(p.nickname, p.id === you);
-        this.raccoons.set(p.id, sprite);
-        this.entities.addChild(sprite);
-        sprite.position.set(p.x, p.y);
-        sprite.zIndex = playerDepth(p.y);
-      }
+      if (this.raccoons.has(p.id)) continue;
+      const body = drawRaccoon(p.nickname, p.id === you);
+      body.position.set(p.x, p.y);
+      body.zIndex = playerDepth(p.y);
+      this.entities.addChild(body);
+      this.raccoons.set(p.id, { body, balloon: null, balloonText: null });
     }
     this.place(performance.now());
   }
@@ -98,14 +114,25 @@ export class RoomScene {
     this.app.destroy({ removeView: true }, { children: true });
   }
 
-  /** Moves every raccoon to its interpolated position and depth. */
+  /** Moves raccoons to their interpolated position and updates balloons. */
   private place(now: number): void {
     for (const [id, sprite] of this.raccoons) {
       const pos = this.interpolator.position(id, now);
-      if (!pos) continue;
-      sprite.position.set(pos.x, pos.y);
-      sprite.zIndex = playerDepth(pos.y);
+      if (pos) {
+        sprite.body.position.set(pos.x, pos.y);
+        sprite.body.zIndex = playerDepth(pos.y);
+      }
+      this.updateBalloon(sprite, this.balloons.textFor(id, now));
+      sprite.balloon?.position.copyFrom(sprite.body.position);
     }
+  }
+
+  private updateBalloon(sprite: RaccoonSprite, text: string | null): void {
+    if (text === sprite.balloonText) return;
+    sprite.balloon?.destroy({ children: true });
+    sprite.balloon = text === null ? null : drawBalloon(text);
+    sprite.balloonText = text;
+    if (sprite.balloon) this.overlay.addChild(sprite.balloon);
   }
 
   /** Scales the room to fit the canvas and centers it. */
@@ -175,5 +202,35 @@ function drawRaccoon(nickname: string, isYou: boolean): Container {
   label.anchor.set(0.5, 1);
   label.position.set(0, -38);
   c.addChild(label);
+  return c;
+}
+
+/** A speech balloon whose tail points down at (0, BALLOON_BOTTOM). */
+function drawBalloon(text: string): Container {
+  const c = new Container();
+  const label = new Text({
+    text,
+    style: {
+      fontFamily: "system-ui, sans-serif",
+      fontSize: 11,
+      fill: COLORS.balloonText,
+      wordWrap: true,
+      breakWords: true,
+      wordWrapWidth: BALLOON_MAX_WIDTH,
+      align: "center",
+    },
+    resolution: 2,
+  });
+  const padX = 7;
+  const padY = 4;
+  const w = label.width + padX * 2;
+  const h = label.height + padY * 2;
+  const top = BALLOON_BOTTOM - h;
+
+  const bg = new Graphics();
+  bg.roundRect(-w / 2, top, w, h, 7).fill(COLORS.balloon);
+  bg.poly([-5, BALLOON_BOTTOM, 5, BALLOON_BOTTOM, 0, BALLOON_BOTTOM + 6]).fill(COLORS.balloon);
+  label.position.set(-label.width / 2, top + padY);
+  c.addChild(bg, label);
   return c;
 }
