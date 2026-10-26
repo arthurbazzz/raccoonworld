@@ -1,6 +1,6 @@
 # RW-002 — Tasks: Visual do guaxinim
 
-Status: **Rascunho**, aguardando aprovação · Plano: [plan.md](plan.md) · Criado: 2026-10-25
+Status: **Aprovado** (2026-10-25) · Plano: [plan.md](plan.md) · Criado: 2026-10-25
 
 Regras: as mesmas da RW-001. Uma task por vez, na ordem, teste antes do código, e commits
 no formato `RW-002/Tn: <descrição>`.
