@@ -66,16 +66,20 @@ já faz:
   - a escolha do quadro por direção, estado e tempo.
 - A **qualidade visual** (nitidez e animação) é aprovada pelo dono na galeria.
 
-## Questões em aberto
+## Decisões
 
-- **Q1. Onde recortar os quadros:**
-  - (a) **na hora de gerar o site** (recomendado): um script lê a imagem, acha os quadros e grava
-    uma folha alinhada mais um JSON com as posições. O jogo só carrega o resultado, e um erro
-    na imagem aparece antes de ir para o ar;
-  - (b) **no navegador**, a cada carregamento: mais simples de trocar a imagem, mas mais lento
-    para abrir e com o erro aparecendo só para o jogador.
-- **Q2. Arte em código da RW-003:** remover (a pose de frente, a paleta e as formas) ou manter
-  como reserva caso a imagem não carregue? Recomendo **remover** e, se a imagem falhar, mostrar
-  a mensagem de erro que o jogo já tem.
-- **Q3. Ritmo do andar:** os 4 quadros acompanham o passo atual (6 passos/s, ou seja ~12 quadros/s)?
-  Ou prefere mais lento?
+- **Q1. Recorte na hora de gerar o site.** Um script lê a imagem, acha os quadros e grava uma
+  folha alinhada mais um JSON com as posições. O jogo só carrega esse resultado, e um erro na
+  imagem aparece antes de ir para o ar (RS8).
+- **Q2. Remover a arte em código da RW-003:** a pose de frente, a paleta e as formas. Se a
+  imagem não carregar, o jogo mostra a mensagem de erro que já tem (RS9).
+- **Q3. Ritmo do andar: ~12 quadros por segundo**, acompanhando os 6 passos/s atuais. Pode
+  mudar depois (é uma constante).
+
+## Regras adicionadas pelas decisões
+
+- RS8. **Preparo da arte:** um comando do projeto gera, a partir da imagem fonte, a folha
+  alinhada e o JSON que o jogo usa. O build do site roda esse comando antes de compilar e
+  **falha** se a imagem estiver fora do formato (RS2).
+- RS9. **Sem arte em código:** o guaxinim só existe em sprite. O código de desenho da RW-003
+  (paleta, formas e pose de frente) é removido, e a galeria e a pasta `game/raccoon/` ficam.
