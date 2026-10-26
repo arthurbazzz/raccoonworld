@@ -12,13 +12,18 @@ export interface Motion {
 /** Steps smaller than this (in room pixels) are floating point noise. */
 export const MIN_STEP_PX = 0.01;
 
+/** Whether a step is real movement rather than noise. */
+export function hasMoved(dx: number, dy: number): boolean {
+  return Math.abs(dx) >= MIN_STEP_PX || Math.abs(dy) >= MIN_STEP_PX;
+}
+
 /**
  * RV1: any horizontal movement shows the side (so diagonals use the side,
  * the view that reads best on screen); otherwise front or back. A step
  * with no real movement keeps the previous facing.
  */
 export function facingFrom(dx: number, dy: number, previous: Facing): Facing {
-  if (Math.abs(dx) >= MIN_STEP_PX) return dx > 0 ? "right" : "left";
-  if (Math.abs(dy) >= MIN_STEP_PX) return dy > 0 ? "down" : "up";
+  if (hasMoved(dx, 0)) return dx > 0 ? "right" : "left";
+  if (hasMoved(0, dy)) return dy > 0 ? "down" : "up";
   return previous;
 }
