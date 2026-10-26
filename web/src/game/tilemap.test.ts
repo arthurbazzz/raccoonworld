@@ -61,3 +61,21 @@ describe("mapUrl", () => {
     expect(mapUrl("wss://raccoons.world/ws", "praca")).toBe("https://raccoons.world/maps/praca");
   });
 });
+
+describe("booth tiles (RW-005)", () => {
+  const m = parseTileMap({ ...json, rows: ["######", "#.BB.#", "######"] });
+
+  it("are solid, like on the server", () => {
+    expect(m.isSolid(2, 1)).toBe(true);
+    expect(m.isSolid(3, 1)).toBe(true);
+  });
+
+  it("form the booth box and are not drawn as wall blocks", () => {
+    expect(m.booth).toEqual({ x: 64, y: 32, w: 64, h: 32 });
+    expect(m.solidTiles().some((t) => t.row === 1 && (t.col === 2 || t.col === 3))).toBe(false);
+  });
+
+  it("are absent from maps without 'B'", () => {
+    expect(parseTileMap(json).booth).toBeNull();
+  });
+});
