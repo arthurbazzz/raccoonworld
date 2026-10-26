@@ -7,10 +7,15 @@ no formato `RW-002/Tn: <descrição>`.
 
 ## Fase 0 — Cenários
 
-- [ ] **T1** Escrever `specs/002-visual-guaxinim/features/visual.feature` com os 6 cenários da
+- [x] **T1** Escrever `specs/002-visual-guaxinim/features/visual.feature` com os 6 cenários da
   spec e a tag `@ui`, e criar os steps no playwright-bdd como pendentes.
   Pronto quando: `npm run test:e2e` lista os cenários novos **falhando**, e os 4 da RW-001
   continuam verdes.
+  - Resultado: os 10 cenários da RW-002 (o esquema conta 4) falham com `pending: RW-002/T8`,
+    e os 4 da RW-001 passam.
+  - **Observação:** na primeira rodada, com o Next dev ainda frio, 2 cenários da RW-001 bateram
+    no tempo limite de 1 min. Isolados, e numa segunda rodada completa, passaram. Isso deve ser
+    avaliado na T9: rodar o e2e contra `next build && next start` em vez do modo dev.
 
 ## Fase 1 — Direção e estado (Vitest, TDD)
 
