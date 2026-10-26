@@ -57,11 +57,13 @@ as suítes existentes continuam verdes (godog, `go test`, Vitest e os 14 cenári
 - [x] **T13** `CupsPanel.tsx`: espera com inscritos e contagem, copos como botões, teclas 1/2/3 e
   Esc (fora do chat), resultado da rodada, placar, **Jogar de novo** e **Sair** (RC6, RC8, RC12,
   RC13, RC19).
-  - O painel fica **embaixo**, acima do chat: no alto ele cobria a própria barraca, que fica no
-    topo da Praça. O aviso "Aperte E para jogar" também.
+  - O aviso "Aperte E para jogar" fica embaixo, acima do chat, para não cobrir a barraca.
+  - **Pedido do dono (2026-10-26):** o painel fica **no centro da tela**, e o copinho ao lado do
+    nome virou uma etiqueta "jogando", porque o copinho perto da barraca se confundia com os
+    copos.
   - Verificado no navegador com dois guaxinins e um robô: aviso, espera, rodada, escolha com a
     tecla 2, "Errou!" com os copos levantados, copos mexendo na barraca para quem assiste e o
-    copinho ao lado do nome de quem joga.
+    sinal ao lado do nome de quem joga.
   - Para os testes de navegador lerem o que a barraca faz (ela é desenhada no canvas), uma linha
     escondida `Barraca dos três copos` com `data-stage`, como a lista de jogadores.
 - [ ] **T14** Steps do playwright-bdd para os cenários `@e2e`, lendo `cups.round` pelo

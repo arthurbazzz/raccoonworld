@@ -1,11 +1,10 @@
-/* The three cups panel (RW-005): a card over the Praça, which stays visible
-   around it (RC19). It sits low, above the chat, because the booth is at the
-   top of the Praça and players should still see it. */
+/* The three cups panel (RW-005): a card in the middle of the screen, over
+   the Praça, which stays visible around it (RC19). */
 .panel {
   position: absolute;
-  bottom: 68px;
+  top: 50%;
   left: 50%;
-  transform: translateX(-50%);
+  transform: translate(-50%, -50%);
   width: min(380px, calc(100% - 32px));
   padding: 14px 16px 12px;
   border-radius: 16px;

@@ -148,9 +148,23 @@ export class BoothView extends Container {
   }
 }
 
-/** A small cup next to a nickname: this raccoon is playing (RC22). */
-export function drawPlayingSign(): Graphics {
-  const g = drawCup(0.55);
-  g.label = "playing-sign";
-  return g;
+/**
+ * A small "jogando" tag next to a nickname: this raccoon is playing (RC22).
+ * Text, not a cup: a cup icon next to the booth got mixed up with the cups.
+ * Its left edge sits at (0, 0), vertically centered.
+ */
+export function drawPlayingSign(): Container {
+  const c = new Container({ label: "playing-sign" });
+  const text = new Text({
+    text: "jogando",
+    style: { fontFamily: "system-ui, sans-serif", fontSize: 8, fontWeight: "700", fill: 0x2b2622 },
+    resolution: 2,
+  });
+  const padX = 4;
+  const bg = new Graphics()
+    .roundRect(0, -text.height / 2 - 1, text.width + padX * 2, text.height + 2, 5)
+    .fill(COLORS.sign);
+  text.position.set(padX, -text.height / 2);
+  c.addChild(bg, text);
+  return c;
 }
