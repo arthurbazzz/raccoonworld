@@ -1,6 +1,6 @@
 import { Container, Graphics } from "pixi.js";
 
-import type { Facing } from "./motion";
+import type { Facing } from "../motion";
 
 // The raccoon drawn in code (RW-002, Q1). Everything is built upward from
 // the feet at (0, 0), so depth sorting and the hitbox are unchanged (RV4).

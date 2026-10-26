@@ -1,6 +1,6 @@
 # RW-003 — Tasks: Arte do guaxinim em camadas
 
-Status: **Rascunho**, aguardando aprovação · Plano: [plan.md](plan.md) · Criado: 2026-10-25
+Status: **Aprovado** (2026-10-25) · Plano: [plan.md](plan.md) · Criado: 2026-10-25
 
 Regras: as mesmas das RWs anteriores. Uma task por vez, teste antes do código, e commits
 `RW-003/Tn: <descrição>`. A cada task, os 14 cenários de navegador e os testes unitários de
@@ -8,10 +8,14 @@ comportamento da RW-002 continuam verdes (RA1).
 
 ## Fase 0 — Estrutura
 
-- [ ] **T1** Criar `web/src/game/raccoon/`, mover o `RaccoonView` atual para lá sem mudar o
+- [x] **T1** Criar `web/src/game/raccoon/`, mover o `RaccoonView` atual para lá sem mudar o
   desenho e deixar `raccoonArt.ts` só reexportando. Separar os testes da RW-002 em
   "comportamento", que continuam, e "desenho antigo", que serão trocados nas próximas tasks.
   Pronto quando: tudo verde, sem mudança visual.
+  - O `raccoonArt.ts` **não ficou** como reexportação: o único importador era a `scene.ts`, que
+    agora importa de `./raccoon`. O plano já previa a remoção quando ninguém mais importasse.
+  - Os testes ficaram em `raccoon/RaccoonView.test.ts` (21, comportamento) e
+    `raccoon/legacyArt.test.ts` (2, desenho antigo: quantidade de patas e chaves da paleta).
 - [ ] **T2** Galeria `/galeria` (RA8) com o guaxinim atual: 4 direções, andando e parado, a 1× e a 4×,
   respondendo 404 em produção. Ela serve de "antes" para comparar com o resultado.
 

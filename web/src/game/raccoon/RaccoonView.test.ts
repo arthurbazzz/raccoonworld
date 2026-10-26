@@ -3,10 +3,9 @@ import { describe, expect, it } from "vitest";
 import {
   animationFrame,
   BREATH_PERIOD_MS,
-  RACCOON_COLORS,
   RaccoonView,
   STEPS_PER_SECOND,
-} from "./raccoonArt";
+} from "./RaccoonView";
 
 describe("RaccoonView poses (RV1)", () => {
   it("starts facing down with the front pose", () => {
@@ -60,15 +59,6 @@ describe("RaccoonView poses (RV1)", () => {
     expect(order().indexOf(v.parts.tail)).toBeGreaterThan(order().indexOf(v.parts.torso));
   });
 
-  it("shows two paws from the front and back and four from the side", () => {
-    const v = new RaccoonView();
-    expect(v.parts.legs).toHaveLength(2);
-    v.setFacing("up");
-    expect(v.parts.legs).toHaveLength(2);
-    v.setFacing("right");
-    expect(v.parts.legs).toHaveLength(4);
-  });
-
   it("keeps the feet at the origin and the art above them (RV4)", () => {
     for (const facing of ["down", "up", "right", "left"] as const) {
       const v = new RaccoonView();
@@ -78,12 +68,6 @@ describe("RaccoonView poses (RV1)", () => {
       expect(b.minY).toBeGreaterThan(-45); // fits under the nickname at y=-38..-50
       expect(Math.abs(b.minX + b.maxX) / 2).toBeLessThan(8); // roughly centered on the feet
     }
-  });
-
-  it("uses a single palette", () => {
-    expect(Object.keys(RACCOON_COLORS)).toEqual(
-      expect.arrayContaining(["fur", "furLight", "mask", "tailRing", "paw"]),
-    );
   });
 });
 

@@ -5,10 +5,10 @@ import type { PlayerId, PlayerState } from "@/net/protocol";
 import type { ChatBalloons } from "./chat";
 import { playerDepth, tileDepth } from "./depth";
 import type { Interpolator } from "./interpolation";
-import { RaccoonView } from "./raccoonArt";
+import { RaccoonView } from "./raccoon";
 import { fitScale, type SolidTile, type TileMap } from "./tilemap";
 
-// Scenery and UI colors; the raccoon palette lives in raccoonArt.ts.
+// Scenery and UI colors; the raccoon palette lives in raccoon/.
 const COLORS = {
   background: 0x2b2622,
   floorA: 0x8fb07a,
