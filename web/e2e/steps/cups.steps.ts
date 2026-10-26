@@ -6,21 +6,53 @@ import { type CupsRound, Given, Then, When, type World } from "./fixtures";
 // The server runs with RW_CUPS_FAST=1 (playwright.config.ts), so a round
 // takes about a second.
 
-/** Walking legs from the spawn point around the fountain to the booth. */
-const LEGS: { key: string; done: (p: { x: number; y: number }) => boolean }[] = [
-  { key: "a", done: (p) => p.x <= 420 },
-  { key: "w", done: (p) => p.y <= 200 },
-  { key: "d", done: (p) => p.x >= 480 },
+/** Walking legs from the spawn point around the fountain to under the booth. */
+const LEGS: { key: string; axis: "x" | "y"; target: number }[] = [
+  { key: "a", axis: "x", target: 420 },
+  { key: "w", axis: "y", target: 240 },
+  { key: "d", axis: "x", target: 480 },
+  { key: "w", axis: "y", target: 200 },
 ];
+/** Raccoon speed (RN3), to turn the distance left into how long to hold. */
+const SPEED_PX_PER_MS = 0.16;
 
+/**
+ * Taps the key for about half the time the distance left needs, so the
+ * raccoon never overshoots by much however slow the page is, and then
+ * waits for the server to report the move.
+ */
 async function walkToBooth(world: World, nickname: string): Promise<void> {
+  const page = world.page(nickname);
   for (const leg of LEGS) {
-    await world.keyDown(nickname, leg.key);
-    await expect
-      .poll(async () => leg.done(await world.position(nickname, nickname)), { timeout: 10_000 })
-      .toBe(true);
-    await world.keyUp(nickname, leg.key);
+    const sign = leg.key === "a" || leg.key === "w" ? -1 : 1;
+    const left = async () =>
+      sign * (leg.target - (await world.position(nickname, nickname))[leg.axis]);
+    for (let tries = 0; (await left()) > 0; tries++) {
+      if (tries > 30) throw new Error(`${nickname} could not walk to the booth`);
+      const before = await world.position(nickname, nickname);
+      const hold = Math.min(600, Math.max(80, ((await left()) / SPEED_PX_PER_MS) * 0.5));
+      await world.keyDown(nickname, leg.key);
+      await page.waitForTimeout(hold);
+      await world.keyUp(nickname, leg.key);
+      await expect
+        .poll(async () => world.position(nickname, nickname), { timeout: 2_000 })
+        .not.toEqual(before)
+        .catch(() => undefined); // blocked by the booth: the distance check decides
+    }
   }
+}
+
+/**
+ * Waits, checking every frame, until the element labelled `label` shows
+ * `stage`. In fast mode a shuffle lasts a fraction of a second, shorter than
+ * the polling of expect(); a round also waits up to 10 s for picks.
+ */
+async function waitForStage(page: Page, label: string, stage: string): Promise<void> {
+  await page.waitForFunction(
+    ([l, s]) => document.querySelector(`[aria-label="${l}"]`)?.getAttribute("data-stage") === s,
+    [label, stage],
+    { polling: "raf", timeout: 30_000 },
+  );
 }
 
 const panel = (page: Page) => page.getByRole("region", { name: "Três copos" });
@@ -111,13 +143,13 @@ Given("que {string} está na Praça sem jogar", async ({ world }, nickname: stri
 
 When("os copos são embaralhados", async ({ world }) => {
   const player = world.nicknames()[0];
-  await expect(panel(world.page(player))).toHaveAttribute("data-stage", "shuffle");
+  await waitForStage(world.page(player), "Três copos", "shuffle");
 });
 
 Then("{string} vê os copos se mexendo na barraca", async ({ world }, nickname: string) => {
   const page = world.page(nickname);
   await expect(panel(page)).toBeHidden(); // not playing
-  await expect(page.getByLabel("Barraca dos três copos")).toHaveAttribute("data-stage", "shuffle");
+  await waitForStage(page, "Barraca dos três copos", "shuffle");
 });
 
 When("{string} começa uma partida", async ({ world }, nickname: string) => {

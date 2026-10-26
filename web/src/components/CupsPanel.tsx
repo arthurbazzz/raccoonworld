@@ -58,7 +58,9 @@ export function CupsPanel({ cups, you, players, onPick, onLeave, onPlayAgain }: 
 
   return (
     <section
-      className={styles.panel}
+      className={
+        stage === "lobby" || stage === "queued" ? `${styles.panel} ${styles.waiting}` : styles.panel
+      }
       aria-label="Três copos"
       data-stage={stage}
       data-round={round?.round ?? 0}

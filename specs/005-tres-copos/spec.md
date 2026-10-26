@@ -104,8 +104,7 @@ Quem passa perto da barraca vê os copos se mexendo e pode entrar na próxima pa
   com a partida (Q3). Não vê o palpite de ninguém.
 - RC21. Enquanto joga (e na espera), o guaxinim **fica parado** perto da barraca: WASD não o
   move e o chat continua funcionando.
-- RC22. Os outros jogadores veem quem está jogando por uma etiqueta "jogando"
-  ao lado do nome. (Era um copinho, trocado porque se confundia com os copos da barraca.)
+- RC22. Os outros jogadores veem quem está jogando por um copinho antes do nome.
 
 ## Critérios de aceitação
 

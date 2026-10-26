@@ -33,7 +33,7 @@ const BALLOON_MAX_WIDTH = 160;
 
 interface RaccoonSprite {
   body: RaccoonView;
-  /** "jogando" tag by the nickname while playing the three cups (RC22). */
+  /** Small cup before the nickname while playing the three cups (RC22). */
   sign: Container;
   balloon: Container | null;
   balloonText: string | null;
@@ -194,7 +194,7 @@ function drawBlock(tile: SolidTile): Graphics {
 
 /**
  * A raccoon (RW-004 sprites) with its nickname above the head and, hidden
- * until they play the three cups, a "jogando" tag by the nickname.
+ * until they play the three cups, a small cup before the nickname.
  */
 function drawRaccoon(
   sheet: RaccoonSheet,
@@ -217,7 +217,7 @@ function drawRaccoon(
   label.position.set(0, LABEL_BOTTOM);
   view.addChild(label); // outside the body, so it never flips
   const sign = drawPlayingSign();
-  sign.position.set(label.width / 2 + 4, LABEL_BOTTOM - label.height / 2);
+  sign.position.set(-label.width / 2 - 7, LABEL_BOTTOM - 1); // before the name
   sign.visible = false;
   view.addChild(sign);
   return { view, sign };

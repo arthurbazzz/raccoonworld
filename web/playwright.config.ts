@@ -15,7 +15,9 @@ export default defineConfig({
   testDir,
   fullyParallel: false,
   workers: 1,
-  timeout: 30_000,
+  // RW-005: two players loading the game (~20 s each), walking to the booth
+  // and playing a round take ~50 s.
+  timeout: 90_000,
   reporter: [["list"]],
   use: {
     baseURL: "http://localhost:3000",

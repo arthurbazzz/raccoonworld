@@ -5,6 +5,13 @@
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
+}
+
+/* The lobby and the queue notice wait low, above the chat, out of the way. */
+.waiting {
+  top: auto;
+  bottom: 68px;
+  transform: translateX(-50%);
   width: min(380px, calc(100% - 32px));
   padding: 14px 16px 12px;
   border-radius: 16px;

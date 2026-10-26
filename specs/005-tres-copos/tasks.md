@@ -58,19 +58,22 @@ as suítes existentes continuam verdes (godog, `go test`, Vitest e os 14 cenári
   Esc (fora do chat), resultado da rodada, placar, **Jogar de novo** e **Sair** (RC6, RC8, RC12,
   RC13, RC19).
   - O aviso "Aperte E para jogar" fica embaixo, acima do chat, para não cobrir a barraca.
-  - **Pedido do dono (2026-10-26):** o painel fica **no centro da tela**, e o copinho ao lado do
-    nome virou uma etiqueta "jogando", porque o copinho perto da barraca se confundia com os
-    copos.
+  - **Pedidos do dono (2026-10-26):** o painel da partida fica **no centro da tela**, e a
+    espera (e o aviso de partida em andamento) fica **embaixo**, acima do chat. O sinal de quem
+    joga é um copinho **antes** do nome (depois do nome, ficava colado nos copos da barraca).
   - Verificado no navegador com dois guaxinins e um robô: aviso, espera, rodada, escolha com a
     tecla 2, "Errou!" com os copos levantados, copos mexendo na barraca para quem assiste e o
     sinal ao lado do nome de quem joga.
   - Para os testes de navegador lerem o que a barraca faz (ela é desenhada no canvas), uma linha
     escondida `Barraca dos três copos` com `data-stage`, como a lista de jogadores.
-- [ ] **T14** Steps do playwright-bdd para os cenários `@e2e`, lendo `cups.round` pelo
+- [x] **T14** Steps do playwright-bdd para os cenários `@e2e`, lendo `cups.round` pelo
   WebSocket para achar o copo certo, com o servidor em `RW_CUPS_FAST=1`.
-  - **Steps escritos** (`e2e/steps/cups.steps.ts`) e o `bddgen` gera os 6 cenários sem steps
-    faltando. **Ainda não rodaram:** as portas 3000 e 8080 estão ocupadas por servidores antigos
-    (de antes da RW-005), que o Playwright reaproveitaria.
+  - **19/19 cenários de navegador passam** (14 das RW-001/002 e 5 da RW-005).
+  - O andar até a barraca é em toques proporcionais à distância: segurando a tecla até chegar,
+    o atraso de dois navegadores fazia o guaxinim passar ~100 px do ponto.
+  - A troca de copos no modo rápido dura menos de 0,3 s: os steps esperam por ela checando a cada
+    quadro (`waitForFunction` com `raf`).
+  - Tempo máximo por cenário de 30 s para 90 s: dois jogadores abrindo o jogo levam ~40 s.
 
 ## Fase 4 — Fechamento
 
