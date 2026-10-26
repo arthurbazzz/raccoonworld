@@ -90,3 +90,8 @@ O endereço do servidor vem de `NEXT_PUBLIC_WS_URL` (padrão `ws://localhost:808
 ```bash
 npm run format
 ```
+
+**Arte do guaxinim (sprites):** a imagem fonte fica em `web/art/raccoon.png` (3 fileiras: frente,
+costas e lado direito; 6 colunas: 2 parado + 4 andando; fundo transparente). `npm run sprites`
+gera a folha alinhada em `web/public/sprites/` e roda sozinho antes de `dev`, `build` e
+`test:e2e`. Para trocar a arte, basta substituir o arquivo.

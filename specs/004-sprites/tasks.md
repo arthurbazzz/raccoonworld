@@ -1,6 +1,6 @@
 # RW-004 — Tasks: Guaxinim em sprites
 
-Status: **Aprovado** (2026-10-25) · Plano: [plan.md](plan.md) · Criado: 2026-10-25
+Status: **Concluído** (2026-10-26), menos a aprovação visual · Aprovado: 2026-10-25 · Plano: [plan.md](plan.md) · Criado: 2026-10-25
 
 Regras: uma task por vez, teste antes do código, commits `RW-004/Tn: <descrição>`. A cada task,
 os 14 cenários de navegador continuam verdes (RS1).
@@ -37,5 +37,36 @@ os 14 cenários de navegador continuam verdes (RS1).
 
 ## Fase 2 — Fechamento
 
-- [ ] **T8** Rodar todas as suítes, conferir que o build falha com uma imagem fora do formato, pedir
+- [x] **T8** Rodar todas as suítes, conferir que o build falha com uma imagem fora do formato, pedir
   a **aprovação visual** do dono na galeria, conferir a Definição de Pronto e atualizar spec e plano.
+
+## Fechamento (T8, 2026-10-26)
+
+### Definição de Pronto
+
+- [x] **Critérios de aceitação:**
+  - **14/14 cenários de navegador** (RW-001 e RW-002) com o guaxinim em sprites, rodados a frio;
+  - testes de detecção, erro, alinhamento, escolha de quadro e do `RaccoonView`.
+- [ ] **Aprovação visual do dono na `/galeria`:** pendente.
+- [x] **Testes, lint e formatação:**
+  - Vitest com 134 testes, `tsc`, ESLint, Prettier e `next build`;
+  - Go: `go vet`, golangci-lint com 0 problemas e todos os pacotes verdes, sem mudanças nesta RW.
+- [x] **Camadas:** o servidor não mudou, e o preparo da arte fica em `web/scripts/`, fora do jogo.
+- [x] **spec, plan e tasks atualizados:** o plan §7 lista o que mudou.
+
+### Conferências da RW-004
+
+- **Imagem fora do formato (RS2/RS8):** com a última coluna da fileira de lado apagada,
+  `npm run build` parou com "esperado 3×6 quadros, achei 3 fileiras com 6, 6, 5 colunas", e o
+  `next build` não rodou. A imagem original foi restaurada.
+- **Produção:** `/` responde 200, `/galeria` responde 404, `/sprites/raccoon.json` responde 200 (283 B)
+  e `/sprites/raccoon.png` responde 200 (285 KB). A primeira carga continua em 103–104 kB de JS.
+- **No jogo:** o rocky aparece como sprite com o anel, vira para a esquerda ao andar e para
+  olhando para a esquerda. O canvas aparece ~0,4 s depois de "Entrar".
+
+### Observações
+
+- **O andar de frente é sutil na arte:** as pernas pouco mudam entre os quadros. Trocar a imagem
+  resolve sem mudar código (RS6).
+- **Os cenários de navegador ficaram mais lentos** (~17–20 s com 2 jogadores), porque agora esperam
+  o jogo carregar em contextos sem cache, no modo dev.

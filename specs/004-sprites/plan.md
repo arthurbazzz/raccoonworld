@@ -1,6 +1,6 @@
 # RW-004 — Plano técnico: Guaxinim em sprites
 
-Status: **Aprovado** (2026-10-25) · Spec: [spec.md](spec.md) · Criado: 2026-10-25
+Status: **Implementado** (2026-10-26) · Aprovado: 2026-10-25 · Spec: [spec.md](spec.md) · Criado: 2026-10-25
 
 ## 1. Visão geral
 
@@ -120,7 +120,21 @@ Os dois rodam com o **TypeScript nativo do Node 24** (`node scripts/sprites/buil
 - **TypeScript nativo do Node:** os scripts não podem usar sintaxe que precise de compilação
   (`enum` e parâmetros de construtor com modificador). Isso é registrado no CLAUDE.md.
 
-## 7. Decisões deste plano (aprovadas em 2026-10-25)
+## 7. O que mudou durante a implementação
+
+| Mudança | Task | Por quê |
+|---|---|---|
+| A montagem da grade ficou em `scripts/sprites/layout.ts`, separada do `build.ts` | T3 | Lógica pura, testável sem imagens |
+| O tipo `SheetManifest` fica em `src/game/raccoon/manifest.ts` e é importado pelos scripts | T3 | Uma só definição para quem escreve e quem lê o JSON |
+| `web/scripts/package.json` com `"type": "module"` | T4 | O Node avisava que não sabia se os scripts eram ESM |
+| `tsconfig`: `allowImportingTsExtensions` | T2 | O Node exige imports com `.ts` para rodar TypeScript nativo |
+| A escolha do quadro ficou em `frames.ts` (`frameFor`, `WALK_FPS`, `IDLE_FRAME_MS`) | T5 | Separada do desenho, testável sem PixiJS |
+| O novo `RaccoonView` nasceu em `RaccoonSprite.ts`; o antigo `RaccoonView.ts` foi apagado na T7 | T6/T7 | O jogo não quebra entre as tasks |
+| Galeria com zoom 2,5× (era 4×) | T7 | Acima da resolução da arte o sprite borra |
+| Steps do e2e esperam o canvas aparecer depois de entrar | T7 | Com o Next frio, "Animação de andar" disputava com a página ainda carregando |
+| A folha gerada tem ~285 KB (o plano estimava ~100 KB) | T4 | PNG com alfa e sombreado suave; ainda carrega só depois do login |
+
+## 8. Decisões deste plano (aprovadas em 2026-10-25)
 
 1. A imagem **fonte** fica em `web/art/` e é versionada, e os arquivos **gerados** não são versionados.
 2. O `sharp` passa a ser uma `devDependency` declarada.
