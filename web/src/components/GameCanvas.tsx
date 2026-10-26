@@ -3,9 +3,10 @@
 import { useEffect, useRef, useState } from "react";
 
 import type { ChatBalloons } from "@/game/chat";
+import type { CupsState } from "@/game/cups/cupsState";
 import type { Interpolator } from "@/game/interpolation";
 import type { RoomScene } from "@/game/scene";
-import { loadTileMap } from "@/game/tilemap";
+import { loadTileMap, type TileMap } from "@/game/tilemap";
 import type { PlayerId, PlayerState } from "@/net/protocol";
 
 interface Props {
@@ -15,15 +16,27 @@ interface Props {
   you: PlayerId | null;
   interpolator: Interpolator;
   balloons: ChatBalloons;
+  cups: CupsState;
+  /** Called once the map is loaded (the world needs the booth, RW-005). */
+  onMap?: (map: TileMap) => void;
 }
 
 /** Hosts the PixiJS scene. PixiJS is loaded client-side only. */
-export function GameCanvas({ wsUrl, mapName, players, you, interpolator, balloons }: Props) {
+export function GameCanvas({
+  wsUrl,
+  mapName,
+  players,
+  you,
+  interpolator,
+  balloons,
+  cups,
+  onMap,
+}: Props) {
   const hostRef = useRef<HTMLDivElement>(null);
   const sceneRef = useRef<RoomScene | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const latest = useRef({ players, you });
-  latest.current = { players, you };
+  const latest = useRef({ players, you, cups, onMap });
+  latest.current = { players, you, cups, onMap };
 
   useEffect(() => {
     const host = hostRef.current;
@@ -38,6 +51,7 @@ export function GameCanvas({ wsUrl, mapName, players, you, interpolator, balloon
           loadTileMap(wsUrl, mapName),
         ]);
         if (cancelled) return;
+        latest.current.onMap?.(map);
         const created = await RoomScene.create(host, map, interpolator, balloons);
         if (cancelled) {
           created.destroy();
@@ -46,6 +60,7 @@ export function GameCanvas({ wsUrl, mapName, players, you, interpolator, balloon
         scene = created;
         sceneRef.current = created;
         created.sync(latest.current.players, latest.current.you);
+        created.syncCups(latest.current.cups);
       } catch (e) {
         if (!cancelled) setError(e instanceof Error ? e.message : String(e));
       }
@@ -61,6 +76,10 @@ export function GameCanvas({ wsUrl, mapName, players, you, interpolator, balloon
   useEffect(() => {
     sceneRef.current?.sync(players, you);
   }, [players, you]);
+
+  useEffect(() => {
+    sceneRef.current?.syncCups(cups);
+  }, [cups]);
 
   return (
     <div ref={hostRef} style={{ position: "absolute", inset: 0 }}>

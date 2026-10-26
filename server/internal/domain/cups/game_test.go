@@ -307,3 +307,24 @@ func mustPick(t *testing.T, g *cups.Game, id room.PlayerID, round, slot int, now
 		t.Fatalf("Pick(%s, round %d, slot %d): %v", id, round, slot, err)
 	}
 }
+
+func TestPlayAgainFromTheScoreboard(t *testing.T) {
+	g := cups.NewGame(cups.DefaultTiming(), fixedShuffler{})
+	g.Join("rocky", t0)
+	g.Join("bandit", t0)
+	now := t0
+	for g.Phase() != cups.Results {
+		now = now.Add(50 * time.Millisecond)
+		g.Advance(now)
+	}
+	if res, _ := g.Join("rocky", now); res != cups.JoinedQueue {
+		t.Fatalf("play again = %v, want queued for the next match (RC12)", res)
+	}
+	if res, _ := g.Join("rocky", now); res != cups.JoinedNothing {
+		t.Fatalf("play again twice = %v, want nothing", res)
+	}
+	st, _ := find[cups.StatusChanged](g.Advance(now.Add(cups.DefaultTiming().Results)))
+	if g.Phase() != cups.Lobby || len(st.Players) != 1 || st.Players[0] != "rocky" || g.Busy("bandit") {
+		t.Fatalf("after results: %v %+v, want a lobby with rocky only", g.Phase(), st)
+	}
+}

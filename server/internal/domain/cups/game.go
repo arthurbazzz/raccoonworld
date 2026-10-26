@@ -86,6 +86,11 @@ const (
 // Join adds id to the booth (RC4, RC5). The first player opens the lobby.
 func (g *Game) Join(id room.PlayerID, now time.Time) (JoinResult, []Event) {
 	events := g.Advance(now)
+	if g.phase == Results && g.index(id) >= 0 && !slices.Contains(g.queued, id) {
+		// "Jogar de novo" on the scoreboard: play the next match (RC12).
+		g.queued = append(g.queued, id)
+		return JoinedQueue, append(events, g.status(now))
+	}
 	if g.Busy(id) {
 		return JoinedNothing, events
 	}
