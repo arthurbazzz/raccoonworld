@@ -1,6 +1,6 @@
 # RW-002 — Plano técnico: Visual do guaxinim
 
-Status: **Aprovado** (2026-10-25) · Spec: [spec.md](spec.md) · Criado: 2026-10-25
+Status: **Implementado** (2026-10-25) · Aprovado: 2026-10-25 · Spec: [spec.md](spec.md) · Criado: 2026-10-25
 
 ## 1. Visão geral
 
@@ -93,7 +93,20 @@ Nenhuma.
 - **Gosto:** arte em código tem um teto de qualidade. A paleta e as partes separadas
   facilitam trocar por sprites depois, sem mexer em direção e animação.
 
-## 8. Decisões deste plano (aprovadas em 2026-10-25)
+## 8. O que mudou durante a implementação
+
+| Mudança | Task | Por quê |
+|---|---|---|
+| `hasMoved(dx, dy)` em `motion.ts`, usado por `facingFrom` e `motion()` | T3 | A mesma regra de ruído (< 0,01 px) aparecia em três lugares |
+| O rabo é desenhado a partir da **base** | T4 | Girado pelo centro, descia abaixo dos pés; pela base, o balanço sai da raiz |
+| Pose de costas com o rabo de lado | T4 | Centralizado, cobria o corpo e parecia um tronco listrado (visto no navegador) |
+| Patas em **pares**, em diagonal na pose de lado | T5 | Um andar mais natural; o plano não detalhava |
+| Nome a −40 e balão a −56 (eram −38 e −54) | T7 | As orelhas novas são mais altas |
+| Testes de arte em Node só com `Container`/`Graphics`; o nome (`Text`) é adicionado pela cena | T4/T7 | `Text` precisa de canvas, que o Node não tem |
+| Cenário da diagonal com **S+D** em vez de W+D | T8 | Com W+D o guaxinim bate na fonte e anda reto, e o teste não distinguia as regras |
+| Verificação de direção espera no máximo **1 s** | T8 | Com 5 s, o guaxinim chegava ao muro e a resposta "certa" aparecia por acaso |
+
+## 9. Decisões deste plano (aprovadas em 2026-10-25)
 
 1. **Direção e estado deduzidos das posições interpoladas** (o que aparece na tela), e não
    das teclas. Isso vale também para o próprio jogador, que continua seguindo o servidor

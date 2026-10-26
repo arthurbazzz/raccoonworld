@@ -1,6 +1,6 @@
 # RW-002 — Tasks: Visual do guaxinim
 
-Status: **Aprovado** (2026-10-25) · Plano: [plan.md](plan.md) · Criado: 2026-10-25
+Status: **Concluído** (2026-10-25) · Aprovado: 2026-10-25 · Plano: [plan.md](plan.md) · Criado: 2026-10-25
 
 Regras: as mesmas da RW-001. Uma task por vez, na ordem, teste antes do código, e commits
 no formato `RW-002/Tn: <descrição>`.
@@ -51,5 +51,38 @@ no formato `RW-002/Tn: <descrição>`.
 
 ## Fase 4 — Fechamento
 
-- [ ] **T9** Rodar todas as suítes (RW-001 e RW-002), conferir a Definição de Pronto da
+- [x] **T9** Rodar todas as suítes (RW-001 e RW-002), conferir a Definição de Pronto da
   constituição e atualizar spec e plan com o que mudou.
+
+## Fechamento (T9, 2026-10-25)
+
+### Definição de Pronto
+
+- [x] **Critérios de aceitação da spec atendidos.** Os 6 cenários de `features/visual.feature` passam.
+- [x] **Cenários BDD passando:**
+  - playwright-bdd: **14/14**, sendo 10 da RW-002 e 4 da RW-001;
+  - godog: **24/24** nos casos de uso e **3/3** no smoke. A RW-002 não muda o servidor, então
+    essas suítes só confirmam que nada quebrou.
+- [x] **Testes, lint e formatação limpos:**
+  - Vitest com 127 testes (+50 desde a RW-001), `tsc`, ESLint, Prettier e `next build`;
+  - Go: `go vet`, golangci-lint com 0 problemas e `golangci-lint fmt` sem diferenças.
+- [x] **Nenhuma violação de camada.** Nenhum arquivo fora de `web/` e `specs/` mudou, e o servidor
+  está idêntico ao da RW-001, como a spec pedia.
+- [x] **spec, plan e tasks atualizados.** O plan §8 lista o que mudou.
+
+As mutações confirmaram que os cenários pegam os erros: "nunca andando" e "diagonal pela
+frente/costas", esta depois das correções da T8.
+
+### Observações
+
+- A primeira carga da página continua em ~108 kB, porque o PixiJS e a arte carregam depois do login.
+- **O e2e roda contra o Next em modo dev.** Na T1, 2 cenários estouraram o tempo limite com o
+  servidor frio. Nas 5 rodadas completas seguintes isso não se repetiu, então mantive o modo dev.
+  Se voltar a acontecer, a saída é rodar o e2e contra `next build && next start`.
+- A fluidez da animação não foi avaliada a olho, porque o painel do navegador usado nos testes
+  desenha a 2 quadros por segundo. Vale conferir com o jogo numa janela visível.
+
+### Próximas specs sugeridas
+
+- Customização do guaxinim (cores e acessórios), que troca a `RACCOON_COLORS` e depende da autenticação.
+- Arte do cenário (chão, árvores e fonte) no mesmo estilo desenhado em código.

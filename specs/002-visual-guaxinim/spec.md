@@ -1,6 +1,6 @@
 # RW-002 — Visual do guaxinim
 
-Status: **Aprovada** (2026-10-25) · Criada: 2026-10-25 · Depende de: RW-001
+Status: **Implementada** (2026-10-25) · Aprovada: 2026-10-25 · Criada: 2026-10-25 · Depende de: RW-001
 
 ## Problema
 
