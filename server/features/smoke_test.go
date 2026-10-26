@@ -86,7 +86,12 @@ func (c *wsClient) readLoop() {
 
 // waitFor polls received messages until one of type typ satisfies match.
 func (c *wsClient) waitFor(typ string, match func(json.RawMessage) bool) error {
-	deadline := time.Now().Add(waitTimeout)
+	return c.waitForWithin(waitTimeout, typ, match)
+}
+
+// waitForWithin is waitFor with its own time limit.
+func (c *wsClient) waitForWithin(limit time.Duration, typ string, match func(json.RawMessage) bool) error {
+	deadline := time.Now().Add(limit)
 	for time.Now().Before(deadline) {
 		c.mu.Lock()
 		for _, m := range c.received {
@@ -98,7 +103,7 @@ func (c *wsClient) waitFor(typ string, match func(json.RawMessage) bool) error {
 		c.mu.Unlock()
 		time.Sleep(10 * time.Millisecond)
 	}
-	return fmt.Errorf("no %s message matched within %v", typ, waitTimeout)
+	return fmt.Errorf("no %s message matched within %v", typ, limit)
 }
 
 type smokeWorld struct {
@@ -129,13 +134,15 @@ func initializeSmokeScenario(sc *godog.ScenarioContext) {
 	sc.Step(`^a entrada é recusada com o motivo "([^"]*)"$`, w.joinRejectedWith)
 	sc.Step(`^"([^"]*)" envia a mensagem "([^"]*)"$`, w.say)
 	sc.Step(`^"([^"]*)" vê o balão "([^"]*)" sobre "([^"]*)"$`, w.seesBalloon)
+	w.registerCupsSmokeSteps(sc)
 }
 
 func (w *smokeWorld) openRoom(name string) error {
 	if _, ok := roomIDs[name]; !ok {
 		return fmt.Errorf("unknown room %q", name)
 	}
-	a, err := app.New(app.Options{Clock: clock.System{}})
+	// Fast three cups (RW_CUPS_FAST), so a round takes a second or two.
+	a, err := app.New(app.Options{Clock: clock.System{}, CupsSpeedup: 10})
 	if err != nil {
 		return err
 	}

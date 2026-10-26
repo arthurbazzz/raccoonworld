@@ -51,6 +51,9 @@ func New(opts Options) (*App, error) {
 		SendChat:  usecase.NewSendChat(runner, hub, opts.Clock),
 		Leave:     usecase.NewLeaveRoom(runner, hub),
 		KeepAlive: usecase.NewKeepAlive(runner, opts.Clock),
+		JoinCups:  usecase.NewJoinCups(runner, hub, opts.Clock),
+		PickCup:   usecase.NewPickCup(runner, opts.Clock),
+		LeaveCups: usecase.NewLeaveCups(runner, opts.Clock),
 	}, ws.Options{AllowedOrigins: opts.AllowedOrigins, Logger: opts.Logger})
 
 	router := httpapi.NewRouter(httpapi.Config{

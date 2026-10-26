@@ -242,7 +242,9 @@ func TestBusyPlayerDoesNotMove(t *testing.T) {
 	if moved := r.Step(tick); len(moved) != 0 {
 		t.Fatalf("player walked off after the game: %v", moved)
 	}
-	r.SetInput("p1", room.Input{Right: true})
+	if err := r.SetInput("p1", room.Input{Right: true}); err != nil {
+		t.Fatal(err)
+	}
 	if moved := r.Step(tick); len(moved) != 1 {
 		t.Fatal("player cannot move again after the game")
 	}

@@ -114,7 +114,7 @@ type CupsResults struct {
 // CupsRejectReason tells a player why they could not play.
 type CupsRejectReason string
 
-// CupsTooFar: the raccoon is not near the booth (RC2).
+// CupsTooFar means the raccoon is not near the booth (RC2).
 const CupsTooFar CupsRejectReason = "too_far"
 
 // CupsRejected is sent to a player whose cups.join was refused.

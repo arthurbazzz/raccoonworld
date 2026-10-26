@@ -225,9 +225,9 @@ func TestFullMatchAndScoreboard(t *testing.T) {
 		if round%2 == 0 {
 			other = 2
 		}
-		g.Pick("rocky", round, nut, now)
-		g.Pick("bandit", round, other, now)
-		g.Pick("ringo", round, other, now)
+		mustPick(t, g, "rocky", round, nut, now)
+		mustPick(t, g, "bandit", round, other, now)
+		mustPick(t, g, "ringo", round, other, now)
 		now = now.Add(tm.Reveal)
 		if f, ok := find[cups.Finished](g.Advance(now)); ok {
 			fin = f
@@ -266,7 +266,7 @@ func TestLeave(t *testing.T) {
 	g.Join("bandit", t0)
 	now := toChoose(t, g)
 
-	g.Pick("bandit", 1, 0, now)
+	mustPick(t, g, "bandit", 1, 0, now)
 	ok, ev := g.Leave("rocky", now)
 	if !ok || g.Busy("rocky") {
 		t.Fatal("rocky still in the match")
@@ -298,5 +298,12 @@ func TestCurrentRound(t *testing.T) {
 	r, elapsed, ok := g.CurrentRound(t0.Add(11 * time.Second))
 	if !ok || r.Round != 1 || elapsed != time.Second {
 		t.Fatalf("CurrentRound = %+v %v %v", r, elapsed, ok)
+	}
+}
+
+func mustPick(t *testing.T, g *cups.Game, id room.PlayerID, round, slot int, now time.Time) {
+	t.Helper()
+	if _, err := g.Pick(id, round, slot, now); err != nil {
+		t.Fatalf("Pick(%s, round %d, slot %d): %v", id, round, slot, err)
 	}
 }
