@@ -1,6 +1,6 @@
 # RW-004 — Guaxinim em sprites (imagem)
 
-Status: **Rascunho**, aguardando aprovação · Criada: 2026-10-25 · Substitui: RW-003 · Depende de: RW-002
+Status: **Aprovada** (2026-10-25) · Criada: 2026-10-25 · Substitui: RW-003 · Depende de: RW-002
 
 ## Problema
 
