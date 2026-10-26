@@ -1,6 +1,6 @@
 # RW-004 — Plano técnico: Guaxinim em sprites
 
-Status: **Rascunho**, aguardando aprovação · Spec: [spec.md](spec.md) · Criado: 2026-10-25
+Status: **Aprovado** (2026-10-25) · Spec: [spec.md](spec.md) · Criado: 2026-10-25
 
 ## 1. Visão geral
 
@@ -120,7 +120,7 @@ Os dois rodam com o **TypeScript nativo do Node 24** (`node scripts/sprites/buil
 - **TypeScript nativo do Node:** os scripts não podem usar sintaxe que precise de compilação
   (`enum` e parâmetros de construtor com modificador). Isso é registrado no CLAUDE.md.
 
-## 7. Decisões deste plano que precisam do seu OK
+## 7. Decisões deste plano (aprovadas em 2026-10-25)
 
 1. A imagem **fonte** fica em `web/art/` e é versionada, e os arquivos **gerados** não são versionados.
 2. O `sharp` passa a ser uma `devDependency` declarada.
