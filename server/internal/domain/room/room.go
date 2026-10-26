@@ -84,6 +84,20 @@ func (r *Room) SetInput(id PlayerID, in Input) error {
 	return nil
 }
 
+// SetBusy marks a player as playing a minigame, or done with it. A busy
+// player does not move whatever keys they hold (RW-005, RC21). Either way
+// the held keys are dropped, so nobody walks off on their own when the game
+// ends.
+func (r *Room) SetBusy(id PlayerID, busy bool) error {
+	i := r.index(id)
+	if i < 0 {
+		return ErrPlayerNotFound
+	}
+	r.players[i].busy = busy
+	r.players[i].input = Input{}
+	return nil
+}
+
 // Player returns a snapshot of one player.
 func (r *Room) Player(id PlayerID) (PlayerView, bool) {
 	i := r.index(id)
@@ -108,7 +122,7 @@ func (r *Room) Step(dt time.Duration) []PlayerView {
 	var moved []PlayerView
 	for _, p := range r.players {
 		dir := p.input.Direction()
-		if dir == (Vec{}) {
+		if dir == (Vec{}) || p.busy {
 			continue
 		}
 		before := p.position

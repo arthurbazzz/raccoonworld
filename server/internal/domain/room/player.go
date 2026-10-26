@@ -20,6 +20,7 @@ type player struct {
 	nickname Nickname
 	position Vec // feet, in room pixels
 	input    Input
+	busy     bool // playing a minigame: keys do not move them (RW-005, RC21)
 
 	lastMessageAt time.Time // zero until the first accepted chat message
 	lastSeenAt    time.Time // last sign of life from the connection (RN5)
