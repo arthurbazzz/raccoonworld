@@ -170,3 +170,31 @@ describe("RaccoonView.animate", () => {
     expect(v.parts.body.y).toBeLessThan(0);
   });
 });
+
+describe("ring under your own raccoon (RV3)", () => {
+  it("has no ring by default", () => {
+    expect(new RaccoonView().ring).toBeNull();
+  });
+
+  it("draws a ring at the feet, below the body and the shadow", () => {
+    const v = new RaccoonView({ isYou: true });
+    expect(v.ring).not.toBeNull();
+    expect(v.getChildIndex(v.ring!)).toBe(0);
+    const b = v.ring!.getLocalBounds();
+    expect((b.minX + b.maxX) / 2).toBeCloseTo(0);
+    expect((b.minY + b.maxY) / 2).toBeCloseTo(0);
+    expect(b.maxX - b.minX).toBeGreaterThan(20); // wider than the 20px hitbox
+  });
+
+  it("stays put while the raccoon turns and walks (RV4)", () => {
+    const v = new RaccoonView({ isYou: true });
+    const ring = v.ring!;
+    v.setFacing("left");
+    v.animate(true, 1000 / STEPS_PER_SECOND / 2);
+    expect(v.ring).toBe(ring);
+    expect(ring.scale.x).toBe(1);
+    expect(ring.position.x).toBe(0);
+    expect(ring.position.y).toBe(0);
+    expect(v.getChildIndex(ring)).toBe(0);
+  });
+});

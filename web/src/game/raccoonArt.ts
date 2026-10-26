@@ -18,6 +18,7 @@ export const RACCOON_COLORS = {
   tailRing: 0x3b3b42,
   paw: 0x4a4a52,
   shadow: 0x000000,
+  ring: 0xffe08a, // same yellow as your nickname
 };
 
 export type Pose = "front" | "back" | "side";
@@ -107,10 +108,13 @@ export class RaccoonView extends Container {
   facing: Facing = "down";
   pose: Pose = "front";
   parts: RaccoonParts;
+  /** RV3: the ring under your own raccoon, or null for everyone else. */
+  readonly ring: Graphics | null;
   private rest: Rest;
 
-  constructor() {
+  constructor({ isYou = false }: { isYou?: boolean } = {}) {
     super();
+    this.ring = isYou ? this.addChild(drawRing()) : null;
     this.addChild(drawShadow());
     this.parts = buildPose(this.pose);
     this.rest = restOf(this.parts);
@@ -144,6 +148,14 @@ export class RaccoonView extends Container {
     parts.torso.scale.y = f.breath;
     parts.head.y = rest.headY * f.breath;
   }
+}
+
+/** A flat ring on the ground around the feet, outside the body so it never flips or bobs. */
+function drawRing(): Graphics {
+  return new Graphics()
+    .ellipse(0, 0, 15, 6)
+    .fill({ color: C.ring, alpha: 0.18 })
+    .stroke({ color: C.ring, width: 2, alpha: 0.9 });
 }
 
 function drawShadow(): Graphics {
