@@ -26,7 +26,7 @@ no formato `RW-002/Tn: <descrição>`.
 
 ## Fase 2 — Arte em código
 
-- [ ] **T4** `RaccoonView` com a paleta `RACCOON_COLORS` e as 3 poses (frente, costas e lado),
+- [x] **T4** `RaccoonView` com a paleta `RACCOON_COLORS` e as 3 poses (frente, costas e lado),
   com a esquerda espelhando só o corpo. Testes de montagem das partes por direção.
 - [ ] **T5** Animações a partir do tempo: andar (bob, patas e rabo) e parado (respiração) (RV2).
 - [ ] **T6** Anel no chão só no próprio guaxinim (RV3), sem mudar o ponto de apoio nem a hitbox (RV4).
