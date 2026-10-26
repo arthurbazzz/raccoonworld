@@ -20,9 +20,12 @@ Funcionalidade: Visual do guaxinim
       | S     | baixo      |
       | D     | a direita  |
 
+  # S+D, não W+D: logo acima do ponto de nascimento fica a fonte. Com W+D o
+  # guaxinim bate nela e passa a andar só para a direita, e o cenário passaria
+  # mesmo se a diagonal valesse frente/costas (achado na mutação da T8).
   Cenário: Na diagonal vale o lado
     Dado que "rocky" e "bandit" estão na Praça
-    Quando "rocky" segura as teclas "W" e "D"
+    Quando "rocky" segura as teclas "S" e "D"
     Então "bandit" vê "rocky" olhando para a direita
 
   Cenário: Quem acabou de entrar olha para baixo

@@ -1,3 +1,5 @@
+import { expect } from "@playwright/test";
+
 import { Given, Then, When } from "./fixtures";
 
 // Steps for specs/002-visual-guaxinim/features/visual.feature.
@@ -29,26 +31,60 @@ When("{string} solta a tecla {string}", async ({ world }, nickname: string, key:
   await world.page(nickname).waitForTimeout(HOLD_MS);
 });
 
-// Visual assertions read data-facing / data-moving / data-ring from the
-// accessible player list; they land in RW-002/T7 and T8.
-// playwright-bdd checks each function's arity against its step pattern and
-// needs the fixtures argument destructured.
-const PENDING = "pending: RW-002/T8";
-/* eslint-disable @typescript-eslint/no-unused-vars */
-const pending1 = async ({ world }: { world: unknown }, _a: string) => {
-  throw new Error(PENDING);
-};
-const pending2 = async ({ world }: { world: unknown }, _a: string, _b: string) => {
-  throw new Error(PENDING);
-};
-const pending3 = async ({ world }: { world: unknown }, _a: string, _b: string, _c: string) => {
-  throw new Error(PENDING);
-};
-/* eslint-enable @typescript-eslint/no-unused-vars */
+// Visual assertions read the accessible player list, where the game exposes
+// what the scene draws: data-facing, data-moving and data-ring (RW-002/T7).
+// toHaveAttribute retries, which covers the 100ms refresh and the 100ms
+// interpolation delay.
+//
+// Facing checks retry for at most FACING_TIMEOUT_MS. With the default 5s, a
+// raccoon still holding a diagonal reaches a wall and slides straight along
+// it, so a wrong diagonal rule would eventually show the "right" answer and
+// the test would pass (found by mutation in RW-002/T8).
+const FACING_TIMEOUT_MS = 1000;
 
-Then(/^"([^"]*)" vê "([^"]*)" olhando para (cima|baixo|a esquerda|a direita)$/, pending3);
-Then(/^"([^"]*)" está parado olhando para (cima|baixo|a esquerda|a direita)$/, pending2);
-Then("{string} vê {string} andando", pending2);
-Then("{string} vê {string} parado", pending2);
-Then("{string} vê o anel embaixo do próprio guaxinim", pending1);
-Then("{string} não vê anel embaixo do guaxinim de {string}", pending2);
+const FACING: Record<string, string> = {
+  cima: "up",
+  baixo: "down",
+  "a esquerda": "left",
+  "a direita": "right",
+};
+
+Then(
+  /^"([^"]*)" vê "([^"]*)" olhando para (cima|baixo|a esquerda|a direita)$/,
+  async ({ world }, observer: string, target: string, direction: string) => {
+    const entry = world.entry(world.page(observer), target);
+    await expect(entry).toHaveAttribute("data-facing", FACING[direction], {
+      timeout: FACING_TIMEOUT_MS,
+    });
+  },
+);
+
+Then(
+  /^"([^"]*)" está parado olhando para (cima|baixo|a esquerda|a direita)$/,
+  async ({ world }, nickname: string, direction: string) => {
+    const entry = world.entry(world.page(nickname), nickname);
+    await expect(entry).toHaveAttribute("data-moving", "false");
+    await expect(entry).toHaveAttribute("data-facing", FACING[direction], {
+      timeout: FACING_TIMEOUT_MS,
+    });
+  },
+);
+
+Then("{string} vê {string} andando", async ({ world }, observer: string, target: string) => {
+  await expect(world.entry(world.page(observer), target)).toHaveAttribute("data-moving", "true");
+});
+
+Then("{string} vê {string} parado", async ({ world }, observer: string, target: string) => {
+  await expect(world.entry(world.page(observer), target)).toHaveAttribute("data-moving", "false");
+});
+
+Then("{string} vê o anel embaixo do próprio guaxinim", async ({ world }, nickname: string) => {
+  await expect(world.entry(world.page(nickname), nickname)).toHaveAttribute("data-ring", "true");
+});
+
+Then(
+  "{string} não vê anel embaixo do guaxinim de {string}",
+  async ({ world }, observer: string, other: string) => {
+    await expect(world.entry(world.page(observer), other)).toHaveAttribute("data-ring", "false");
+  },
+);

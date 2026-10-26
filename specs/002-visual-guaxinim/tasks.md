@@ -36,7 +36,18 @@ no formato `RW-002/Tn: <descrição>`.
 - [x] **T7** `RoomScene` passa a usar o `RaccoonView` e o `motion()`. O hook
   `useMotionAttributes` atualiza `data-facing`, `data-moving` e `data-ring` na lista acessível
   10 vezes por segundo.
-- [ ] **T8** Implementar os steps de `visual.feature`. Pronto quando os 6 cenários passam.
+- [x] **T8** Implementar os steps de `visual.feature`. Pronto quando os 6 cenários passam.
+  - Resultado: os 10 cenários da RW-002 passam (os 6 da spec, com o esquema contando 4), e os 4 da
+    RW-001 também. A suíte completa passou 2 vezes seguidas.
+  - Mutações: "nunca andando" foi pega. "Diagonal pela frente/costas" **escapou** duas vezes, por
+    dois motivos, ambos corrigidos:
+    1. com W+D, o guaxinim bate na fonte e passa a andar reto, então o cenário virou **S+D**
+       (spec e `.feature` atualizados);
+    2. a nova tentativa de 5 s do Playwright esperava o guaxinim chegar ao muro e andar reto, então
+       a verificação de direção agora espera no máximo 1 s.
+    Depois disso, a mutação passou a ser pega.
+  - O anel é verificado pelo `data-ring`, que vem do mesmo `you` que a cena usa. O desenho do anel
+    em si é coberto pelos testes do `RaccoonView` (T6).
 
 ## Fase 4 — Fechamento
 

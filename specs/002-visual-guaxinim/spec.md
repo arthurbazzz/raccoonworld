@@ -74,7 +74,7 @@ Funcionalidade: Visual do guaxinim
 
   Cenário: Na diagonal vale o lado
     Dado que "rocky" e "bandit" estão na Praça
-    Quando "rocky" segura as teclas "W" e "D"
+    Quando "rocky" segura as teclas "S" e "D"
     Então "bandit" vê "rocky" olhando para a direita
 
   Cenário: Quem acabou de entrar olha para baixo
