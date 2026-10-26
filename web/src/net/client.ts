@@ -64,6 +64,19 @@ export class RoomClient {
     this.send({ type: "chat.send", data: { text } });
   }
 
+  /** Three cups: E near the booth, a pick, and Esc / Sair (RW-005). */
+  joinCups(): void {
+    this.send({ type: "cups.join", data: {} });
+  }
+
+  pickCup(round: number, slot: number): void {
+    this.send({ type: "cups.pick", data: { round, slot } });
+  }
+
+  leaveCups(): void {
+    this.send({ type: "cups.leave", data: {} });
+  }
+
   /** Closes for good: no reconnect. */
   close(): void {
     this.closed = true;
