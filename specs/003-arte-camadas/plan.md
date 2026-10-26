@@ -1,6 +1,6 @@
 # RW-003 — Plano técnico: Arte do guaxinim em camadas
 
-Status: **Rascunho**, aguardando aprovação · Spec: [spec.md](spec.md) · Criado: 2026-10-25
+Status: **Aprovado** (2026-10-25) · Spec: [spec.md](spec.md) · Criado: 2026-10-25
 
 ## 1. Visão geral
 
@@ -124,7 +124,7 @@ Nenhuma.
 - **Semelhança com a referência:** o sombreado em código é mais "chapado" do que o da imagem.
   Já foi combinado na spec (Q1).
 
-## 9. Decisões deste plano que precisam do seu OK
+## 9. Decisões deste plano (aprovadas em 2026-10-25)
 
 1. **Pasta `game/raccoon/`** no lugar do arquivo único `raccoonArt.ts`.
 2. **Sombra pela técnica das 2 formas** (escura embaixo, base deslocada por cima), em vez de degradê.
