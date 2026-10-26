@@ -19,7 +19,7 @@ os 14 cenários de navegador continuam verdes (RS1).
 
 ## Fase 1 — Desenho no jogo
 
-- [ ] **T5** `frameFor(facing, moving, t)`: fileira por direção, andar a 12 quadros/s e parado
+- [x] **T5** `frameFor(facing, moving, t)`: fileira por direção, andar a 12 quadros/s e parado
   trocando a cada 1 s (RS5).
 - [ ] **T6** `sheet.ts`: carregar o JSON e a imagem e cortar as texturas, com mipmaps.
   `RaccoonView` com `Sprite` de 46 px, espelhando só o sprite (RS1, RS4). Testes com texturas falsas.
