@@ -27,7 +27,7 @@ comportamento da RW-002 continuam verdes (RA1).
 ## Fase 1 — Paleta e formas (Vitest, TDD)
 
 - [x] **T3** `palette.ts`: paleta base, `shade()` e contorno derivados (RA5, RA7).
-- [ ] **T4** `shapes.ts`: formas com contorno e sombra pela técnica das 2 formas (elipse, círculo,
+- [x] **T4** `shapes.ts`: formas com contorno e sombra pela técnica das 2 formas (elipse, círculo,
   orelha e rabo com anéis), todas recebendo a paleta.
 
 ## Fase 2 — Poses novas

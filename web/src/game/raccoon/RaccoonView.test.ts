@@ -1,11 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import {
-  animationFrame,
-  BREATH_PERIOD_MS,
-  RaccoonView,
-  STEPS_PER_SECOND,
-} from "./RaccoonView";
+import { animationFrame, BREATH_PERIOD_MS, RaccoonView, STEPS_PER_SECOND } from "./RaccoonView";
 
 describe("RaccoonView poses (RV1)", () => {
   it("starts facing down with the front pose", () => {
