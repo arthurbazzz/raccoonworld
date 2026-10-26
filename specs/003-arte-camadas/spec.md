@@ -1,6 +1,11 @@
 # RW-003 — Arte do guaxinim em camadas
 
-Status: **Aprovada** (2026-10-25) · Criada: 2026-10-25 · Depende de: RW-002
+Status: **Substituída pela [RW-004](../004-sprites/spec.md)** (2026-10-25) · Criada: 2026-10-25 · Depende de: RW-002
+
+> **Por que foi substituída:** depois da pose de frente (T5), o dono do projeto avaliou que o
+> formato do guaxinim desenhado em código não ficou bom. A decisão foi usar a imagem gerada
+> por IA (sprites). T1–T5 ficaram commitadas; a T6 (pose de lado) foi descartada antes do commit.
+> A RW-004 decide o que destas tasks é reaproveitado.
 
 ## Problema
 

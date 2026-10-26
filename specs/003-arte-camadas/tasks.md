@@ -1,6 +1,6 @@
 # RW-003 — Tasks: Arte do guaxinim em camadas
 
-Status: **Aprovado** (2026-10-25) · Plano: [plan.md](plan.md) · Criado: 2026-10-25
+Status: **Interrompido na T5** (2026-10-25): spec substituída pela [RW-004](../004-sprites/spec.md) · Plano: [plan.md](plan.md) · Criado: 2026-10-25
 
 Regras: as mesmas das RWs anteriores. Uma task por vez, teste antes do código, e commits
 `RW-003/Tn: <descrição>`. A cada task, os 14 cenários de navegador e os testes unitários de
