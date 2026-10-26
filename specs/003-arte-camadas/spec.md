@@ -1,6 +1,6 @@
 # RW-003 — Arte do guaxinim em camadas
 
-Status: **Rascunho**, aguardando aprovação · Criada: 2026-10-25 · Depende de: RW-002
+Status: **Aprovada** (2026-10-25) · Criada: 2026-10-25 · Depende de: RW-002
 
 ## Problema
 
