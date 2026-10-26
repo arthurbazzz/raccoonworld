@@ -19,7 +19,7 @@ no formato `RW-002/Tn: <descrição>`.
 
 ## Fase 1 — Direção e estado (Vitest, TDD)
 
-- [ ] **T2** `facingFrom(dx, dy, previous)`: 4 lados, diagonal vale o lado, parado mantém e
+- [x] **T2** `facingFrom(dx, dy, previous)`: 4 lados, diagonal vale o lado, parado mantém e
   deslocamentos menores que 0,01 px contam como parado (RV1).
 - [ ] **T3** `Interpolator.motion(id, now)`: `moving` nos últimos 150 ms, `facing` do último
   trecho com movimento, e quem acabou de entrar começa com `down` (RV1, RV2).
