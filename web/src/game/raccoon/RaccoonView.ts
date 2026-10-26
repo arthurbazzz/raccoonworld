@@ -1,6 +1,10 @@
 import { Container, Graphics } from "pixi.js";
 
 import type { Facing } from "../motion";
+import { DEFAULT_PALETTE, type RaccoonPalette } from "./palette";
+import { buildFront, type RaccoonParts } from "./rig";
+
+export type { RaccoonParts } from "./rig";
 
 // The raccoon drawn in code (RW-002, Q1). Everything is built upward from
 // the feet at (0, 0), so depth sorting and the hitbox are unchanged (RV4).
@@ -22,18 +26,6 @@ export const RACCOON_COLORS = {
 };
 
 export type Pose = "front" | "back" | "side";
-
-/** The animatable parts of a pose. */
-export interface RaccoonParts {
-  /** Everything that flips when facing left. */
-  body: Container;
-  torso: Graphics;
-  head: Container;
-  tail: Graphics;
-  legs: Graphics[];
-  /** Which pair each leg belongs to (0 or 1): pairs lift in turn when walking. */
-  legPairs: (0 | 1)[];
-}
 
 const C = RACCOON_COLORS;
 
@@ -110,13 +102,18 @@ export class RaccoonView extends Container {
   parts: RaccoonParts;
   /** RV3: the ring under your own raccoon, or null for everyone else. */
   readonly ring: Graphics | null;
+  readonly palette: RaccoonPalette;
   private rest: Rest;
 
-  constructor({ isYou = false }: { isYou?: boolean } = {}) {
+  constructor({
+    isYou = false,
+    palette = DEFAULT_PALETTE,
+  }: { isYou?: boolean; palette?: RaccoonPalette } = {}) {
     super();
+    this.palette = palette;
     this.ring = isYou ? this.addChild(drawRing()) : null;
     this.addChild(drawShadow());
-    this.parts = buildPose(this.pose);
+    this.parts = buildPose(this.pose, this.palette);
     this.rest = restOf(this.parts);
     this.addChild(this.parts.body);
   }
@@ -127,7 +124,7 @@ export class RaccoonView extends Container {
     if (pose !== this.pose) {
       const index = this.getChildIndex(this.parts.body);
       this.parts.body.destroy({ children: true });
-      this.parts = buildPose(pose);
+      this.parts = buildPose(pose, this.palette);
       this.rest = restOf(this.parts);
       this.addChildAt(this.parts.body, index);
       this.pose = pose;
@@ -162,10 +159,10 @@ function drawShadow(): Graphics {
   return new Graphics().ellipse(0, 0, 11, 4).fill({ color: C.shadow, alpha: 0.22 });
 }
 
-function buildPose(pose: Pose): RaccoonParts {
+function buildPose(pose: Pose, palette: RaccoonPalette): RaccoonParts {
   switch (pose) {
     case "front":
-      return buildFront();
+      return buildFront(palette);
     case "back":
       return buildBack();
     case "side":
@@ -192,40 +189,24 @@ function stripedTail(baseX: number, baseY: number, rx: number, ry: number): Grap
   return g;
 }
 
+/**
+ * RW-002 back and side poses, kept until RW-003 T6/T7 redraw them. They have
+ * no separate leg or arm layers, so those are empty containers.
+ */
+function legacyParts(p: Omit<RaccoonParts, "legLayer" | "armLayer" | "arms">): RaccoonParts {
+  return { ...p, legLayer: new Container(), armLayer: new Container(), arms: [] };
+}
+
+function headFace(head: Container): Graphics {
+  return head.children[0] as Graphics;
+}
+
 function ears(g: Graphics, dx: number, y: number): Graphics {
   for (const x of [-dx, dx]) {
     g.circle(x, y, 4).fill(C.fur);
     g.circle(x, y + 0.5, 2).fill(C.earInner);
   }
   return g;
-}
-
-function buildFront(): RaccoonParts {
-  const body = new Container();
-  const tail = stripedTail(7, -5, 4.5, 8);
-  tail.rotation = 0.35;
-  const legs = [paw(-5), paw(5)];
-  const torso = new Graphics()
-    .ellipse(0, -11, 10, 10)
-    .fill(C.fur)
-    .ellipse(0, -9, 6, 7)
-    .fill(C.furLight);
-
-  const head = new Container();
-  head.position.set(0, -25);
-  const face = ears(new Graphics(), 7, -8)
-    .circle(0, 0, 10)
-    .fill(C.fur)
-    .ellipse(0, 4, 7, 5)
-    .fill(C.furLight)
-    .roundRect(-9.5, -4, 19, 6, 3)
-    .fill(C.mask);
-  for (const x of [-4, 4]) face.circle(x, -1, 2).fill(C.eye).circle(x, -0.8, 1).fill(C.pupil);
-  face.ellipse(0, 3.5, 1.8, 1.3).fill(C.nose);
-  head.addChild(face);
-
-  body.addChild(tail, ...legs, torso, head);
-  return { body, torso, head, tail, legs, legPairs: [0, 1] };
 }
 
 function buildBack(): RaccoonParts {
@@ -244,7 +225,7 @@ function buildBack(): RaccoonParts {
   const tail = stripedTail(3, -3, 4.5, 8);
   tail.rotation = 0.45;
   body.addChild(...legs, torso, head, tail);
-  return { body, torso, head, tail, legs, legPairs: [0, 1] };
+  return legacyParts({ body, torso, head, face: headFace(head), tail, legs, legPairs: [0, 1] });
 }
 
 function buildSide(): RaccoonParts {
@@ -282,5 +263,13 @@ function buildSide(): RaccoonParts {
 
   body.addChild(tail, ...farLegs, torso, ...nearLegs, head);
   // Diagonal pairs, like a real walk: far-back with near-front.
-  return { body, torso, head, tail, legs: [...farLegs, ...nearLegs], legPairs: [0, 1, 1, 0] };
+  return legacyParts({
+    body,
+    torso,
+    head,
+    face,
+    tail,
+    legs: [...farLegs, ...nearLegs],
+    legPairs: [0, 1, 1, 0],
+  });
 }

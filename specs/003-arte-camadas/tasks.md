@@ -32,8 +32,16 @@ comportamento da RW-002 continuam verdes (RA1).
 
 ## Fase 2 — Poses novas
 
-- [ ] **T5** Pose de **frente** no estilo da referência: cabeça grande, máscara, faixa creme, olhos
+- [x] **T5** Pose de **frente** no estilo da referência: cabeça grande, máscara, faixa creme, olhos
   com brilho, nariz, boquinha, braços, pernas, barriga e rabo. Camadas na ordem do plano (RA2).
+  - `rig.ts` com `buildFront(paleta)`, que agora é o novo tipo `RaccoonParts` (com `face`,
+    `legLayer`, `armLayer` e `arms`). Costas e lado continuam as da RW-002 até a T6/T7.
+  - O `RaccoonView` recebe a paleta (padrão: `DEFAULT_PALETTE`).
+  - Com as orelhas novas o guaxinim tem ~46 px. O nome subiu para −49 e o balão para −65, e o
+    teste de altura foi de −45 para −49 (RA6 permite até 48 px).
+  - Ajustado depois de comparar com a referência a 10×: o rosto saiu do "efeito óculos" (creme no
+    rosto todo, olhos com anel branco) para rosto cinza, faixa creme contornando a máscara,
+    máscara maior e olhos pretos com brilho; o tufo ficou mais discreto.
 - [ ] **T6** Pose de **lado**: perfil com focinho, perna de trás e da frente, braço e rabo atrás.
 - [ ] **T7** Pose de **costas** com mais detalhe (Q2): nuca clara, orelhas com contorno e rabo com
   volume por cima do corpo.

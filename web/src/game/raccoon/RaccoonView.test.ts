@@ -60,7 +60,8 @@ describe("RaccoonView poses (RV1)", () => {
       v.setFacing(facing);
       const b = v.parts.body.getLocalBounds();
       expect(b.maxY).toBeLessThanOrEqual(2); // paws may touch the ground line
-      expect(b.minY).toBeGreaterThan(-45); // fits under the nickname at y=-38..-50
+      // RW-003 (RA6): up to 48px tall with the ears; the nickname sits above that.
+      expect(b.minY).toBeGreaterThan(-49);
       expect(Math.abs(b.minX + b.maxX) / 2).toBeLessThan(8); // roughly centered on the feet
     }
   });

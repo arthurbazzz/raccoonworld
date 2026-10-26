@@ -25,8 +25,8 @@ const COLORS = {
 /** How tall a solid tile looks in the 3/4 view, in pixels. */
 const BLOCK_HEIGHT = 14;
 /** The nickname sits just above the ears; chat balloons above the nickname. */
-const LABEL_BOTTOM = -40;
-const BALLOON_BOTTOM = -56;
+const LABEL_BOTTOM = -49; // RW-003: the bigger head and ears reach about -46
+const BALLOON_BOTTOM = -65;
 const BALLOON_MAX_WIDTH = 160;
 
 interface RaccoonSprite {
