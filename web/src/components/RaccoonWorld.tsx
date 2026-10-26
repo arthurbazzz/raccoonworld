@@ -1,5 +1,6 @@
 "use client";
 
+import { useMotionAttributes } from "@/game/useMotionAttributes";
 import { useMovementKeys } from "@/game/useMovementKeys";
 import { defaultServerUrl } from "@/net/client";
 import { useRoom } from "@/net/useRoom";
@@ -14,6 +15,7 @@ const wsUrl = defaultServerUrl();
 export function RaccoonWorld() {
   const { state, status, join, sendInput, sendChat, interpolator, balloons } = useRoom(wsUrl);
   useMovementKeys(state.phase === "playing", sendInput);
+  const motions = useMotionAttributes(interpolator, Object.keys(state.players));
 
   if (state.phase !== "playing" || !state.map) {
     return (
@@ -50,8 +52,16 @@ export function RaccoonWorld() {
       {/* Screen readers and UI tests read the room from here. */}
       <ul className={styles.srOnly} aria-label="Jogadores na Praça">
         {players.map((p) => (
-          // Server position (not the interpolated one) for UI tests.
-          <li key={p.id} data-player={p.nickname} data-x={p.x} data-y={p.y}>
+          // Position: the server's. Facing/moving: what the scene draws (RW-002).
+          <li
+            key={p.id}
+            data-player={p.nickname}
+            data-x={p.x}
+            data-y={p.y}
+            data-facing={motions[p.id]?.facing}
+            data-moving={motions[p.id]?.moving}
+            data-ring={p.id === state.you}
+          >
             {p.nickname}
           </li>
         ))}

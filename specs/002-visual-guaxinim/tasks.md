@@ -33,7 +33,7 @@ no formato `RW-002/Tn: <descrição>`.
 
 ## Fase 3 — Integração
 
-- [ ] **T7** `RoomScene` passa a usar o `RaccoonView` e o `motion()`. O hook
+- [x] **T7** `RoomScene` passa a usar o `RaccoonView` e o `motion()`. O hook
   `useMotionAttributes` atualiza `data-facing`, `data-moving` e `data-ring` na lista acessível
   10 vezes por segundo.
 - [ ] **T8** Implementar os steps de `visual.feature`. Pronto quando os 6 cenários passam.

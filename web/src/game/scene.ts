@@ -5,9 +5,10 @@ import type { PlayerId, PlayerState } from "@/net/protocol";
 import type { ChatBalloons } from "./chat";
 import { playerDepth, tileDepth } from "./depth";
 import type { Interpolator } from "./interpolation";
+import { RaccoonView } from "./raccoonArt";
 import { fitScale, type SolidTile, type TileMap } from "./tilemap";
 
-// Placeholder art (plan §4): flat shapes until the real sprites arrive.
+// Scenery and UI colors; the raccoon palette lives in raccoonArt.ts.
 const COLORS = {
   background: 0x2b2622,
   floorA: 0x8fb07a,
@@ -15,9 +16,6 @@ const COLORS = {
   blockTop: 0x9b8a74,
   blockFront: 0x6e604f,
   shadow: 0x000000,
-  fur: 0x8a8a8f,
-  furLight: 0xd9d6cf,
-  mask: 0x2e2e33,
   label: 0xffffff,
   youLabel: 0xffe08a,
   balloon: 0xffffff,
@@ -26,12 +24,13 @@ const COLORS = {
 
 /** How tall a solid tile looks in the 3/4 view, in pixels. */
 const BLOCK_HEIGHT = 14;
-/** Chat balloons sit above the nickname label. */
-const BALLOON_BOTTOM = -54;
+/** The nickname sits just above the ears; chat balloons above the nickname. */
+const LABEL_BOTTOM = -40;
+const BALLOON_BOTTOM = -56;
 const BALLOON_MAX_WIDTH = 160;
 
 interface RaccoonSprite {
-  body: Container;
+  body: RaccoonView;
   balloon: Container | null;
   balloonText: string | null;
 }
@@ -114,13 +113,21 @@ export class RoomScene {
     this.app.destroy({ removeView: true }, { children: true });
   }
 
-  /** Moves raccoons to their interpolated position and updates balloons. */
+  /**
+   * Moves raccoons to their interpolated position, turns and animates them
+   * (RW-002), and updates balloons.
+   */
   private place(now: number): void {
     for (const [id, sprite] of this.raccoons) {
       const pos = this.interpolator.position(id, now);
       if (pos) {
         sprite.body.position.set(pos.x, pos.y);
         sprite.body.zIndex = playerDepth(pos.y);
+      }
+      const motion = this.interpolator.motion(id, now);
+      if (motion) {
+        if (motion.facing !== sprite.body.facing) sprite.body.setFacing(motion.facing);
+        sprite.body.animate(motion.moving, now);
       }
       this.updateBalloon(sprite, this.balloons.textFor(id, now));
       sprite.balloon?.position.copyFrom(sprite.body.position);
@@ -168,26 +175,9 @@ function drawBlock(tile: SolidTile): Graphics {
   return g;
 }
 
-/** Placeholder raccoon, drawn upward from its feet at (0, 0). */
-function drawRaccoon(nickname: string, isYou: boolean): Container {
-  const c = new Container();
-  const g = new Graphics();
-  g.ellipse(0, 0, 11, 4).fill({ color: COLORS.shadow, alpha: 0.25 });
-  // Striped tail.
-  g.ellipse(11, -8, 5, 9).fill(COLORS.fur);
-  g.rect(7, -10, 9, 3).fill(COLORS.mask);
-  // Body and head.
-  g.ellipse(0, -10, 10, 10).fill(COLORS.fur);
-  g.circle(0, -24, 9).fill(COLORS.fur);
-  g.circle(-6, -32, 3).fill(COLORS.fur);
-  g.circle(6, -32, 3).fill(COLORS.fur);
-  g.ellipse(0, -21, 5, 3).fill(COLORS.furLight);
-  // Bandit mask and eyes.
-  g.rect(-8, -27, 16, 5).fill(COLORS.mask);
-  g.circle(-3.5, -25, 1.5).fill(COLORS.label);
-  g.circle(3.5, -25, 1.5).fill(COLORS.label);
-  c.addChild(g);
-
+/** A raccoon (RW-002 art) with its nickname above the head. */
+function drawRaccoon(nickname: string, isYou: boolean): RaccoonView {
+  const view = new RaccoonView({ isYou });
   const label = new Text({
     text: nickname,
     style: {
@@ -200,9 +190,9 @@ function drawRaccoon(nickname: string, isYou: boolean): Container {
     resolution: 2,
   });
   label.anchor.set(0.5, 1);
-  label.position.set(0, -38);
-  c.addChild(label);
-  return c;
+  label.position.set(0, LABEL_BOTTOM);
+  view.addChild(label); // outside the body, so it never flips
+  return view;
 }
 
 /** A speech balloon whose tail points down at (0, BALLOON_BOTTOM). */
