@@ -9,7 +9,7 @@ os 14 cenários de navegador continuam verdes (RS1).
 
 - [x] **T1** Versionar a imagem fonte em `web/art/raccoon.png`, declarar o `sharp` como
   devDependency e ignorar `web/public/sprites/` no git.
-- [ ] **T2** `scripts/sprites/slice.ts` (Vitest, TDD): achar fileiras e colunas pelas faixas
+- [x] **T2** `scripts/sprites/slice.ts` (Vitest, TDD): achar fileiras e colunas pelas faixas
   transparentes, ignorar sujeira, gerar erro com a contagem quando não forem 3×6 (RS2).
 - [ ] **T3** Alinhamento pelos pés e montagem das células, ainda como lógica pura: tamanho da
   célula, `anchor`, `artHeight` e o conteúdo do JSON (RS3).
