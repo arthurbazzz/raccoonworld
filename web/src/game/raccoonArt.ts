@@ -30,9 +30,67 @@ export interface RaccoonParts {
   head: Container;
   tail: Graphics;
   legs: Graphics[];
+  /** Which pair each leg belongs to (0 or 1): pairs lift in turn when walking. */
+  legPairs: (0 | 1)[];
 }
 
 const C = RACCOON_COLORS;
+
+/** Walking cadence (RV2): one paw pair lifts per step. */
+export const STEPS_PER_SECOND = 6;
+/** Idle breathing cycle (RV2). */
+export const BREATH_PERIOD_MS = 2000;
+
+const BOB_PX = 2;
+const LEG_LIFT_PX = 2;
+const TAIL_SWAY_RAD = 0.15;
+const BREATH_AMOUNT = 0.03;
+
+/** How the animatable parts are offset from their rest pose at one moment. */
+export interface AnimationFrame {
+  /** Vertical body offset in px (negative is up). */
+  bob: number;
+  /** How high each paw pair is lifted, in px. */
+  legLift: [number, number];
+  /** Tail rotation added to its rest angle, in radians. */
+  tailSway: number;
+  /** Torso vertical scale. */
+  breath: number;
+}
+
+/**
+ * The animation at time `t` (ms), computed from the clock alone so no state
+ * is kept per frame. Walking: each step is half a sine period, lifting one
+ * paw pair while the body bobs. Idle: a slow breath and nothing else.
+ */
+export function animationFrame(moving: boolean, t: number): AnimationFrame {
+  if (!moving) {
+    const breath = BREATH_AMOUNT * (1 - Math.cos((2 * Math.PI * t) / BREATH_PERIOD_MS)) * 0.5;
+    return { bob: 0, legLift: [0, 0], tailSway: 0, breath: 1 + breath };
+  }
+  const s = Math.sin((Math.PI * t * STEPS_PER_SECOND) / 1000);
+  return {
+    bob: -Math.abs(s) * BOB_PX,
+    legLift: [Math.max(0, s) * LEG_LIFT_PX, Math.max(0, -s) * LEG_LIFT_PX],
+    tailSway: s * TAIL_SWAY_RAD,
+    breath: 1,
+  };
+}
+
+/** Rest values of the parts, so animate() can offset from them. */
+interface Rest {
+  legY: number[];
+  headY: number;
+  tailRotation: number;
+}
+
+function restOf(parts: RaccoonParts): Rest {
+  return {
+    legY: parts.legs.map((l) => l.y),
+    headY: parts.head.y,
+    tailRotation: parts.tail.rotation,
+  };
+}
 
 export function poseFor(facing: Facing): Pose {
   if (facing === "down") return "front";
@@ -49,11 +107,13 @@ export class RaccoonView extends Container {
   facing: Facing = "down";
   pose: Pose = "front";
   parts: RaccoonParts;
+  private rest: Rest;
 
   constructor() {
     super();
     this.addChild(drawShadow());
     this.parts = buildPose(this.pose);
+    this.rest = restOf(this.parts);
     this.addChild(this.parts.body);
   }
 
@@ -64,10 +124,25 @@ export class RaccoonView extends Container {
       const index = this.getChildIndex(this.parts.body);
       this.parts.body.destroy({ children: true });
       this.parts = buildPose(pose);
+      this.rest = restOf(this.parts);
       this.addChildAt(this.parts.body, index);
       this.pose = pose;
     }
     this.parts.body.scale.x = facing === "left" ? -1 : 1;
+  }
+
+  /** Applies the walking or idle animation at time `t` (ms). */
+  animate(moving: boolean, t: number): void {
+    const f = animationFrame(moving, t);
+    const { parts, rest } = this;
+    parts.body.y = f.bob;
+    parts.legs.forEach((leg, i) => {
+      leg.y = rest.legY[i] - f.legLift[parts.legPairs[i]];
+    });
+    parts.tail.rotation = rest.tailRotation + f.tailSway;
+    // The torso grows upward from the feet; the head rides on top of it.
+    parts.torso.scale.y = f.breath;
+    parts.head.y = rest.headY * f.breath;
   }
 }
 
@@ -138,7 +213,7 @@ function buildFront(): RaccoonParts {
   head.addChild(face);
 
   body.addChild(tail, ...legs, torso, head);
-  return { body, torso, head, tail, legs };
+  return { body, torso, head, tail, legs, legPairs: [0, 1] };
 }
 
 function buildBack(): RaccoonParts {
@@ -157,7 +232,7 @@ function buildBack(): RaccoonParts {
   const tail = stripedTail(3, -3, 4.5, 8);
   tail.rotation = 0.45;
   body.addChild(...legs, torso, head, tail);
-  return { body, torso, head, tail, legs };
+  return { body, torso, head, tail, legs, legPairs: [0, 1] };
 }
 
 function buildSide(): RaccoonParts {
@@ -194,5 +269,6 @@ function buildSide(): RaccoonParts {
   head.addChild(face);
 
   body.addChild(tail, ...farLegs, torso, ...nearLegs, head);
-  return { body, torso, head, tail, legs: [...farLegs, ...nearLegs] };
+  // Diagonal pairs, like a real walk: far-back with near-front.
+  return { body, torso, head, tail, legs: [...farLegs, ...nearLegs], legPairs: [0, 1, 1, 0] };
 }

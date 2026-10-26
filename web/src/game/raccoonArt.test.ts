@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest";
 
-import { RACCOON_COLORS, RaccoonView } from "./raccoonArt";
+import {
+  animationFrame,
+  BREATH_PERIOD_MS,
+  RACCOON_COLORS,
+  RaccoonView,
+  STEPS_PER_SECOND,
+} from "./raccoonArt";
 
 describe("RaccoonView poses (RV1)", () => {
   it("starts facing down with the front pose", () => {
@@ -78,5 +84,89 @@ describe("RaccoonView poses (RV1)", () => {
     expect(Object.keys(RACCOON_COLORS)).toEqual(
       expect.arrayContaining(["fur", "furLight", "mask", "tailRing", "paw"]),
     );
+  });
+});
+
+describe("animationFrame (RV2)", () => {
+  it("stands still and breathes when idle", () => {
+    expect(animationFrame(false, 0)).toEqual({ bob: 0, legLift: [0, 0], tailSway: 0, breath: 1 });
+    const peak = animationFrame(false, BREATH_PERIOD_MS / 2);
+    expect(peak.breath).toBeCloseTo(1.03);
+    expect(peak.bob).toBe(0);
+    expect(peak.legLift).toEqual([0, 0]);
+  });
+
+  it("breathes between 1.00 and 1.03 over a ~2s cycle", () => {
+    expect(BREATH_PERIOD_MS).toBe(2000);
+    for (let t = 0; t < 4000; t += 37) {
+      const b = animationFrame(false, t).breath;
+      expect(b).toBeGreaterThanOrEqual(1);
+      expect(b).toBeLessThanOrEqual(1.03 + 1e-9);
+    }
+  });
+
+  it("bobs up to 2px and alternates paws while walking", () => {
+    let sawA = false;
+    let sawB = false;
+    for (let t = 0; t < 1000; t += 7) {
+      const f = animationFrame(true, t);
+      expect(f.bob).toBeLessThanOrEqual(0);
+      expect(f.bob).toBeGreaterThanOrEqual(-2);
+      expect(f.breath).toBe(1);
+      // Never both pairs in the air.
+      expect(Math.min(f.legLift[0], f.legLift[1])).toBe(0);
+      if (f.legLift[0] > 0) sawA = true;
+      if (f.legLift[1] > 0) sawB = true;
+    }
+    expect(sawA && sawB).toBe(true);
+  });
+
+  it("takes about 6 steps per second", () => {
+    expect(STEPS_PER_SECOND).toBe(6);
+    // One step later the other pair of paws is up.
+    const stepMs = 1000 / STEPS_PER_SECOND;
+    const a = animationFrame(true, stepMs / 2);
+    const b = animationFrame(true, stepMs * 1.5);
+    expect(a.legLift[0]).toBeGreaterThan(0);
+    expect(b.legLift[1]).toBeGreaterThan(0);
+  });
+
+  it("sways the tail while walking", () => {
+    const sways = [0, 40, 80, 120].map((t) => animationFrame(true, t).tailSway);
+    expect(new Set(sways.map((s) => s.toFixed(3))).size).toBeGreaterThan(1);
+  });
+});
+
+describe("RaccoonView.animate", () => {
+  it("applies the walking frame to the parts and resets when idle", () => {
+    const v = new RaccoonView();
+    const legY = v.parts.legs.map((l) => l.y);
+    const tailRotation = v.parts.tail.rotation;
+
+    const stepMs = 1000 / STEPS_PER_SECOND;
+    v.animate(true, stepMs / 2);
+    expect(v.parts.body.y).toBeLessThan(0);
+    expect(v.parts.legs[0].y).toBeLessThan(legY[0]);
+    expect(v.parts.tail.rotation).not.toBe(tailRotation);
+
+    v.animate(false, 0);
+    expect(v.parts.body.y).toBe(0);
+    expect(v.parts.legs.map((l) => l.y)).toEqual(legY);
+    expect(v.parts.tail.rotation).toBe(tailRotation);
+  });
+
+  it("breathes by stretching the torso upward and lifting the head with it", () => {
+    const v = new RaccoonView();
+    const headY = v.parts.head.y;
+    v.animate(false, BREATH_PERIOD_MS / 2);
+    expect(v.parts.torso.scale.y).toBeCloseTo(1.03);
+    expect(v.parts.head.y).toBeLessThan(headY);
+  });
+
+  it("keeps animating after the pose changes", () => {
+    const v = new RaccoonView();
+    v.setFacing("right");
+    v.animate(true, 1000 / STEPS_PER_SECOND / 2);
+    expect(v.parts.body.y).toBeLessThan(0);
   });
 });
