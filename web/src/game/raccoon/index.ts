@@ -1,12 +1,6 @@
-// The raccoon drawn in code (RW-002, RW-003): public API used by the scene.
-export {
-  animationFrame,
-  BREATH_PERIOD_MS,
-  poseFor,
-  RACCOON_COLORS,
-  RaccoonView,
-  STEPS_PER_SECOND,
-  type AnimationFrame,
-  type Pose,
-  type RaccoonParts,
-} from "./RaccoonView";
+// The raccoon drawn from the sprite sheet (RW-004): public API used by the
+// scene and the gallery.
+export { frameFor, IDLE_FRAME_MS, WALK_FPS, type FrameRef } from "./frames";
+export type { SheetManifest } from "./manifest";
+export { RaccoonView, TARGET_HEIGHT } from "./RaccoonSprite";
+export { loadRaccoonSheet, MANIFEST_URL, sheetFrom, type RaccoonSheet } from "./sheet";

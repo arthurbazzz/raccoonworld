@@ -23,8 +23,17 @@ os 14 cenários de navegador continuam verdes (RS1).
   trocando a cada 1 s (RS5).
 - [x] **T6** `sheet.ts`: carregar o JSON e a imagem e cortar as texturas, com mipmaps.
   `RaccoonView` com `Sprite` de 46 px, espelhando só o sprite (RS1, RS4). Testes com texturas falsas.
-- [ ] **T7** Cena e galeria usando a folha, com a mensagem de erro se ela não carregar. Remover
+- [x] **T7** Cena e galeria usando a folha, com a mensagem de erro se ela não carregar. Remover
   a arte em código, a animação por código e os testes antigos (RS9).
+  - A cena carrega a folha em `RoomScene.create`. Saíram 9 arquivos da RW-002/RW-003:
+    `RaccoonView.ts`, `palette`, `shapes`, `rig` e os testes deles.
+  - Galeria com zoom 2,5× (perto da resolução da arte); com 4× o sprite ficava borrado.
+  - `public/sprites/` entrou no `.prettierignore`, porque é gerado.
+  - **E2E:** "Animação de andar" falhou 1 vez em 5 com o Next frio. O rocky bate no muro de baixo
+    em ~1,3 s, e a página do observador ainda carregava o PixiJS e o sprite. O `join` dos steps
+    agora espera o canvas aparecer. Depois disso, 3/3 a frio e a suíte completa 14/14. Cada
+    cenário com 2 jogadores passou de ~4 s para ~17–20 s, porque agora espera o jogo carregar
+    em contextos sem cache; no navegador, o canvas aparece ~0,4 s depois de "Entrar".
 
 ## Fase 2 — Fechamento
 

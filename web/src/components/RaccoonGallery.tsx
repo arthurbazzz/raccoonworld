@@ -15,8 +15,9 @@ const STATES = [
   { moving: true, label: "andando" },
 ];
 
-const ZOOM = 4;
-const CELL = 56 * ZOOM; // one zoomed raccoon per column
+// ~ the art's own resolution (108px art shown ~115px): more would only blur it.
+const ZOOM = 2.5;
+const CELL = 64 * ZOOM; // one zoomed raccoon per column
 const LABEL_H = 26;
 const ACTUAL_H = 70; // strip with the same raccoons at game size
 // One block per state: label, zoomed row, game-size row.
@@ -37,10 +38,11 @@ export function RaccoonGallery() {
     let destroy: (() => void) | null = null;
 
     (async () => {
-      const [{ Application, Text }, { RaccoonView }] = await Promise.all([
+      const [{ Application, Text }, { RaccoonView, loadRaccoonSheet }] = await Promise.all([
         import("pixi.js"),
         import("@/game/raccoon"),
       ]);
+      const sheet = await loadRaccoonSheet();
       const app = new Application();
       await app.init({
         width: FACINGS.length * CELL,
@@ -74,14 +76,14 @@ export function RaccoonGallery() {
           const cx = col * CELL + CELL / 2;
           label(`${facingLabel} · ${stateLabel}`, cx, top + 6);
 
-          const zoomed = new RaccoonView();
+          const zoomed = new RaccoonView(sheet);
           zoomed.setFacing(facing);
           zoomed.scale.set(ZOOM);
           zoomed.position.set(cx, top + LABEL_H + CELL - 12);
           app.stage.addChild(zoomed);
 
           // Game size below; the first one has the ring, to judge it at 1x too.
-          const actual = new RaccoonView({ isYou: col === 0 });
+          const actual = new RaccoonView(sheet, { isYou: col === 0 });
           actual.setFacing(facing);
           actual.position.set(cx, top + BLOCK_H - 14);
           app.stage.addChild(actual);
@@ -106,8 +108,8 @@ export function RaccoonGallery() {
     <main style={{ padding: 16, overflowX: "auto" }}>
       <h1 style={{ margin: "0 0 4px" }}>Galeria do guaxinim</h1>
       <p style={{ margin: "0 0 12px", opacity: 0.7 }}>
-        Só em desenvolvimento (RW-003). Todas as poses, paradas e andando, ampliadas e no tamanho do
-        jogo.
+        Só em desenvolvimento (RW-004, sprites). Todas as poses, paradas e andando, ampliadas e no
+        tamanho do jogo.
       </p>
       <div ref={hostRef} />
     </main>

@@ -5,7 +5,7 @@ import type { PlayerId, PlayerState } from "@/net/protocol";
 import type { ChatBalloons } from "./chat";
 import { playerDepth, tileDepth } from "./depth";
 import type { Interpolator } from "./interpolation";
-import { RaccoonView } from "./raccoon";
+import { loadRaccoonSheet, RaccoonView, type RaccoonSheet } from "./raccoon";
 import { fitScale, type SolidTile, type TileMap } from "./tilemap";
 
 // Scenery and UI colors; the raccoon palette lives in raccoon/.
@@ -55,6 +55,7 @@ export class RoomScene {
     private readonly map: TileMap,
     private readonly interpolator: Interpolator,
     private readonly balloons: ChatBalloons,
+    private readonly sheet: RaccoonSheet,
   ) {
     this.world.addChild(this.floor, this.entities, this.overlay);
     app.stage.addChild(this.world);
@@ -71,6 +72,8 @@ export class RoomScene {
     interpolator: Interpolator,
     balloons: ChatBalloons,
   ): Promise<RoomScene> {
+    // RW-004: the raccoon art; a failure surfaces in GameCanvas as an error.
+    const sheet = await loadRaccoonSheet();
     const app = new Application();
     await app.init({
       resizeTo: parent,
@@ -80,7 +83,7 @@ export class RoomScene {
       resolution: Math.min(window.devicePixelRatio || 1, 2),
     });
     parent.appendChild(app.canvas);
-    return new RoomScene(app, map, interpolator, balloons);
+    return new RoomScene(app, map, interpolator, balloons, sheet);
   }
 
   /**
@@ -98,7 +101,7 @@ export class RoomScene {
     }
     for (const p of Object.values(players)) {
       if (this.raccoons.has(p.id)) continue;
-      const body = drawRaccoon(p.nickname, p.id === you);
+      const body = drawRaccoon(this.sheet, p.nickname, p.id === you);
       body.position.set(p.x, p.y);
       body.zIndex = playerDepth(p.y);
       this.entities.addChild(body);
@@ -175,9 +178,9 @@ function drawBlock(tile: SolidTile): Graphics {
   return g;
 }
 
-/** A raccoon (RW-002 art) with its nickname above the head. */
-function drawRaccoon(nickname: string, isYou: boolean): RaccoonView {
-  const view = new RaccoonView({ isYou });
+/** A raccoon (RW-004 sprites) with its nickname above the head. */
+function drawRaccoon(sheet: RaccoonSheet, nickname: string, isYou: boolean): RaccoonView {
+  const view = new RaccoonView(sheet, { isYou });
   const label = new Text({
     text: nickname,
     style: {
