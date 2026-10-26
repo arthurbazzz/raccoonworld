@@ -19,6 +19,7 @@ import (
 // featurePaths are relative to this package directory (go test runs here).
 var featurePaths = []string{
 	"../../specs/001-sala-inicial/features",
+	"../../specs/005-tres-copos/features",
 }
 
 func TestFeatures(t *testing.T) {
