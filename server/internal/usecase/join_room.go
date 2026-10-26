@@ -72,6 +72,7 @@ func (uc *JoinRoom) Execute(in JoinInput) error {
 			MapName: r.Map().Name(),
 			You:     me,
 			Players: r.Players(),
+			Cups:    uc.runner.cupsSnapshot(now),
 		})
 		uc.broadcaster.ToRoom(r.ID(), PlayerJoined{Player: me})
 	})

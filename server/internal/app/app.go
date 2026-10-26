@@ -11,6 +11,7 @@ import (
 
 	"raccoons-world/server/internal/adapter/httpapi"
 	"raccoons-world/server/internal/adapter/ws"
+	"raccoons-world/server/internal/domain/cups"
 	"raccoons-world/server/internal/domain/room"
 	"raccoons-world/server/internal/usecase"
 	"raccoons-world/server/maps"
@@ -21,6 +22,8 @@ type Options struct {
 	AllowedOrigins []string
 	Clock          usecase.Clock
 	Logger         *slog.Logger // nil discards logs
+	// CupsSpeedup divides the three cups durations; 0 or 1 is real speed.
+	CupsSpeedup int
 }
 
 // App is a ready-to-serve Raccoons World server with a single room.
@@ -37,7 +40,11 @@ func New(opts Options) (*App, error) {
 	}
 
 	hub := ws.NewHub(opts.Logger)
-	runner := usecase.NewRoomRunner(room.New("praca", tiles), hub, opts.Clock)
+	runner := usecase.NewRoomRunner(
+		room.New("praca", tiles),
+		cups.NewGame(cups.DefaultTiming().Scaled(opts.CupsSpeedup), cups.RandomShuffler{}),
+		hub, opts.Clock,
+	)
 	wsHandler := ws.NewHandler(hub, ws.UseCases{
 		Join:      usecase.NewJoinRoom(runner, hub, opts.Clock),
 		SetInput:  usecase.NewSetInput(runner),

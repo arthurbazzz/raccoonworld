@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"raccoons-world/server/internal/domain/cups"
 	"raccoons-world/server/internal/domain/room"
 	"raccoons-world/server/internal/usecase"
 	"raccoons-world/server/maps"
@@ -23,7 +24,7 @@ func (w *world) openRoom(name string) error {
 	if err != nil {
 		return err
 	}
-	w.runner = usecase.NewRoomRunner(room.New(id, tiles), w.broadcaster, w.clock)
+	w.runner = usecase.NewRoomRunner(room.New(id, tiles), cups.NewGame(cups.DefaultTiming(), cycleShuffler{}), w.broadcaster, w.clock)
 	w.ticks = make(chan time.Time)
 	w.done = make(chan struct{})
 
@@ -38,6 +39,9 @@ func (w *world) openRoom(name string) error {
 	w.keepAlive = usecase.NewKeepAlive(w.runner, w.clock)
 	w.setInput = usecase.NewSetInput(w.runner)
 	w.sendChat = usecase.NewSendChat(w.runner, w.broadcaster, w.clock)
+	w.joinCups = usecase.NewJoinCups(w.runner, w.broadcaster, w.clock)
+	w.pickCup = usecase.NewPickCup(w.runner, w.clock)
+	w.leaveCups = usecase.NewLeaveCups(w.runner, w.clock)
 	return nil
 }
 

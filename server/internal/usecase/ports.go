@@ -6,6 +6,7 @@ package usecase
 import (
 	"time"
 
+	"raccoons-world/server/internal/domain/cups"
 	"raccoons-world/server/internal/domain/room"
 )
 
@@ -43,6 +44,7 @@ type Joined struct {
 	MapName string
 	You     room.PlayerView
 	Players []room.PlayerView
+	Cups    CupsSnapshot // the three cups booth right now (RW-005)
 }
 
 // JoinRejected is sent to a visitor whose join attempt failed.
@@ -73,3 +75,56 @@ func (PlayerLeft) isEvent()   {}
 func (Joined) isEvent()       {}
 func (JoinRejected) isEvent() {}
 func (PlayerJoined) isEvent() {}
+
+// CupsSnapshot is the three cups booth as a newcomer must see it: who is
+// there and, if a round is on, the round so far.
+type CupsSnapshot struct {
+	Status cups.StatusChanged
+	Round  *CupsRound // nil when no round is in progress
+}
+
+// CupsStatus is broadcast when who is at the booth, or its phase, changes
+// (RC6, RC22).
+type CupsStatus struct {
+	Status cups.StatusChanged
+}
+
+// CupsRound is broadcast when a round starts, with everything needed to
+// animate it (RC8, RC20). Elapsed is only set in a CupsSnapshot.
+type CupsRound struct {
+	Round   cups.RoundStarted
+	Elapsed time.Duration
+}
+
+// CupsPicked is broadcast when someone picks, without the cup (RC10).
+type CupsPicked struct {
+	ID room.PlayerID
+}
+
+// CupsRevealed is broadcast when the cups go up.
+type CupsRevealed struct {
+	Reveal cups.Revealed
+}
+
+// CupsResults is broadcast at the end of a match (RC12).
+type CupsResults struct {
+	Results cups.Finished
+}
+
+// CupsRejectReason tells a player why they could not play.
+type CupsRejectReason string
+
+// CupsTooFar: the raccoon is not near the booth (RC2).
+const CupsTooFar CupsRejectReason = "too_far"
+
+// CupsRejected is sent to a player whose cups.join was refused.
+type CupsRejected struct {
+	Reason CupsRejectReason
+}
+
+func (CupsStatus) isEvent()   {}
+func (CupsRound) isEvent()    {}
+func (CupsPicked) isEvent()   {}
+func (CupsRevealed) isEvent() {}
+func (CupsResults) isEvent()  {}
+func (CupsRejected) isEvent() {}
