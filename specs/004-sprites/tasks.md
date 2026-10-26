@@ -1,6 +1,6 @@
 # RW-004 — Tasks: Guaxinim em sprites
 
-Status: **Concluído** (2026-10-26), menos a aprovação visual · Aprovado: 2026-10-25 · Plano: [plan.md](plan.md) · Criado: 2026-10-25
+Status: **Concluído** (2026-10-26) · Aprovado: 2026-10-25 · Plano: [plan.md](plan.md) · Criado: 2026-10-25
 
 Regras: uma task por vez, teste antes do código, commits `RW-004/Tn: <descrição>`. A cada task,
 os 14 cenários de navegador continuam verdes (RS1).
@@ -47,7 +47,7 @@ os 14 cenários de navegador continuam verdes (RS1).
 - [x] **Critérios de aceitação:**
   - **14/14 cenários de navegador** (RW-001 e RW-002) com o guaxinim em sprites, rodados a frio;
   - testes de detecção, erro, alinhamento, escolha de quadro e do `RaccoonView`.
-- [ ] **Aprovação visual do dono na `/galeria`:** pendente.
+- [x] **Aprovação visual do dono na `/galeria`:** aprovada em 2026-10-26.
 - [x] **Testes, lint e formatação:**
   - Vitest com 134 testes, `tsc`, ESLint, Prettier e `next build`;
   - Go: `go vet`, golangci-lint com 0 problemas e todos os pacotes verdes, sem mudanças nesta RW.
