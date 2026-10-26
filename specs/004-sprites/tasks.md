@@ -11,7 +11,7 @@ os 14 cenários de navegador continuam verdes (RS1).
   devDependency e ignorar `web/public/sprites/` no git.
 - [x] **T2** `scripts/sprites/slice.ts` (Vitest, TDD): achar fileiras e colunas pelas faixas
   transparentes, ignorar sujeira, gerar erro com a contagem quando não forem 3×6 (RS2).
-- [ ] **T3** Alinhamento pelos pés e montagem das células, ainda como lógica pura: tamanho da
+- [x] **T3** Alinhamento pelos pés e montagem das células, ainda como lógica pura: tamanho da
   célula, `anchor`, `artHeight` e o conteúdo do JSON (RS3).
 - [ ] **T4** `scripts/sprites/build.ts` com `sharp` e o comando `npm run sprites`, ligado ao
   `predev`, `prebuild` e `pretest:e2e` (RS8). Rodar contra a imagem real e conferir as 18 células
