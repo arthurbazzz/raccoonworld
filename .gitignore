@@ -22,3 +22,6 @@ web/.features-gen/
 Thumbs.db
 .vscode/
 .idea/
+
+# RW-004: generated from web/art/ by `npm run sprites`
+web/public/sprites/

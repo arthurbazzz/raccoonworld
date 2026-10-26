@@ -3,7 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "sprites": "node scripts/sprites/build.ts",
+    "predev": "npm run sprites",
     "dev": "next dev",
+    "prebuild": "npm run sprites",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
@@ -11,6 +14,7 @@
     "format:check": "prettier --check .",
     "test": "vitest run",
     "test:watch": "vitest",
+    "pretest:e2e": "npm run sprites",
     "test:e2e": "bddgen && playwright test"
   },
   "dependencies": {
@@ -30,6 +34,7 @@
     "eslint-config-prettier": "10.1.8",
     "playwright-bdd": "9.2.1",
     "prettier": "3.9.10",
+    "sharp": "0.35.5",
     "typescript": "^5",
     "vitest": "3.2.7"
   }

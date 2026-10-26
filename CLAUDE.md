@@ -48,6 +48,10 @@ Funcionalidade: Entrar em um minigame
 <!-- Preencher quando o projeto tiver código -->
 - Frontend (em `web/`): `npm run dev` · `npm test` (Vitest) · `npm run test:e2e` (playwright-bdd,
   cenários `@ui`/`@e2e`; sobe os dois servidores sozinho) · `npm run lint` · `npm run format:check`
+- Sprites (RW-004): a arte fonte fica em `web/art/`. `npm run sprites` gera `web/public/sprites/`
+  (fora do git) e roda sozinho antes de `dev`, `build` e `test:e2e`; se a imagem sair do formato
+  3×6, esses comandos param. Os scripts em `web/scripts/` rodam com o TypeScript nativo do Node:
+  sem `enum` e sem parâmetros de construtor com modificador; importe com a extensão `.ts`.
 - O BDD de UI usa um único servidor compartilhado. Feche abas do jogo abertas em outro navegador
   antes de rodar: elas reconectam sozinhas e ocupam os apelidos dos cenários.
 - Backend (em `server/`): `go run ./cmd/server` · `go test ./...` (inclui godog) ·

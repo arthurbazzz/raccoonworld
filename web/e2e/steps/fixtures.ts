@@ -34,6 +34,10 @@ export class World {
     await page.getByLabel("Apelido").fill(nickname);
     await page.getByRole("button", { name: "Entrar na Praça" }).click();
     await expect(this.entry(page, nickname)).toBeAttached();
+    // Ready to play only once the scene is on screen (PixiJS and, since
+    // RW-004, the sprite sheet loaded). On a cold dev server that takes a
+    // while, and steps that start walking earlier race a busy page.
+    await expect(page.locator("canvas")).toBeVisible({ timeout: 20_000 });
     return page;
   }
 
