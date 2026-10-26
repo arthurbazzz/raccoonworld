@@ -42,7 +42,7 @@ func New(opts Options) (*App, error) {
 	hub := ws.NewHub(opts.Logger)
 	runner := usecase.NewRoomRunner(
 		room.New("praca", tiles),
-		cups.NewGame(cups.DefaultTiming().Scaled(opts.CupsSpeedup), cups.RandomShuffler{}),
+		cups.NewGame(cupsTiming(opts.CupsSpeedup), cups.RandomShuffler{}),
 		hub, opts.Clock,
 	)
 	wsHandler := ws.NewHandler(hub, ws.UseCases{
@@ -69,4 +69,14 @@ func (a *App) RunRoom(ctx context.Context) {
 	ticker := time.NewTicker(usecase.TickInterval)
 	defer ticker.Stop()
 	a.runner.Run(ctx, ticker.C)
+}
+
+// cupsTiming is the real three cups timing, sped up by speedup for browser
+// tests (RW_CUPS_FAST). Picking and the reveal keep their real length: the
+// players, and the tests, need the time to click and to read the result.
+func cupsTiming(speedup int) cups.Timing {
+	base := cups.DefaultTiming()
+	t := base.Scaled(speedup)
+	t.Pick, t.Reveal = base.Pick, base.Reveal
+	return t
 }

@@ -1,9 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
-
 import type { CupsState } from "@/game/cups/cupsState";
 import { cupsAt, shuffleEndMs, type CupPose } from "@/game/cups/timeline";
+import { useFrameTime } from "@/game/cups/useFrameTime";
 import type { PlayerId, PlayerState } from "@/net/protocol";
 
 import styles from "./CupsPanel.module.css";
@@ -22,20 +21,6 @@ type Stage = "queued" | "lobby" | "show" | "shuffle" | "choose" | "reveal" | "re
 
 const REST: CupPose[] = [0, 1, 2].map((slot) => ({ slot, arc: 0, lift: 0 }));
 const UP: CupPose[] = [0, 1, 2].map((slot) => ({ slot, arc: 0, lift: 1 }));
-
-/** Re-renders every animation frame while `on`; returns performance.now(). */
-function useFrameTime(on: boolean): number {
-  const [now, setNow] = useState(() => performance.now());
-  useEffect(() => {
-    if (!on) return;
-    let id = requestAnimationFrame(function tick(t) {
-      setNow(t);
-      id = requestAnimationFrame(tick);
-    });
-    return () => cancelAnimationFrame(id);
-  }, [on]);
-  return now;
-}
 
 /**
  * The three cups panel over the Praça (RW-005, RC19), for whoever is in the

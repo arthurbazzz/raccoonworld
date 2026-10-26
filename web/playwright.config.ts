@@ -26,6 +26,8 @@ export default defineConfig({
     {
       command: "go run ./cmd/server",
       cwd: "../server",
+      // Fast three cups (RW-005): a match takes seconds, not a minute.
+      env: { RW_CUPS_FAST: "1" },
       url: "http://localhost:8080/health",
       reuseExistingServer: !process.env.CI,
       timeout: 120_000,

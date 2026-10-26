@@ -7,47 +7,68 @@ as suítes existentes continuam verdes (godog, `go test`, Vitest e os 14 cenári
 
 ## Fase 0 — Cenários
 
-- [ ] **T1** Passar os 22 cenários da spec para `specs/005-tres-copos/features/tres_copos.feature`,
+- [x] **T1** Passar os 22 cenários da spec para `specs/005-tres-copos/features/tres_copos.feature`,
   com as tags `@smoke` e `@e2e` do plano (seção 5). Registrar os steps no godog como pendentes:
   a suíte roda e mostra os 22 cenários **falhando/pendentes**.
+  - Os cenários não precisaram de steps pendentes: sem definição, o godog já os mostra como
+    indefinidos e falha (modo estrito). Os de navegador ficaram com `@e2e` e um com `@smoke @e2e`.
 
 ## Fase 1 — Domínio (Go, TDD com `go test`)
 
-- [ ] **T2** Barraca no mapa: tile `B` sólido e o objeto `booth` no `praca.json`; `TileMap.Booth()`
+- [x] **T2** Barraca no mapa: tile `B` sólido e o objeto `booth` no `praca.json`; `TileMap.Booth()`
   e `TileMap.NearBooth(pos)` com alcance de 48 px (RC1, RC2). Tabela de casos: dentro, na borda
   e fora do alcance, nos 4 lados.
-- [ ] **T3** `domain/cups`: tipos, constantes (seção 3.1), slots e `Shuffler`. Função pura que
+  - **Mudou:** a barraca vem só dos tiles `B` (colunas 14–16 da linha 4, caixa 448,128 96×32),
+    sem um objeto `booth` separado no JSON. Uma fonte só, sem risco de as duas discordarem.
+  - O `parseTileMap` do navegador também aprendeu o `B` (senão a Praça nem carregaria), com o
+    `nearBooth` e a mesma tabela de casos do Go.
+- [x] **T3** `domain/cups`: tipos, constantes (seção 3.1), slots e `Shuffler`. Função pura que
   aplica as trocas e devolve onde a noz termina (RC17).
-- [ ] **T4** `Game`: Idle → Lobby → Round (Show → Shuffle → Choose → Reveal) × 5 → Results →
+- [x] **T4** `Game`: Idle → Lobby → Round (Show → Shuffle → Choose → Reveal) × 5 → Results →
   Lobby/Idle, avançado por `Advance(now)` e devolvendo eventos (RC4, RC5, RC7, RC8, RC11).
-- [ ] **T5** `Pick` e `Leave`: uma escolha por rodada, só na fase Choose e só de quem joga;
+- [x] **T5** `Pick` e `Leave`: uma escolha por rodada, só na fase Choose e só de quem joga;
   revelar cedo quando todos escolheram ou quando quem faltava sai; Idle quando todos saem;
   placar ordenado com empate (RC9, RC11–RC15, RC18).
-- [ ] **T6** `Room.SetBusy`: quem joga não anda, e o input é zerado ao sair (RC21).
+  - **Adicionado na T13:** "Jogar de novo" no placar inscreve o jogador na próxima partida. Sem
+    isso, o E de quem ainda está no placar era ignorado.
+- [x] **T6** `Room.SetBusy`: quem joga não anda, e o input é zerado ao sair (RC21).
 
 ## Fase 2 — Casos de uso e protocolo (Go)
 
-- [ ] **T7** `JoinCups`, `PickCup` e `LeaveCups`; o `RoomRunner` chama `Advance` em todo tick e
+- [x] **T7** `JoinCups`, `PickCup` e `LeaveCups`; o `RoomRunner` chama `Advance` em todo tick e
   traduz os eventos; `LeaveRoom` e a expiração tiram o jogador da partida. Steps godog com
   `FakeClock` e `Shuffler` fixo: **os 22 cenários passam** no godog.
-- [ ] **T8** Protocolo v1: mensagens `cups.*` no `adapter/ws`, `cups` no `room.joined` e testes
+- [x] **T8** Protocolo v1: mensagens `cups.*` no `adapter/ws`, `cups` no `room.joined` e testes
   que fixam o JSON exato de cada mensagem. Smoke `@smoke` com o servidor real.
-- [ ] **T9** `RW_CUPS_FAST=1` na config, dividindo todos os tempos por 10 (padrão: desligado).
+- [x] **T9** `RW_CUPS_FAST=1` na config, dividindo todos os tempos por 10 (padrão: desligado).
+  - **Mudou na T14:** o modo rápido mantém a escolha (10 s) e a revelação (2,5 s) no tempo real.
+    Divididas por 10, seriam 1 s para clicar e 250 ms para ler "Acertou!", curto demais até
+    para o teste.
 
 ## Fase 3 — Frontend (Vitest antes, navegador depois)
 
-- [ ] **T10** Protocolo TS das mensagens `cups.*` (mesmos JSONs dos testes Go), `nearBooth` e o
+- [x] **T10** Protocolo TS das mensagens `cups.*` (mesmos JSONs dos testes Go), `nearBooth` e o
   reducer `cupsState`.
-- [ ] **T11** `timeline.ts`: fase e posição de cada copo pelo tempo decorrido, com o arco nas
+- [x] **T11** `timeline.ts`: fase e posição de cada copo pelo tempo decorrido, com o arco nas
   trocas; mesma resposta para qualquer `t`, inclusive depois de pular tempo (aba em segundo plano).
-- [ ] **T12** Na Praça (PixiJS): barraca e copos com `Graphics` e profundidade, copos seguindo a
+- [x] **T12** Na Praça (PixiJS): barraca e copos com `Graphics` e profundidade, copos seguindo a
   `timeline`, aviso "Aperte E para jogar", tecla E, copinho ao lado do nome e
   `data-cups` na lista acessível (RC2, RC20, RC22).
-- [ ] **T13** `CupsPanel.tsx`: espera com inscritos e contagem, copos como botões, teclas 1/2/3 e
+- [x] **T13** `CupsPanel.tsx`: espera com inscritos e contagem, copos como botões, teclas 1/2/3 e
   Esc (fora do chat), resultado da rodada, placar, **Jogar de novo** e **Sair** (RC6, RC8, RC12,
   RC13, RC19).
+  - O painel fica **embaixo**, acima do chat: no alto ele cobria a própria barraca, que fica no
+    topo da Praça. O aviso "Aperte E para jogar" também.
+  - Verificado no navegador com dois guaxinins e um robô: aviso, espera, rodada, escolha com a
+    tecla 2, "Errou!" com os copos levantados, copos mexendo na barraca para quem assiste e o
+    copinho ao lado do nome de quem joga.
+  - Para os testes de navegador lerem o que a barraca faz (ela é desenhada no canvas), uma linha
+    escondida `Barraca dos três copos` com `data-stage`, como a lista de jogadores.
 - [ ] **T14** Steps do playwright-bdd para os cenários `@e2e`, lendo `cups.round` pelo
   WebSocket para achar o copo certo, com o servidor em `RW_CUPS_FAST=1`.
+  - **Steps escritos** (`e2e/steps/cups.steps.ts`) e o `bddgen` gera os 6 cenários sem steps
+    faltando. **Ainda não rodaram:** as portas 3000 e 8080 estão ocupadas por servidores antigos
+    (de antes da RW-005), que o Playwright reaproveitaria.
 
 ## Fase 4 — Fechamento
 

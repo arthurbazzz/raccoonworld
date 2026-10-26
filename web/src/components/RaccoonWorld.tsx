@@ -12,6 +12,7 @@ import type { Rect, TileMap } from "@/game/tilemap";
 import { defaultServerUrl } from "@/net/client";
 import { useRoom } from "@/net/useRoom";
 
+import { BoothStatus } from "./BoothStatus";
 import { ChatBox } from "./ChatBox";
 import { CupsPanel } from "./CupsPanel";
 import cupsStyles from "./CupsPanel.module.css";
@@ -117,6 +118,7 @@ export function RaccoonWorld() {
           </li>
         ))}
       </ul>
+      <BoothStatus cups={state.cups} className={styles.srOnly} />
       <ol className={styles.srOnly} aria-label="Mensagens" aria-live="polite">
         {state.messages.map((m, i) => (
           <li key={i}>

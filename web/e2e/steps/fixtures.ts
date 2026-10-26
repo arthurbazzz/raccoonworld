@@ -8,6 +8,13 @@ interface Player {
   page: Page;
 }
 
+/** A cups.round message as the player received it (RW-005). */
+export interface CupsRound {
+  round: number;
+  nut: number;
+  swaps: [number, number][];
+}
+
 export interface Point {
   x: number;
   y: number;
@@ -22,6 +29,8 @@ export class World {
   private readonly players = new Map<string, Player>();
   private readonly held = new Map<string, Set<string>>();
   readonly marks = new Map<string, Point>();
+  /** Every cups.round each player received, read off the WebSocket. */
+  readonly rounds = new Map<string, CupsRound[]>();
 
   constructor(private readonly browser: Browser) {}
 
@@ -29,6 +38,18 @@ export class World {
     const context = await this.browser.newContext();
     const page = await context.newPage();
     this.players.set(nickname, { context, page });
+    const rounds: CupsRound[] = [];
+    this.rounds.set(nickname, rounds);
+    page.on("websocket", (ws) =>
+      ws.on("framereceived", ({ payload }) => {
+        try {
+          const msg = JSON.parse(String(payload));
+          if (msg.type === "cups.round") rounds.push(msg.data);
+        } catch {
+          // not JSON: not ours
+        }
+      }),
+    );
 
     await page.goto("/");
     await page.getByLabel("Apelido").fill(nickname);
