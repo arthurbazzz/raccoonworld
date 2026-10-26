@@ -89,6 +89,67 @@ describe("Interpolator", () => {
     expect(it.position("a", 1000 * TICK_MS + D)).toEqual({ x: 1000, y: 0 });
   });
 
+  describe("motion (RW-002)", () => {
+    // Walks right: 8px per tick, snapshots at 50 and 100.
+    function walkingRight() {
+      const it = new Interpolator();
+      it.ingest(joined(["a", 0, 0]), 0);
+      it.ingest(snapshot(1, ["a", 8, 0]), 50);
+      it.ingest(snapshot(2, ["a", 16, 0]), 100);
+      return it;
+    }
+
+    it("starts facing down and standing still (RV1)", () => {
+      const it = new Interpolator();
+      it.ingest(joined(["a", 0, 0]), 0);
+      expect(it.motion("a", 5000)).toEqual({ facing: "down", moving: false });
+    });
+
+    it("faces the direction of the move while walking", () => {
+      expect(walkingRight().motion("a", 100 + D)).toEqual({ facing: "right", moving: true });
+    });
+
+    it("keeps walking for 150ms after the last move, then stands still (RV2)", () => {
+      const w = walkingRight();
+      // Render time 249: the position at 99 was still changing.
+      expect(w.motion("a", 249 + D)).toEqual({ facing: "right", moving: true });
+      // Render time 250: unchanged since 100.
+      expect(w.motion("a", 250 + D)).toEqual({ facing: "right", moving: false });
+    });
+
+    it("keeps facing where it walked after stopping (RV1)", () => {
+      expect(walkingRight().motion("a", 60_000)).toEqual({ facing: "right", moving: false });
+    });
+
+    it("uses the latest direction when the move changes", () => {
+      const it = new Interpolator();
+      it.ingest(joined(["a", 0, 0]), 0);
+      it.ingest(snapshot(1, ["a", 0, -8]), 50); // up
+      it.ingest(snapshot(2, ["a", -8, -8]), 100); // then left
+      expect(it.motion("a", 100 + D)?.facing).toBe("left");
+      // Halfway through the first segment it was still facing up.
+      expect(it.motion("a", 25 + D)?.facing).toBe("up");
+    });
+
+    it("uses the side on a diagonal", () => {
+      const it = new Interpolator();
+      it.ingest(joined(["a", 0, 0]), 0);
+      it.ingest(snapshot(1, ["a", 5.66, -5.66]), 50);
+      expect(it.motion("a", 50 + D)?.facing).toBe("right");
+    });
+
+    it("does not turn before the move is rendered", () => {
+      const it = new Interpolator();
+      it.ingest(joined(["a", 0, 0]), 0);
+      it.ingest(snapshot(1, ["a", 8, 0]), 10_000); // rest sample at 9950
+      expect(it.motion("a", 9949 + D)).toEqual({ facing: "down", moving: false });
+    });
+
+    it("returns null for an unknown player", () => {
+      expect(new Interpolator().motion("ghost", 0)).toBeNull();
+    });
+  });
+
   it("uses a delay of about two ticks", () => {
     expect(D).toBe(100);
     expect(TICK_MS).toBe(50);

@@ -72,6 +72,11 @@ export class World {
     this.held.set(nickname, keys);
   }
 
+  async keyUp(nickname: string, key: string): Promise<void> {
+    await this.page(nickname).keyboard.up(key);
+    this.held.get(nickname)?.delete(key);
+  }
+
   async close(): Promise<void> {
     for (const [nickname, keys] of this.held) {
       for (const key of keys) await this.page(nickname).keyboard.up(key);

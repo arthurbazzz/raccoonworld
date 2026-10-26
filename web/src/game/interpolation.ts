@@ -1,5 +1,7 @@
 import type { PlayerId, ServerMessage } from "@/net/protocol";
 
+import { facingFrom, hasMoved, type Facing, type Motion } from "./motion";
+
 /** Server tick (usecase.TickInterval): snapshots arrive about this often. */
 export const TICK_MS = 50;
 
@@ -13,6 +15,12 @@ export const INTERPOLATION_DELAY_MS = 2 * TICK_MS;
 const IDLE_GAP_MS = 2 * TICK_MS;
 
 const MAX_SAMPLES = 32;
+
+/** RV2: a raccoon counts as walking if it moved within this window. */
+export const MOVING_WINDOW_MS = 150;
+
+/** RV1: who just arrived faces the camera. */
+const INITIAL_FACING: Facing = "down";
 
 interface Sample {
   t: number; // arrival time on the client clock, in ms
@@ -69,6 +77,32 @@ export class Interpolator {
     const b = s[i + 1];
     const k = (t - a.t) / (b.t - a.t);
     return { x: a.x + (b.x - a.x) * k, y: a.y + (b.y - a.y) * k };
+  }
+
+  /**
+   * Facing and walking state at `now`, from the same rendered positions as
+   * position(), so a raccoon turns exactly when it starts moving on screen.
+   */
+  motion(id: PlayerId, now: number): Motion | null {
+    const s = this.samples.get(id);
+    if (!s || s.length === 0) return null;
+    const t = now - INTERPOLATION_DELAY_MS;
+
+    // Facing: the latest segment already started at render time that moved.
+    let facing = INITIAL_FACING;
+    for (let i = s.length - 2; i >= 0; i--) {
+      if (s[i].t >= t) continue;
+      const dx = s[i + 1].x - s[i].x;
+      const dy = s[i + 1].y - s[i].y;
+      if (hasMoved(dx, dy)) {
+        facing = facingFrom(dx, dy, INITIAL_FACING);
+        break;
+      }
+    }
+
+    const a = this.position(id, now)!;
+    const b = this.position(id, now - MOVING_WINDOW_MS)!;
+    return { facing, moving: hasMoved(a.x - b.x, a.y - b.y) };
   }
 
   /** Number of buffered samples for a player (for tests). */
