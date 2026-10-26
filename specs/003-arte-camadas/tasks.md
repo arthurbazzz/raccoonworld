@@ -16,8 +16,13 @@ comportamento da RW-002 continuam verdes (RA1).
     agora importa de `./raccoon`. O plano já previa a remoção quando ninguém mais importasse.
   - Os testes ficaram em `raccoon/RaccoonView.test.ts` (21, comportamento) e
     `raccoon/legacyArt.test.ts` (2, desenho antigo: quantidade de patas e chaves da paleta).
-- [ ] **T2** Galeria `/galeria` (RA8) com o guaxinim atual: 4 direções, andando e parado, a 1× e a 4×,
+- [x] **T2** Galeria `/galeria` (RA8) com o guaxinim atual: 4 direções, andando e parado, a 1× e a 4×,
   respondendo 404 em produção. Ela serve de "antes" para comparar com o resultado.
+  - Layout: uma fileira por estado (parado, andando), com as 4 direções a 4× e o tamanho real
+    embaixo; o primeiro de cada fileira tem o anel. Cabe em ~900 px de largura.
+  - Conferido com `next build && next start`: `/` responde 200 e `/galeria` responde 404.
+  - **Cuidado:** rodar `next build` e depois `next dev` na mesma pasta deixou o dev servindo
+    arquivos inexistentes (404 nos chunks). Apagar `web/.next/` resolve.
 
 ## Fase 1 — Paleta e formas (Vitest, TDD)
 
