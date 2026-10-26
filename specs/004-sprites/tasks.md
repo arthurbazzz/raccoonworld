@@ -1,13 +1,13 @@
 # RW-004 — Tasks: Guaxinim em sprites
 
-Status: **Rascunho**, aguardando aprovação · Plano: [plan.md](plan.md) · Criado: 2026-10-25
+Status: **Aprovado** (2026-10-25) · Plano: [plan.md](plan.md) · Criado: 2026-10-25
 
 Regras: uma task por vez, teste antes do código, commits `RW-004/Tn: <descrição>`. A cada task,
 os 14 cenários de navegador continuam verdes (RS1).
 
 ## Fase 0 — Arte e preparo
 
-- [ ] **T1** Versionar a imagem fonte em `web/art/raccoon.png`, declarar o `sharp` como
+- [x] **T1** Versionar a imagem fonte em `web/art/raccoon.png`, declarar o `sharp` como
   devDependency e ignorar `web/public/sprites/` no git.
 - [ ] **T2** `scripts/sprites/slice.ts` (Vitest, TDD): achar fileiras e colunas pelas faixas
   transparentes, ignorar sujeira, gerar erro com a contagem quando não forem 3×6 (RS2).
