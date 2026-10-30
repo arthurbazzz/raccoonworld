@@ -1,0 +1,22 @@
+[
+  { "name": "group of 3", "tiles": ["red-10", "blue-10", "green-10"], "kind": "group", "points": 30 },
+  { "name": "group of 4", "tiles": ["brown-7", "red-7", "green-7", "blue-7"], "kind": "group", "points": 28 },
+  { "name": "group with a joker", "tiles": ["red-7", "joker", "blue-7"], "kind": "group", "points": 21 },
+  { "name": "group of 5 is too long", "tiles": ["brown-7", "red-7", "green-7", "blue-7", "joker"], "error": "too_long" },
+  { "name": "group with a repeated color", "tiles": ["red-7", "red-7", "blue-7"], "error": "repeated_color" },
+  { "name": "two tiles", "tiles": ["red-7", "blue-7"], "error": "too_short" },
+  { "name": "empty", "tiles": [], "error": "too_short" },
+  { "name": "run of 3", "tiles": ["blue-3", "blue-4", "blue-5"], "kind": "run", "points": 12 },
+  { "name": "run of 13", "tiles": ["red-1", "red-2", "red-3", "red-4", "red-5", "red-6", "red-7", "red-8", "red-9", "red-10", "red-11", "red-12", "red-13"], "kind": "run", "points": 91 },
+  { "name": "run with a joker in the gap", "tiles": ["brown-8", "joker", "brown-10"], "kind": "run", "points": 27 },
+  { "name": "run with a joker at the start", "tiles": ["joker", "brown-9", "brown-10"], "kind": "run", "points": 27 },
+  { "name": "run with a joker at the end", "tiles": ["brown-11", "brown-12", "joker"], "kind": "run", "points": 36 },
+  { "name": "run with two jokers", "tiles": ["joker", "green-5", "joker"], "kind": "run", "points": 15 },
+  { "name": "run out of order", "tiles": ["blue-5", "blue-3", "blue-4"], "error": "gap" },
+  { "name": "run with a gap", "tiles": ["blue-3", "blue-4", "blue-6"], "error": "gap" },
+  { "name": "run with mixed colors", "tiles": ["blue-3", "red-4", "blue-5"], "error": "mixed_colors" },
+  { "name": "13 is not followed by 1", "tiles": ["red-12", "red-13", "red-1"], "error": "gap" },
+  { "name": "joker before 1", "tiles": ["joker", "red-1", "red-2"], "error": "out_of_range" },
+  { "name": "joker after 13", "tiles": ["red-12", "red-13", "joker"], "error": "out_of_range" },
+  { "name": "neither a group nor a run", "tiles": ["red-3", "blue-7", "green-9"], "error": "mixed_colors" }
+]

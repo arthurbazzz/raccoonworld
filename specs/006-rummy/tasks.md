@@ -19,7 +19,7 @@ RW-001 a RW-005).
   tabela de casos (RN4, RN25).
 - [x] **T3** `domain/rummy`: `Tile`, as 106 peças de `NewDeck` com IDs fixos, `Shuffler` e as
   constantes (plano, seção 3.1).
-- [ ] **T4** `Classify` e `Points`: grupos, sequências e coringas, com os motivos de erro. Tabela
+- [x] **T4** `Classify` e `Points`: grupos, sequências e coringas, com os motivos de erro. Tabela
   de casos grande, guardada em JSON em `server/internal/domain/rummy/testdata/melds.json` para o
   TypeScript reaproveitar (RN2, RN3).
 - [ ] **T5** `Match`: distribuição, ordem sorteada, rascunho (`Move` com a checagem de
