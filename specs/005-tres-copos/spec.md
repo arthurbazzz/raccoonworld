@@ -1,6 +1,6 @@
 # RW-005 — Minigame dos três copos
 
-Status: **Aprovada** (2026-10-26) · Criada: 2026-10-26 · Depende de: RW-001, RW-004
+Status: **Implementada** (2026-10-29), aprovada pelo dono após jogar · Aprovada: 2026-10-26 · Criada: 2026-10-26 · Depende de: RW-001, RW-004
 
 ## Problema
 

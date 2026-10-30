@@ -77,10 +77,22 @@ async function startPlaying(world: World, nicknames: string[]): Promise<void> {
     await walkToBooth(world, n);
   }
   // Everyone walks first: the fast lobby lasts a second.
+  await waitForFreeBooth(world.page(nicknames[0]));
   for (const n of nicknames) await world.page(n).keyboard.press("e");
   for (const n of nicknames) {
     await expect(panel(world.page(n))).toHaveAttribute("data-round", "1");
   }
+}
+
+/**
+ * Waits until the booth is free before pressing E. A player from the
+ * previous scenario whose browser closed without a clean disconnect stays
+ * at the booth until the presence timeout (10 s, RN5).
+ */
+async function waitForFreeBooth(page: Page): Promise<void> {
+  await expect(page.getByLabel("Barraca dos três copos")).toHaveAttribute("data-stage", "idle", {
+    timeout: 15_000,
+  });
 }
 
 async function pick(world: World, nickname: string, slot: number): Promise<void> {
@@ -154,6 +166,7 @@ Then("{string} vê os copos se mexendo na barraca", async ({ world }, nickname: 
 
 When("{string} começa uma partida", async ({ world }, nickname: string) => {
   await walkToBooth(world, nickname);
+  await waitForFreeBooth(world.page(nickname));
   await world.page(nickname).keyboard.press("e");
 });
 

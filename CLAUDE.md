@@ -61,5 +61,10 @@ Funcionalidade: Entrar em um minigame
   `TestFeatures`, contra os casos de uso com relógio falso, e `TestSmokeOverWebSocket`, que roda os
   cenários `@smoke` contra o servidor real (`internal/app`). Para filtrar
   cenários, use `GODOG_TAGS` (ex.: `$env:GODOG_TAGS="@RW-001"`).
+- Três copos (RW-005): o domínio fica em `server/internal/domain/cups` (máquina de estados pura,
+  avançada pelo tick da sala) e o cliente em `web/src/game/cups/` (`timeline.ts` diz onde está
+  cada copo em qualquer instante; painel e barraca usam a mesma). O `test:e2e` sobe o servidor
+  com `RW_CUPS_FAST=1`. Nos steps de navegador, ande em toques curtos (segurar a tecla passa do
+  ponto) e espere fases rápidas com `waitForFunction` + `raf`, não com `expect`.
 - O golangci-lint também barra imports que violam a Clean Architecture (depguard em `server/.golangci.yml`).
   Não desative essas regras: corrija a dependência.

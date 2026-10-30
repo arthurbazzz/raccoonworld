@@ -1,6 +1,6 @@
 # RW-005 — Tasks: Minigame dos três copos
 
-Status: **Em andamento** · Aprovado: 2026-10-26 · Plano: [plan.md](plan.md) · Criado: 2026-10-26
+Status: **Concluído** (2026-10-29) · Aprovado: 2026-10-26 · Plano: [plan.md](plan.md) · Criado: 2026-10-26
 
 Regras: uma task por vez, teste antes do código, commits `RW-005/Tn: <descrição>`. A cada task,
 as suítes existentes continuam verdes (godog, `go test`, Vitest e os 14 cenários de navegador).
@@ -77,14 +77,14 @@ as suítes existentes continuam verdes (godog, `go test`, Vitest e os 14 cenári
 
 ## Fase 4 — Fechamento
 
-- [ ] **T15** Rodar todas as suítes, lint e formatação; atualizar README, CLAUDE.md e a seção
+- [x] **T15** Rodar todas as suítes, lint e formatação; atualizar README, CLAUDE.md e a seção
   "O que mudou durante a implementação" do plano; pedir ao dono para jogar uma partida com
   duas abas e aprovar.
 
 ## Definição de Pronto
 
-- [ ] Os 22 cenários passam no godog; os `@smoke` com o servidor real; os `@e2e` no navegador
-- [ ] Os 14 cenários de navegador das RW-001/RW-002 continuam passando
-- [ ] `go test`, Vitest, `golangci-lint` (com as regras de camada), `eslint` e Prettier limpos
-- [ ] spec, plan e tasks atualizados com o que foi feito
-- [ ] Partida jogada e aprovada pelo dono
+- [x] Os 22 cenários passam no godog; os `@smoke` com o servidor real; os `@e2e` no navegador
+- [x] Os 14 cenários de navegador das RW-001/RW-002 continuam passando
+- [x] `go test`, Vitest, `golangci-lint` (com as regras de camada), `eslint` e Prettier limpos
+- [x] spec, plan e tasks atualizados com o que foi feito
+- [x] Partida jogada e aprovada pelo dono

@@ -1,6 +1,6 @@
 # RW-005 — Plano técnico: Minigame dos três copos
 
-Status: **Aprovado** (2026-10-26) · Spec: [spec.md](spec.md) · Criado: 2026-10-26
+Status: **Implementado** (2026-10-29) · Aprovado: 2026-10-26 · Spec: [spec.md](spec.md) · Criado: 2026-10-26
 
 ## 1. Visão geral
 
@@ -25,8 +25,8 @@ Navegador                                   Servidor Go
 ## 2. Barraca no mapa (RC1, RC2)
 
 - O `praca.json` ganha a barraca na área livre de cima, entre as árvores e a fonte:
-  tiles `B` nas colunas 13–15 da linha 4 (3×1 tiles, 96×32 px). `B` é **sólido** como `#`.
-- O JSON ganha `"booth": { "x": 448, "y": 128, "w": 96, "h": 32 }`, em pixels.
+  tiles `B` nas colunas 14–16 da linha 4 (3×1 tiles, 96×32 px). `B` é **sólido** como `#`.
+- A caixa da barraca (448,128, 96×32 px) sai dos próprios tiles `B`, sem objeto extra no JSON.
   É a fonte única: o servidor usa para validar "perto", e o cliente para desenhar e mostrar o aviso.
 - **Perto** = os pés do guaxinim a no máximo **48 px** do retângulo da barraca
   (`BoothReach`). A mesma função existe no Go (`TileMap.NearBooth`) e no TypeScript
@@ -181,7 +181,20 @@ Para os testes de navegador não levarem minutos, o servidor aceita
 ## 7. Decisões deste plano (aprovadas em 2026-10-26)
 
 1. **Partida dentro da sala**, no tick que já existe, em um pacote de domínio novo `cups`.
-2. **Barraca** em cima da fonte (colunas 13–15, linha 4), com "perto" = até 48 px.
+2. **Barraca** em cima da fonte (colunas 14–16, linha 4), com "perto" = até 48 px.
 3. **Trocas enviadas de uma vez** no começo da rodada (seção 3.4).
 4. **Painel em React/DOM**; a barraca na Praça em PixiJS.
 5. **`RW_CUPS_FAST`** para acelerar os tempos só nos testes de navegador.
+
+## 8. O que mudou durante a implementação
+
+| Mudança | Task | Por quê |
+|---|---|---|
+| Barraca só pelos tiles `B` (colunas 14–16, linha 4), sem objeto `booth` no JSON | T2 | Uma fonte só; o cliente também aprendeu o `B` |
+| "Jogar de novo" no placar inscreve na próxima partida | T13 | Quem estava no placar tinha o E ignorado |
+| `RW_CUPS_FAST` mantém escolha (10 s) e revelação (2,5 s) no tempo real | T14 | Divididas por 10, não dava tempo de clicar nem de ler "Acertou!" |
+| Painel no centro; espera e aviso de partida em andamento embaixo; "Aperte E" embaixo | T13 | Pedido do dono, para não cobrir a barraca |
+| Sinal de quem joga: copinho **antes** do nome | T13 | Pedido do dono; depois do nome ficava colado nos copos |
+| Linha escondida "Barraca dos três copos" com `data-stage` | T14 | A barraca é canvas; os testes leem o estado por ela, como a lista de jogadores |
+| Steps de navegador andam em toques e esperam fases com `raf`; limite de 90 s por cenário | T14 | Atraso de dois navegadores e trocas de menos de 0,3 s no modo rápido |
+| Steps de navegador esperam a barraca livre antes do E | T15 | Um jogador do cenário anterior, desconectado sem fechar o socket, fica até 10 s na barraca |
