@@ -323,6 +323,11 @@ Status: **Aprovado** (2026-10-30) · Spec: Emenda A aprovada em 2026-10-30.
 
 ### 9.8 O que mudou durante a implementação da emenda
 
+- Visual da mesa no estilo da folha de assets do usuário: botões, plaquinhas, aro dos avatares,
+  mesa oval e monte desenhados em CSS (recortar a folha ficava serrilhado ao ampliar).
+- Os steps playwright dos cenários `@ui` e `@e2e` (T18, T31) ficaram para depois do merge; o
+  teste no navegador foi manual.
+
 | Mudança | Task | Por quê |
 |---|---|---|
 | As posições vão num array paralelo, `pos: [[x, y], ...]`, e não dentro de cada combinação | T23 | Menos mudanças no cliente e no servidor; `melds` continua igual |

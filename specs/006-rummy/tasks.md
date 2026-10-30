@@ -1,6 +1,6 @@
 # RW-006 — Tasks: Rummy das Nozes
 
-Status: **Em andamento** · Aprovado: 2026-10-30 · Plano: [plan.md](plan.md) · Criado: 2026-10-30
+Status: **Concluído, exceto T18 e T31 (steps playwright)** · Aprovado: 2026-10-30 · Plano: [plan.md](plan.md) · Criado: 2026-10-30
 
 Regras: uma task por vez, teste antes do código, commits `RW-006/Tn: <descrição>`. A cada task,
 as suítes existentes continuam verdes (godog, `go test`, Vitest e os cenários de navegador da
@@ -69,7 +69,7 @@ RW-001 a RW-005).
 
 - [ ] **T18** Steps playwright-bdd dos cenários `@e2e`, com `RW_RUMMY_FAST` e `RW_RUMMY_SEED`
   para mãos conhecidas. **Todos os cenários verdes**, inclusive os das specs anteriores.
-- [ ] **T19** Documentação: comandos novos no `CLAUDE.md`, seção "O que mudou durante a
+- [x] **T19** Documentação: comandos novos no `CLAUDE.md`, seção "O que mudou durante a
   implementação" no plano e status final da spec, do plano e das tasks.
 
 ## Fase 6 — Emenda A (plano, seção 9)

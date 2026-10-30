@@ -66,5 +66,11 @@ Funcionalidade: Entrar em um minigame
   cada copo em qualquer instante; painel e barraca usam a mesma). O `test:e2e` sobe o servidor
   com `RW_CUPS_FAST=1`. Nos steps de navegador, ande em toques curtos (segurar a tecla passa do
   ponto) e espere fases rápidas com `waitForFunction` + `raf`, não com `expect`.
+- Rummy das Nozes (RW-006): o domínio fica em `server/internal/domain/rummy` (regras em
+  `meld.go`, partida em `match.go`; os casos de `testdata/melds.json` valem também para o
+  cliente) e o cliente em `web/src/game/rummy/` (`melds.ts` monta as frases de erro a partir dos
+  códigos; `layout.ts`, `rack.ts` e `selection.ts` são puros). A mesa é
+  `RummyTableScene`, na mesma caixa 3:2 da Praça. Jogada recusada não encerra a vez; só o tempo
+  esgotado compra. `RW_RUMMY_FAST=1` encurta o lobby e `RW_RUMMY_SEED` fixa o embaralhamento.
 - O golangci-lint também barra imports que violam a Clean Architecture (depguard em `server/.golangci.yml`).
   Não desative essas regras: corrija a dependência.
