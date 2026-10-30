@@ -29,13 +29,21 @@
   overflow: hidden;
 }
 
+/* Buttons in the wood style of the table assets: dark wood, a light rim and
+   a dark outline. */
 .scene button {
   font: inherit;
-  padding: 6px 14px;
-  border-radius: 999px;
-  border: 1px solid rgb(255 255 255 / 35%);
-  background: rgb(255 255 255 / 12%);
-  color: var(--ink);
+  font-weight: 700;
+  padding: 6px 16px;
+  border-radius: 12px;
+  border: 2px solid #1d0d07;
+  background: linear-gradient(#5a2e1c, #3b1f14);
+  box-shadow:
+    inset 0 0 0 2px #8a5232,
+    inset 0 -3px 0 2px #2a140b,
+    0 3px 0 #140804;
+  color: #f6e7cf;
+  text-shadow: 0 1px 0 #1d0d07;
   cursor: pointer;
 }
 
@@ -45,18 +53,28 @@
 }
 
 .scene button:not(:disabled):hover {
-  background: rgb(255 255 255 / 22%);
+  background: linear-gradient(#6b3a24, #4a2718);
+}
+
+.scene button:not(:disabled):active {
+  transform: translateY(2px);
+  box-shadow:
+    inset 0 0 0 2px #8a5232,
+    0 1px 0 #140804;
 }
 
 .scene .primary {
-  background: #f0b429;
-  border-color: #f0b429;
-  color: #2b1a07;
-  font-weight: 700;
+  background: linear-gradient(#ffd75e, #e9a823);
+  box-shadow:
+    inset 0 0 0 2px #fff0a8,
+    inset 0 -3px 0 2px #b9781a,
+    0 3px 0 #140804;
+  color: #3b1f14;
+  text-shadow: none;
 }
 
 .scene .primary:not(:disabled):hover {
-  background: #ffc94a;
+  background: linear-gradient(#ffe27f, #f2b636);
 }
 
 /* Top bar */
@@ -120,14 +138,11 @@
   display: grid;
   place-items: center;
   min-height: 0;
-  padding: 3% 6%;
-  border-radius: 50% / 46%;
-  background: radial-gradient(ellipse at 50% 40%, #3f8a52 0%, var(--felt) 60%, #1f4a2b 100%);
-  box-shadow:
-    inset 0 0 0 10px var(--felt-edge),
-    inset 0 0 0 13px #a36a3c,
-    inset 0 0 40px 18px rgb(0 0 0 / 35%),
-    0 18px 40px rgb(0 0 0 / 45%);
+  /* The board stays on the green, inside the wood rim of the sprite. */
+  padding: 6% 9% 9%;
+  background: url("/sprites/table/felt.png") center / 100% 100% no-repeat;
+  image-rendering: pixelated;
+  filter: drop-shadow(0 18px 24px rgb(0 0 0 / 45%));
 }
 
 .board {
@@ -246,14 +261,10 @@
 }
 
 .poolStack {
-  width: 30px;
-  height: 42px;
-  border-radius: 5px;
-  background: #8b5a2b;
-  border: 2px solid #f4e6c8;
-  box-shadow:
-    3px 3px 0 #6b4220,
-    6px 6px 0 #4e2f16;
+  width: 52px;
+  height: 52px;
+  background: url("/sprites/table/deck.png") center / contain no-repeat;
+  image-rendering: pixelated;
 }
 
 /* Seats */
@@ -325,6 +336,9 @@
   overflow: hidden;
   border-radius: 50%;
   background: linear-gradient(#f6d8a8, #d9a066);
+  box-shadow:
+    inset 0 0 0 3px #f0b429,
+    inset 0 0 0 5px #3b1f14;
 }
 
 .avatar::before {
@@ -347,17 +361,26 @@
 .nameplate {
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 2px 10px;
-  border-radius: 999px;
-  background: rgb(0 0 0 / 45%);
+  gap: 8px;
+  padding: 3px 4px 3px 12px;
+  border-radius: 12px;
+  border: 2px solid #1d0d07;
+  background: #3b1f14;
+  box-shadow: inset 0 0 0 2px #8a5232;
+  font-weight: 700;
   white-space: nowrap;
 }
 
+/* Tiles in hand, in the gold-rimmed badge of the nameplate. */
 .count {
   display: inline-flex;
   align-items: center;
   gap: 3px;
+  padding: 0 6px;
+  border-radius: 6px;
+  border: 2px solid #f0b429;
+  background: #2a140b;
+  color: #ffd75e;
   font-weight: 700;
 }
 
@@ -365,9 +388,7 @@
   display: inline-block;
   width: 10px;
   height: 14px;
-  border-radius: 2px;
-  background: #8b5a2b;
-  border: 1px solid #f4e6c8;
+  background: url("/sprites/table/back.png") center / contain no-repeat;
 }
 
 .absent {
@@ -507,7 +528,9 @@
 
 .chatOpen {
   border-radius: 12px;
-  background: rgb(0 0 0 / 45%);
+  border: 2px solid #1d0d07;
+  background: rgb(43 20 11 / 92%);
+  box-shadow: inset 0 0 0 2px #8a5232;
 }
 
 .scene .chatToggle {
