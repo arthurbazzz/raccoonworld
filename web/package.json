@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "sprites": "node scripts/sprites/build.ts",
+    "sprites": "node scripts/sprites/build.ts && node scripts/sprites/rummy-build.ts",
     "predev": "npm run sprites",
     "dev": "next dev",
     "prebuild": "npm run sprites",

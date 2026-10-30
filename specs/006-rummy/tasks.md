@@ -49,7 +49,7 @@ RW-001 a RW-005).
 
 ## Fase 3 — Arte
 
-- [ ] **T13** `npm run sprites` recorta `art/rummy.webp`: 13 peças × 4 cores, coringa, verso e
+- [x] **T13** `npm run sprites` recorta `art/rummy.webp`: 13 peças × 4 cores, coringa, verso e
   monte marrons, e a mesa, para `public/sprites/rummy.png` e `rummy.json`. Para com erro se a
   contagem não bater. Testes Vitest do recorte (Q6).
 
