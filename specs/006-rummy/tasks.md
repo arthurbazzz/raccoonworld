@@ -17,7 +17,7 @@ RW-001 a RW-005).
 - [x] **T2** Mesa no mapa: tile `M` sólido nas colunas 13–16, linhas 15–16; `TileMap.NearTable`
   com alcance de 48 px; o `parseTileMap` do navegador aprende o `M`, com `nearTable` e a mesma
   tabela de casos (RN4, RN25).
-- [ ] **T3** `domain/rummy`: `Tile`, as 106 peças de `NewDeck` com IDs fixos, `Shuffler` e as
+- [x] **T3** `domain/rummy`: `Tile`, as 106 peças de `NewDeck` com IDs fixos, `Shuffler` e as
   constantes (plano, seção 3.1).
 - [ ] **T4** `Classify` e `Points`: grupos, sequências e coringas, com os motivos de erro. Tabela
   de casos grande, guardada em JSON em `server/internal/domain/rummy/testdata/melds.json` para o
