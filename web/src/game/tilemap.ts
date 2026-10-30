@@ -25,10 +25,12 @@ export interface TileMap {
   width: number;
   height: number;
   isSolid(col: number, row: number): boolean;
-  /** The '#' tiles; the booth tiles are drawn apart, as the booth. */
+  /** The '#' tiles; the booth and table tiles are drawn apart. */
   solidTiles(): SolidTile[];
   /** Box covered by the 'B' tiles (three cups booth, RW-005), if any. */
   booth: Rect | null;
+  /** Box covered by the 'M' tiles (pieces table, RW-006), if any. */
+  table: Rect | null;
 }
 
 /** Axis-aligned box in room pixels; (x, y) is its top-left corner. */
@@ -48,14 +50,16 @@ export function parseTileMap(raw: TileMapJSON): TileMap {
   const solid: boolean[] = [];
   const wall: boolean[] = [];
   let booth: Rect | null = null;
+  let table: Rect | null = null;
   rows.forEach((row, r) => {
     if (row.length !== cols) throw new Error(`row ${r} has ${row.length} tiles, want ${cols}`);
     [...row].forEach((ch, c) => {
-      if (ch !== "#" && ch !== "." && ch !== "B")
+      if (ch !== "#" && ch !== "." && ch !== "B" && ch !== "M")
         throw new Error(`unknown tile ${JSON.stringify(ch)} at row ${r}`);
       solid.push(ch !== ".");
       wall.push(ch === "#");
       if (ch === "B") booth = grow(booth, c * tileSize, r * tileSize, tileSize);
+      if (ch === "M") table = grow(table, c * tileSize, r * tileSize, tileSize);
     });
   });
 
@@ -82,6 +86,7 @@ export function parseTileMap(raw: TileMapJSON): TileMap {
       return out;
     },
     booth,
+    table,
   };
 }
 

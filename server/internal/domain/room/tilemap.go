@@ -15,6 +15,8 @@ const (
 	tileSolid = '#'
 	// tileBooth is a solid tile that is part of the three cups booth (RW-005).
 	tileBooth = 'B'
+	// tileTable is a solid tile that is part of the pieces table (RW-006).
+	tileTable = 'M'
 
 	// edgeEpsilon keeps a box that ends exactly on a tile edge from counting
 	// as overlapping the next tile.
@@ -36,11 +38,16 @@ type TileMap struct {
 	solid    []bool // row-major, len = cols*rows
 	spawn    Vec
 	booth    *Rect // bounding box of the 'B' tiles; nil when the map has none
+	table    *Rect // bounding box of the 'M' tiles; nil when the map has none
 }
 
 // BoothReach is how close, in pixels, a raccoon's feet must be to the booth
 // to play (RW-005, RC2).
 const BoothReach = 48.0
+
+// TableReach is how close, in pixels, a raccoon's feet must be to the pieces
+// table to play (RW-006, RN4). Same rule as the booth.
+const TableReach = BoothReach
 
 type tileMapJSON struct {
 	Name     string   `json:"name"`
@@ -55,7 +62,8 @@ type vecJSON struct {
 }
 
 // ParseTileMap builds a TileMap from its JSON form. Each row is a string
-// where '#' is a solid tile, 'B' a solid booth tile and '.' is floor.
+// where '#' is a solid tile, 'B' a solid booth tile, 'M' a solid pieces table
+// tile and '.' is floor.
 func ParseTileMap(data []byte) (*TileMap, error) {
 	var raw tileMapJSON
 	if err := json.Unmarshal(data, &raw); err != nil {
@@ -88,7 +96,10 @@ func ParseTileMap(data []byte) (*TileMap, error) {
 				m.solid = append(m.solid, true)
 			case tileBooth:
 				m.solid = append(m.solid, true)
-				m.addBoothTile(c, r)
+				m.booth = m.growBox(m.booth, c, r)
+			case tileTable:
+				m.solid = append(m.solid, true)
+				m.table = m.growBox(m.table, c, r)
 			default:
 				return nil, fmt.Errorf("%w: unknown tile %q at row %d col %d", ErrInvalidMap, row[c], r, c)
 			}
@@ -105,16 +116,24 @@ func ParseTileMap(data []byte) (*TileMap, error) {
 	return m, nil
 }
 
-func (m *TileMap) addBoothTile(col, row int) {
+// growBox returns box grown to also cover the tile at (col, row).
+func (m *TileMap) growBox(box *Rect, col, row int) *Rect {
 	t := Rect{X: float64(col) * m.tileSize, Y: float64(row) * m.tileSize, W: m.tileSize, H: m.tileSize}
-	if m.booth == nil {
-		m.booth = &t
-		return
+	if box == nil {
+		return &t
 	}
-	b := m.booth
-	right, bottom := math.Max(b.X+b.W, t.X+t.W), math.Max(b.Y+b.H, t.Y+t.H)
-	b.X, b.Y = math.Min(b.X, t.X), math.Min(b.Y, t.Y)
-	b.W, b.H = right-b.X, bottom-b.Y
+	right, bottom := math.Max(box.X+box.W, t.X+t.W), math.Max(box.Y+box.H, t.Y+t.H)
+	box.X, box.Y = math.Min(box.X, t.X), math.Min(box.Y, t.Y)
+	box.W, box.H = right-box.X, bottom-box.Y
+	return box
+}
+
+// withinReach reports whether pos is within reach of box: the distance from
+// the point to the nearest edge of the box.
+func withinReach(box Rect, pos Vec, reach float64) bool {
+	dx := math.Max(0, math.Max(box.X-pos.X, pos.X-(box.X+box.W)))
+	dy := math.Max(0, math.Max(box.Y-pos.Y, pos.Y-(box.Y+box.H)))
+	return math.Hypot(dx, dy) <= reach
 }
 
 // Booth returns the box covered by the booth tiles, if the map has a booth.
@@ -129,12 +148,22 @@ func (m *TileMap) Booth() (Rect, bool) {
 // (RC2). The distance is from the point to the nearest edge of the box.
 func (m *TileMap) NearBooth(pos Vec) bool {
 	b, ok := m.Booth()
-	if !ok {
-		return false
+	return ok && withinReach(b, pos, BoothReach)
+}
+
+// Table returns the box covered by the pieces table tiles, if the map has one.
+func (m *TileMap) Table() (Rect, bool) {
+	if m.table == nil {
+		return Rect{}, false
 	}
-	dx := math.Max(0, math.Max(b.X-pos.X, pos.X-(b.X+b.W)))
-	dy := math.Max(0, math.Max(b.Y-pos.Y, pos.Y-(b.Y+b.H)))
-	return math.Hypot(dx, dy) <= BoothReach
+	return *m.table, true
+}
+
+// NearTable reports whether feet at pos are within TableReach of the pieces
+// table (RW-006, RN4).
+func (m *TileMap) NearTable(pos Vec) bool {
+	t, ok := m.Table()
+	return ok && withinReach(t, pos, TableReach)
 }
 
 // Spawn returns where new players appear, in room pixels.

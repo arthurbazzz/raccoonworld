@@ -14,7 +14,7 @@ RW-001 a RW-005).
 
 ## Fase 1 — Domínio (Go, TDD com `go test`)
 
-- [ ] **T2** Mesa no mapa: tile `M` sólido nas colunas 13–16, linhas 15–16; `TileMap.NearTable`
+- [x] **T2** Mesa no mapa: tile `M` sólido nas colunas 13–16, linhas 15–16; `TileMap.NearTable`
   com alcance de 48 px; o `parseTileMap` do navegador aprende o `M`, com `nearTable` e a mesma
   tabela de casos (RN4, RN25).
 - [ ] **T3** `domain/rummy`: `Tile`, as 106 peças de `NewDeck` com IDs fixos, `Shuffler` e as

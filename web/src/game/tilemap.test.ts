@@ -79,3 +79,22 @@ describe("booth tiles (RW-005)", () => {
     expect(parseTileMap(json).booth).toBeNull();
   });
 });
+
+describe("pieces table tiles (RW-006)", () => {
+  const m = parseTileMap({ ...json, rows: ["######", "#....#", "#MM..#", "#MM..#", "######"] });
+
+  it("are solid, like on the server", () => {
+    expect(m.isSolid(1, 2)).toBe(true);
+    expect(m.isSolid(2, 3)).toBe(true);
+  });
+
+  it("form the table box and are not drawn as wall blocks", () => {
+    expect(m.table).toEqual({ x: 32, y: 64, w: 64, h: 64 });
+    expect(m.booth).toBeNull();
+    expect(m.solidTiles().some((t) => t.row === 2 && t.col === 1)).toBe(false);
+  });
+
+  it("are absent from maps without 'M'", () => {
+    expect(parseTileMap(json).table).toBeNull();
+  });
+});

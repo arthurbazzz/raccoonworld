@@ -203,3 +203,61 @@ func TestNearBooth(t *testing.T) {
 		})
 	}
 }
+
+// tableMap has a 2x2-tile pieces table at cols 1-2, rows 2-3: the box
+// (32,64)-(96,128) (RW-006).
+const tableMap = `{
+  "name": "table",
+  "tileSize": 32,
+  "spawn": {"x": 144, "y": 48},
+  "rows": [
+    "######",
+    "#....#",
+    "#MM..#",
+    "#MM..#",
+    "#....#",
+    "######"
+  ]
+}`
+
+func TestTableTilesAreSolid(t *testing.T) {
+	m := mustParse(t, tableMap)
+	if !m.IsSolid(1, 2) || !m.IsSolid(2, 3) {
+		t.Fatal("table tiles must block movement (RN25)")
+	}
+	tb, ok := m.Table()
+	if !ok {
+		t.Fatal("map with 'M' tiles has no table")
+	}
+	if want := (room.Rect{X: 32, Y: 64, W: 64, H: 64}); tb != want {
+		t.Fatalf("Table() = %+v, want %+v", tb, want)
+	}
+	if _, ok := m.Booth(); ok {
+		t.Fatal("'M' tiles must not count as a booth")
+	}
+}
+
+func TestNearTable(t *testing.T) {
+	m := mustParse(t, tableMap)
+	tests := []struct {
+		name string
+		pos  room.Vec
+		want bool
+	}{
+		{"below, at reach", room.Vec{X: 64, Y: 128 + room.TableReach}, true},
+		{"below, past reach", room.Vec{X: 64, Y: 128 + room.TableReach + 1}, false},
+		{"right, at reach", room.Vec{X: 96 + room.TableReach, Y: 96}, true},
+		{"right, past reach", room.Vec{X: 96 + room.TableReach + 1, Y: 96}, false},
+		{"corner, outside the circle", room.Vec{X: 96 + 35, Y: 128 + 35}, false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := m.NearTable(tt.pos); got != tt.want {
+				t.Fatalf("NearTable(%v) = %v, want %v", tt.pos, got, tt.want)
+			}
+		})
+	}
+	if mustParse(t, testMap).NearTable(room.Vec{X: 64, Y: 80}) {
+		t.Fatal("NearTable without a table must be false")
+	}
+}
