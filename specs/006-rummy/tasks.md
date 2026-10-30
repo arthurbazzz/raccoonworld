@@ -41,7 +41,7 @@ RW-001 a RW-005).
   `EndTurn`, `DrawTile`, `UndoTurn`, `LeaveTableRoom`); o `RoomRunner` avança a mesa no tick;
   `busy` trava o guaxinim e impede jogar copos e rummy ao mesmo tempo; `JoinRoom` e `LeaveRoom`
   avisam a mesa. Steps godog com `FakeClock` e `Shuffler` fixo: **os 20 cenários passam**.
-- [ ] **T11** Protocolo v1: mensagens `rummy.*` no `adapter/ws`, com `rummy.state` mandado a cada
+- [x] **T11** Protocolo v1: mensagens `rummy.*` no `adapter/ws`, com `rummy.state` mandado a cada
   jogador separadamente e `rummy` no `room.joined`. Testes que fixam o JSON exato e que conferem
   que nenhuma mensagem leva a mão de outro jogador nem o monte. Smoke `@smoke` com servidor real.
 - [ ] **T12** `RW_RUMMY_FAST=1` (espera de 1,5 s) e `RW_RUMMY_SEED=<n>` na config, desligados por

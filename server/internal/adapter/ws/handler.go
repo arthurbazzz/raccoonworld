@@ -34,6 +34,13 @@ type UseCases struct {
 	JoinCups  *usecase.JoinCups
 	PickCup   *usecase.PickCup
 	LeaveCups *usecase.LeaveCups
+
+	OpenTable       *usecase.OpenTable
+	CreateTableRoom *usecase.CreateTableRoom
+	JoinTableRoom   *usecase.JoinTableRoom
+	LeaveTableRoom  *usecase.LeaveTableRoom
+	PlayAgain       *usecase.PlayAgain
+	PlayTurn        *usecase.PlayTurn
 }
 
 // Options configure the handler. Zero values use the defaults.
@@ -131,6 +138,20 @@ func (h *Handler) dispatch(id room.PlayerID, msg ClientMessage, log *slog.Logger
 		err = h.uc.PickCup.Execute(m.ToInput(id))
 	case CupsLeaveRequest:
 		err = h.uc.LeaveCups.Execute(id)
+	case RummyOpenRequest:
+		err = h.uc.OpenTable.Execute(id)
+	case RummyCreateRequest:
+		err = h.uc.CreateTableRoom.Execute(id, m.Mode)
+	case RummyJoinRequest:
+		err = h.uc.JoinTableRoom.Execute(id, m.Room)
+	case RummyMoveRequest:
+		err = h.uc.PlayTurn.Execute(m.ToInput(id))
+	case RummyTurnRequest:
+		err = h.uc.PlayTurn.Execute(m.ToInput(id))
+	case RummyLeaveRequest:
+		err = h.uc.LeaveTableRoom.Execute(id)
+	case RummyAgainRequest:
+		err = h.uc.PlayAgain.Execute(id)
 	}
 	if err != nil {
 		// Rejections were already sent to the player or are silent by spec.

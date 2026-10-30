@@ -135,14 +135,16 @@ func initializeSmokeScenario(sc *godog.ScenarioContext) {
 	sc.Step(`^"([^"]*)" envia a mensagem "([^"]*)"$`, w.say)
 	sc.Step(`^"([^"]*)" vê o balão "([^"]*)" sobre "([^"]*)"$`, w.seesBalloon)
 	w.registerCupsSmokeSteps(sc)
+	w.registerRummySmokeSteps(sc)
 }
 
 func (w *smokeWorld) openRoom(name string) error {
 	if _, ok := roomIDs[name]; !ok {
 		return fmt.Errorf("unknown room %q", name)
 	}
-	// Fast three cups (RW_CUPS_FAST), so a round takes a second or two.
-	a, err := app.New(app.Options{Clock: clock.System{}, CupsSpeedup: 10})
+	// Fast three cups (RW_CUPS_FAST), so a round takes a second or two, and a
+	// short rummy lobby (RW_RUMMY_FAST).
+	a, err := app.New(app.Options{Clock: clock.System{}, CupsSpeedup: 10, RummyFast: true})
 	if err != nil {
 		return err
 	}

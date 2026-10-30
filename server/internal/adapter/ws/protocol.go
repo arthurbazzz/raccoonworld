@@ -44,7 +44,8 @@ type envelope struct {
 }
 
 // ClientMessage is a decoded client-to-server message. The set is closed:
-// JoinRequest, InputRequest, ChatRequest or one of the Cups*Request.
+// JoinRequest, InputRequest, ChatRequest or one of the Cups* and Rummy*
+// requests.
 type ClientMessage interface {
 	isClientMessage()
 }
@@ -112,6 +113,24 @@ func DecodeClient(raw []byte) (ClientMessage, error) {
 		return decodeData[CupsPickRequest](env.Data)
 	case TypeCupsLeave:
 		return decodeData[CupsLeaveRequest](env.Data)
+	case TypeRummyOpen:
+		return decodeData[RummyOpenRequest](env.Data)
+	case TypeRummyCreate:
+		return decodeData[RummyCreateRequest](env.Data)
+	case TypeRummyJoin:
+		return decodeData[RummyJoinRequest](env.Data)
+	case TypeRummyMove:
+		return decodeData[RummyMoveRequest](env.Data)
+	case TypeRummyEnd:
+		return decodeTurn(usecase.ActionEnd, env.Data)
+	case TypeRummyDraw:
+		return decodeTurn(usecase.ActionDraw, env.Data)
+	case TypeRummyUndo:
+		return decodeTurn(usecase.ActionUndo, env.Data)
+	case TypeRummyLeave:
+		return decodeData[RummyLeaveRequest](env.Data)
+	case TypeRummyAgain:
+		return decodeData[RummyAgainRequest](env.Data)
 	default:
 		return nil, fmt.Errorf("%w: %q", ErrUnknownType, env.Type)
 	}
@@ -143,10 +162,11 @@ type (
 		Y  float64       `json:"y"`
 	}
 	joinedJSON struct {
-		You     room.PlayerID    `json:"you"`
-		Map     string           `json:"map"`
-		Players []playerJSON     `json:"players"`
-		Cups    cupsSnapshotJSON `json:"cups"`
+		You     room.PlayerID     `json:"you"`
+		Map     string            `json:"map"`
+		Players []playerJSON      `json:"players"`
+		Cups    cupsSnapshotJSON  `json:"cups"`
+		Rummy   rummySnapshotJSON `json:"rummy"`
 	}
 	rejectedJSON struct {
 		Reason usecase.RejectReason `json:"reason"`
@@ -185,13 +205,16 @@ func wireData(ev usecase.Event) (string, any, error) {
 	if typ, data, ok := cupsWireData(ev); ok {
 		return typ, data, nil
 	}
+	if typ, data, ok := rummyWireData(ev); ok {
+		return typ, data, nil
+	}
 	switch e := ev.(type) {
 	case usecase.Joined:
 		players := make([]playerJSON, len(e.Players))
 		for i, p := range e.Players {
 			players[i] = toPlayerJSON(p)
 		}
-		return TypeRoomJoined, joinedJSON{You: e.You.ID, Map: e.MapName, Players: players, Cups: toCupsSnapshotJSON(e.Cups)}, nil
+		return TypeRoomJoined, joinedJSON{You: e.You.ID, Map: e.MapName, Players: players, Cups: toCupsSnapshotJSON(e.Cups), Rummy: toRummySnapshotJSON(e.Rummy)}, nil
 	case usecase.JoinRejected:
 		return TypeRoomJoinRejected, rejectedJSON{Reason: e.Reason}, nil
 	case usecase.PlayerJoined:

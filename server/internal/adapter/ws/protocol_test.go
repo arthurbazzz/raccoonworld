@@ -104,7 +104,8 @@ func TestEncodeEvents(t *testing.T) {
 			`{"type":"room.joined","v":1,"data":{"you":"c1","map":"praca","players":[
 				{"id":"c2","nickname":"bandit","x":488.5,"y":400},
 				{"id":"c1","nickname":"rocky","x":480,"y":400}],
-				"cups":{"phase":"idle","players":[],"queued":[],"lobbyMs":0,"round":null}}}`,
+				"cups":{"phase":"idle","players":[],"queued":[],"lobbyMs":0,"round":null},
+				"rummy":{"playing":[],"tables":0,"rooms":[]}}}`,
 		},
 		{
 			"join rejected",

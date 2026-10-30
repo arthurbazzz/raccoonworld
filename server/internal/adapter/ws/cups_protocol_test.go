@@ -111,7 +111,8 @@ func TestEncodeCupsEvents(t *testing.T) {
 			`{"type":"room.joined","v":1,"data":{"you":"c3","map":"praca","players":[],
 				"cups":{"phase":"playing","players":["c1"],"queued":[],"lobbyMs":0,
 					"round":{"round":2,"total":5,"nut":1,"showMs":1500,"swaps":[[0,1],[1,2]],
-						"swapMs":500,"pickMs":10000,"elapsedMs":2000}}}}`,
+						"swapMs":500,"pickMs":10000,"elapsedMs":2000}},
+				"rummy":{"playing":[],"tables":0,"rooms":[]}}}`,
 		},
 	}
 	for _, tt := range tests {

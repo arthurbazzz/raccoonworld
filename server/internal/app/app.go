@@ -60,6 +60,13 @@ func New(opts Options) (*App, error) {
 		JoinCups:  usecase.NewJoinCups(runner, hub, opts.Clock),
 		PickCup:   usecase.NewPickCup(runner, opts.Clock),
 		LeaveCups: usecase.NewLeaveCups(runner, opts.Clock),
+
+		OpenTable:       usecase.NewOpenTable(runner, opts.Clock),
+		CreateTableRoom: usecase.NewCreateTableRoom(runner, opts.Clock),
+		JoinTableRoom:   usecase.NewJoinTableRoom(runner, opts.Clock),
+		LeaveTableRoom:  usecase.NewLeaveTableRoom(runner, opts.Clock),
+		PlayAgain:       usecase.NewPlayAgain(runner),
+		PlayTurn:        usecase.NewPlayTurn(runner, opts.Clock),
 	}, ws.Options{AllowedOrigins: opts.AllowedOrigins, Logger: opts.Logger})
 
 	router := httpapi.NewRouter(httpapi.Config{
