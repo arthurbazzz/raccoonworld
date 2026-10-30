@@ -8,7 +8,7 @@ RW-001 a RW-005).
 
 ## Fase 0 — Cenários
 
-- [ ] **T1** Passar os 20 cenários da spec para `specs/006-rummy/features/rummy.feature`, com
+- [x] **T1** Passar os 20 cenários da spec para `specs/006-rummy/features/rummy.feature`, com
   `@smoke` e `@e2e` conforme o plano (seção 5). Ligar o arquivo nas suítes do godog: os 20
   aparecem **indefinidos e falhando** (modo estrito).
 

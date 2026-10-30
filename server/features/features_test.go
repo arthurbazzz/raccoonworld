@@ -1,4 +1,4 @@
-// Package features runs the RW-001 and RW-005 Gherkin scenarios against the use cases.
+// Package features runs the RW-001, RW-005 and RW-006 Gherkin scenarios against the use cases.
 //
 // The .feature files live in specs/ and are the single source of truth;
 // both godog (here) and playwright-bdd (web/) read them from there.
@@ -20,6 +20,7 @@ import (
 var featurePaths = []string{
 	"../../specs/001-sala-inicial/features",
 	"../../specs/005-tres-copos/features",
+	"../../specs/006-rummy/features",
 }
 
 func TestFeatures(t *testing.T) {
