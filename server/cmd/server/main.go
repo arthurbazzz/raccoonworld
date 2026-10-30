@@ -43,6 +43,8 @@ func run(cfg config.Config, logger *slog.Logger) error {
 		Clock:          clock.System{},
 		Logger:         logger,
 		CupsSpeedup:    cfg.CupsSpeedup,
+		RummyFast:      cfg.RummyFast,
+		RummySeed:      cfg.RummySeed,
 	})
 	if err != nil {
 		return err

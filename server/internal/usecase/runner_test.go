@@ -9,6 +9,7 @@ import (
 
 	"raccoons-world/server/internal/domain/cups"
 	"raccoons-world/server/internal/domain/room"
+	"raccoons-world/server/internal/domain/rummy"
 	"raccoons-world/server/internal/usecase"
 	"raccoons-world/server/maps"
 )
@@ -48,7 +49,7 @@ func startRunner(t *testing.T) (*usecase.RoomRunner, chan time.Time, *recordingB
 		t.Fatal(err)
 	}
 	b := &recordingBroadcaster{}
-	runner := usecase.NewRoomRunner(room.New("praca", tiles), cups.NewGame(cups.DefaultTiming(), cups.RandomShuffler{}), b, fixedClock{})
+	runner := usecase.NewRoomRunner(room.New("praca", tiles), cups.NewGame(cups.DefaultTiming(), cups.RandomShuffler{}), rummy.NewTable(rummy.DefaultTiming(), rummy.NewRandomShuffler(1)), b, fixedClock{})
 	ticks := make(chan time.Time)
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -131,7 +132,7 @@ func TestIdleTickBroadcastsNothing(t *testing.T) {
 
 func TestExecAfterStopFails(t *testing.T) {
 	tiles, _ := room.ParseTileMap(maps.Praca)
-	r := usecase.NewRoomRunner(room.New("praca", tiles), cups.NewGame(cups.DefaultTiming(), cups.RandomShuffler{}), &recordingBroadcaster{}, fixedClock{})
+	r := usecase.NewRoomRunner(room.New("praca", tiles), cups.NewGame(cups.DefaultTiming(), cups.RandomShuffler{}), rummy.NewTable(rummy.DefaultTiming(), rummy.NewRandomShuffler(1)), &recordingBroadcaster{}, fixedClock{})
 	ctx, cancel := context.WithCancel(context.Background())
 	done := make(chan struct{})
 	go func() { defer close(done); r.Run(ctx, nil) }()

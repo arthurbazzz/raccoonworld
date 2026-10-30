@@ -13,13 +13,15 @@ func NewLeaveRoom(runner *RoomRunner, b Broadcaster) *LeaveRoom {
 	return &LeaveRoom{runner: runner, broadcaster: b}
 }
 
-// Execute removes the player, from the three cups booth too (RC15).
+// Execute removes the player, from the three cups booth too (RC15). A seat
+// in a rummy match is kept for a while (RW-006, RN21).
 // Leaving twice, or after a timeout already removed them, is a no-op.
 func (uc *LeaveRoom) Execute(id room.PlayerID) error {
 	rr := uc.runner
 	return rr.do(func() {
 		if rr.room.Leave(id) {
 			rr.leaveBooth(id, rr.clock.Now())
+			rr.dropFromTable(id, rr.clock.Now())
 			uc.broadcaster.ToRoom(rr.room.ID(), PlayerLeft{ID: id})
 		}
 	})

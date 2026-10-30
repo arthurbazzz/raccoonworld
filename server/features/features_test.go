@@ -64,7 +64,14 @@ type world struct {
 	pickCup   *usecase.PickCup
 	leaveCups *usecase.LeaveCups
 
-	cups cupsWorld // tres_copos.feature
+	openTable       *usecase.OpenTable
+	createTableRoom *usecase.CreateTableRoom
+	joinTableRoom   *usecase.JoinTableRoom
+	leaveTableRoom  *usecase.LeaveTableRoom
+	playTurnUC      *usecase.PlayTurn
+
+	cups  cupsWorld  // tres_copos.feature
+	rummy rummyWorld // rummy.feature
 
 	dropped map[string]bool // nickname -> connection dropped (no more heartbeats)
 
@@ -97,4 +104,5 @@ func initializeScenario(sc *godog.ScenarioContext) {
 	w.registerChatSteps(sc)
 	w.registerConnectionSteps(sc)
 	w.registerCupsSteps(sc)
+	w.registerRummySteps(sc)
 }

@@ -44,7 +44,8 @@ type Joined struct {
 	MapName string
 	You     room.PlayerView
 	Players []room.PlayerView
-	Cups    CupsSnapshot // the three cups booth right now (RW-005)
+	Cups    CupsSnapshot  // the three cups booth right now (RW-005)
+	Rummy   RummySnapshot // the pieces table right now (RW-006)
 }
 
 // JoinRejected is sent to a visitor whose join attempt failed.
@@ -114,8 +115,13 @@ type CupsResults struct {
 // CupsRejectReason tells a player why they could not play.
 type CupsRejectReason string
 
-// CupsTooFar means the raccoon is not near the booth (RC2).
-const CupsTooFar CupsRejectReason = "too_far"
+// Cups rejection reasons.
+const (
+	// CupsTooFar means the raccoon is not near the booth (RC2).
+	CupsTooFar CupsRejectReason = "too_far"
+	// CupsBusy means the player is at the pieces table (RW-006).
+	CupsBusy CupsRejectReason = "busy"
+)
 
 // CupsRejected is sent to a player whose cups.join was refused.
 type CupsRejected struct {

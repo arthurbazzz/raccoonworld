@@ -3,6 +3,7 @@ package config
 
 import (
 	"os"
+	"strconv"
 	"strings"
 )
 
@@ -19,6 +20,12 @@ type Config struct {
 	// CupsSpeedup divides every three cups duration, so browser tests do not
 	// take minutes (RW-005). Env: RW_CUPS_FAST=1 sets 10; default 1 (real speed).
 	CupsSpeedup int
+	// RummyFast shortens the rummy lobby countdown for browser tests (RW-006).
+	// Env: RW_RUMMY_FAST=1; default off.
+	RummyFast bool
+	// RummySeed fixes the rummy shuffles so browser tests know the hands
+	// (RW-006). Env: RW_RUMMY_SEED=<n>; default 0 (random).
+	RummySeed uint64
 }
 
 // FromEnv loads the configuration, applying defaults.
@@ -28,6 +35,8 @@ func FromEnv() Config {
 		AllowedOrigins: splitList(getenv("RW_ALLOWED_ORIGINS", "localhost:3000")),
 		Debug:          os.Getenv("RW_DEBUG") == "1",
 		CupsSpeedup:    cupsSpeedup(),
+		RummyFast:      os.Getenv("RW_RUMMY_FAST") == "1",
+		RummySeed:      rummySeed(),
 	}
 }
 
@@ -56,4 +65,14 @@ func cupsSpeedup() int {
 		return FastCupsSpeedup
 	}
 	return 1
+}
+
+// rummySeed reads RW_RUMMY_SEED; anything that is not a positive number
+// means a random seed.
+func rummySeed() uint64 {
+	n, err := strconv.ParseUint(os.Getenv("RW_RUMMY_SEED"), 10, 64)
+	if err != nil {
+		return 0
+	}
+	return n
 }

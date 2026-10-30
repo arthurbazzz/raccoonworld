@@ -37,7 +37,7 @@ RW-001 a RW-005).
 
 ## Fase 2 — Casos de uso e protocolo (Go)
 
-- [ ] **T10** Casos de uso (`OpenTable`, `CreateTableRoom`, `JoinTableRoom`, `MoveTiles`,
+- [x] **T10** Casos de uso (`OpenTable`, `CreateTableRoom`, `JoinTableRoom`, `MoveTiles`,
   `EndTurn`, `DrawTile`, `UndoTurn`, `LeaveTableRoom`); o `RoomRunner` avança a mesa no tick;
   `busy` trava o guaxinim e impede jogar copos e rummy ao mesmo tempo; `JoinRoom` e `LeaveRoom`
   avisam a mesa. Steps godog com `FakeClock` e `Shuffler` fixo: **os 20 cenários passam**.

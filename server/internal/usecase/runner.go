@@ -7,6 +7,7 @@ import (
 
 	"raccoons-world/server/internal/domain/cups"
 	"raccoons-world/server/internal/domain/room"
+	"raccoons-world/server/internal/domain/rummy"
 )
 
 // TickInterval is the simulation step: 20 ticks per second. Every tick
@@ -22,31 +23,35 @@ type command struct {
 	done chan struct{}
 }
 
-// RoomRunner owns a room and its three cups booth and serializes all access
+// RoomRunner owns a room, its three cups booth and its pieces table, and serializes all access
 // to them through a single goroutine (Run). Commands and ticks never run
 // concurrently, so neither needs locks.
 type RoomRunner struct {
 	room        *room.Room
 	game        *cups.Game
+	table       *rummy.Table
 	broadcaster Broadcaster
 	clock       Clock
 	cmds        chan command
 	stopped     chan struct{}
 	tick        uint64                 // only touched by the loop goroutine
-	busy        map[room.PlayerID]bool // players the booth holds still (RC21)
+	cupsBusy    map[room.PlayerID]bool // players the booth holds still (RC21)
+	rummyBusy   map[room.PlayerID]bool // players the table holds still (RN27)
 }
 
-// NewRoomRunner wraps r and its booth g. Call Run to start processing. c is
+// NewRoomRunner wraps r, its booth g and its pieces table t. Call Run to start processing. c is
 // used on each tick to expire silent players (RN5) and to advance the match.
-func NewRoomRunner(r *room.Room, g *cups.Game, b Broadcaster, c Clock) *RoomRunner {
+func NewRoomRunner(r *room.Room, g *cups.Game, t *rummy.Table, b Broadcaster, c Clock) *RoomRunner {
 	return &RoomRunner{
 		room:        r,
 		game:        g,
+		table:       t,
 		broadcaster: b,
 		clock:       c,
 		cmds:        make(chan command),
 		stopped:     make(chan struct{}),
-		busy:        map[room.PlayerID]bool{},
+		cupsBusy:    map[room.PlayerID]bool{},
+		rummyBusy:   map[room.PlayerID]bool{},
 	}
 }
 
@@ -95,9 +100,11 @@ func (rr *RoomRunner) step() {
 	now := rr.clock.Now()
 	for _, p := range rr.room.Expire(now) {
 		rr.leaveBooth(p.ID, now)
+		rr.dropFromTable(p.ID, now)
 		rr.broadcaster.ToRoom(rr.room.ID(), PlayerLeft{ID: p.ID})
 	}
 	rr.publishCups(rr.game.Advance(now))
+	rr.publishRummy(rr.table.Advance(now), now)
 
 	moved := rr.room.Step(TickInterval)
 	if len(moved) == 0 {
@@ -145,17 +152,22 @@ func (rr *RoomRunner) syncBusy(s cups.StatusChanged) {
 	for _, p := range s.Queued {
 		now[p] = true
 	}
-	for p := range rr.busy {
-		if !now[p] {
-			_ = rr.room.SetBusy(p, false) // they may have left the room already
+	before := rr.cupsBusy
+	rr.cupsBusy = now
+	rr.applyBusy(before, now)
+}
+
+// applyBusy updates the room for everyone in either of one minigame's busy
+// sets: a player is held still while any minigame holds them.
+func (rr *RoomRunner) applyBusy(before, now map[room.PlayerID]bool) {
+	for _, set := range []map[room.PlayerID]bool{before, now} {
+		for p := range set {
+			if before[p] != now[p] {
+				// They may have left the room already.
+				_ = rr.room.SetBusy(p, rr.cupsBusy[p] || rr.rummyBusy[p])
+			}
 		}
 	}
-	for p := range now {
-		if !rr.busy[p] {
-			_ = rr.room.SetBusy(p, true)
-		}
-	}
-	rr.busy = now
 }
 
 // cupsSnapshot is the booth as a newcomer to the room must see it.

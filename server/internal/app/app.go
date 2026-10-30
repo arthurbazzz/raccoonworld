@@ -13,6 +13,7 @@ import (
 	"raccoons-world/server/internal/adapter/ws"
 	"raccoons-world/server/internal/domain/cups"
 	"raccoons-world/server/internal/domain/room"
+	"raccoons-world/server/internal/domain/rummy"
 	"raccoons-world/server/internal/usecase"
 	"raccoons-world/server/maps"
 )
@@ -24,6 +25,10 @@ type Options struct {
 	Logger         *slog.Logger // nil discards logs
 	// CupsSpeedup divides the three cups durations; 0 or 1 is real speed.
 	CupsSpeedup int
+	// RummyFast shortens the rummy lobby countdown (RW_RUMMY_FAST).
+	RummyFast bool
+	// RummySeed fixes the rummy shuffles; 0 is random (RW_RUMMY_SEED).
+	RummySeed uint64
 }
 
 // App is a ready-to-serve Raccoons World server with a single room.
@@ -43,6 +48,7 @@ func New(opts Options) (*App, error) {
 	runner := usecase.NewRoomRunner(
 		room.New("praca", tiles),
 		cups.NewGame(cupsTiming(opts.CupsSpeedup), cups.RandomShuffler{}),
+		rummy.NewTable(rummyTiming(opts.RummyFast), rummy.NewRandomShuffler(opts.RummySeed)),
 		hub, opts.Clock,
 	)
 	wsHandler := ws.NewHandler(hub, ws.UseCases{
@@ -79,4 +85,13 @@ func cupsTiming(speedup int) cups.Timing {
 	t := base.Scaled(speedup)
 	t.Pick, t.Reveal = base.Pick, base.Reveal
 	return t
+}
+
+// rummyTiming is the real rummy timing, with a short lobby for browser
+// tests (RW_RUMMY_FAST).
+func rummyTiming(fast bool) rummy.Timing {
+	if fast {
+		return rummy.FastTiming()
+	}
+	return rummy.DefaultTiming()
 }

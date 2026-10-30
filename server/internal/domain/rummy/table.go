@@ -313,3 +313,14 @@ func (t *Table) reopen(r *tableRoom, now time.Time) []Event {
 	}
 	return append(events, RoomsChanged{})
 }
+
+// Settle takes the events of a turn played straight on a room's match
+// (EndTurn, Draw) and tags them like Advance does, moving the room to the
+// scoreboard if the match ended.
+func (t *Table) Settle(roomID string, events []Event, now time.Time) []Event {
+	r := t.find(roomID)
+	if r == nil {
+		return nil
+	}
+	return t.wrap(r, events, now)
+}

@@ -31,6 +31,10 @@ func (uc *JoinCups) Execute(id room.PlayerID) error {
 			uc.broadcaster.ToPlayer(id, CupsRejected{Reason: CupsTooFar})
 			return
 		}
+		if rr.rummyBusy[id] {
+			uc.broadcaster.ToPlayer(id, CupsRejected{Reason: CupsBusy})
+			return
+		}
 		_, events := rr.game.Join(id, uc.clock.Now())
 		rr.publishCups(events)
 	}); execErr != nil {

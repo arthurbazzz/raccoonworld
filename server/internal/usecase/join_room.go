@@ -73,8 +73,10 @@ func (uc *JoinRoom) Execute(in JoinInput) error {
 			You:     me,
 			Players: r.Players(),
 			Cups:    uc.runner.cupsSnapshot(now),
+			Rummy:   uc.runner.rummySnapshot(now),
 		})
 		uc.broadcaster.ToRoom(r.ID(), PlayerJoined{Player: me})
+		uc.runner.reclaimSeat(me, now)
 	})
 	if execErr != nil {
 		return execErr

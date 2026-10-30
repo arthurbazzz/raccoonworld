@@ -7,6 +7,7 @@ import (
 
 	"raccoons-world/server/internal/domain/cups"
 	"raccoons-world/server/internal/domain/room"
+	"raccoons-world/server/internal/domain/rummy"
 	"raccoons-world/server/internal/usecase"
 	"raccoons-world/server/maps"
 )
@@ -24,7 +25,7 @@ func (w *world) openRoom(name string) error {
 	if err != nil {
 		return err
 	}
-	w.runner = usecase.NewRoomRunner(room.New(id, tiles), cups.NewGame(cups.DefaultTiming(), cycleShuffler{}), w.broadcaster, w.clock)
+	w.runner = usecase.NewRoomRunner(room.New(id, tiles), cups.NewGame(cups.DefaultTiming(), cycleShuffler{}), rummy.NewTable(rummy.DefaultTiming(), &w.rummy.shuffler), w.broadcaster, w.clock)
 	w.ticks = make(chan time.Time)
 	w.done = make(chan struct{})
 
@@ -42,6 +43,11 @@ func (w *world) openRoom(name string) error {
 	w.joinCups = usecase.NewJoinCups(w.runner, w.broadcaster, w.clock)
 	w.pickCup = usecase.NewPickCup(w.runner, w.clock)
 	w.leaveCups = usecase.NewLeaveCups(w.runner, w.clock)
+	w.openTable = usecase.NewOpenTable(w.runner, w.clock)
+	w.createTableRoom = usecase.NewCreateTableRoom(w.runner, w.clock)
+	w.joinTableRoom = usecase.NewJoinTableRoom(w.runner, w.clock)
+	w.leaveTableRoom = usecase.NewLeaveTableRoom(w.runner, w.clock)
+	w.playTurnUC = usecase.NewPlayTurn(w.runner, w.clock)
 	return nil
 }
 
