@@ -13,6 +13,11 @@
   position: fixed;
   inset: 0;
   z-index: 20;
+  /* At most 1920x1080, centered; wider or taller screens get a dark border. */
+  margin: auto;
+  max-width: 1920px;
+  max-height: 1080px;
+  box-shadow: 0 0 0 100vmax #1f0c05;
   display: grid;
   grid-template-rows: auto minmax(0, 1fr) auto auto;
   gap: 6px;
@@ -111,7 +116,7 @@
   position: relative;
   /* Never wider than the board needs (ultrawide screens), so the whole felt is usable. */
   justify-self: center;
-  width: min(100%, calc((100vh - 330px) * 48 / 28 * 1.16 + 40px));
+  width: min(100%, calc((min(100vh, 1080px) - 330px) * 48 / 28 * 1.16 + 40px));
   display: grid;
   place-items: center;
   min-height: 0;
@@ -127,7 +132,7 @@
 
 .board {
   position: relative;
-  width: min(100%, calc((100vh - 330px) * 48 / 28));
+  width: min(100%, calc((min(100vh, 1080px) - 330px) * 48 / 28));
   max-height: 100%;
   border-radius: 12px;
   outline: 1px dashed rgb(255 255 255 / 10%);
