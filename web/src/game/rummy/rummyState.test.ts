@@ -61,9 +61,21 @@ describe("rummyReducer", () => {
   it("shows the others' draft live, but not over our own turn", () => {
     const draft: ServerMessage = {
       type: "rummy.draft",
-      data: { turn: 3, melds: [[1, 2, 3], [7, 8, 9]], handCount: 11 },
+      data: {
+        turn: 3,
+        melds: [
+          [1, 2, 3],
+          [7, 8, 9],
+        ],
+        handCount: 11,
+      },
     };
-    const watching = rummyReducer(rummyReducer(initialRummyState, state(), 0, "p2"), draft, 0, "p2");
+    const watching = rummyReducer(
+      rummyReducer(initialRummyState, state(), 0, "p2"),
+      draft,
+      0,
+      "p2",
+    );
     expect(watching.match?.melds).toHaveLength(2);
     expect(watching.match?.counts.p1).toBe(11);
 
@@ -94,7 +106,9 @@ describe("rummyReducer", () => {
       initialRummyState,
       {
         type: "rummy.rooms",
-        data: { rooms: [{ id: "s2", mode: "free", players: ["p1", "p3"], phase: "lobby", lobbyMs: 0 }] },
+        data: {
+          rooms: [{ id: "s2", mode: "free", players: ["p1", "p3"], phase: "lobby", lobbyMs: 0 }],
+        },
       },
       0,
       "p1",

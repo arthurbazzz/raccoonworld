@@ -6,12 +6,7 @@ import { COLORS, MAX_VALUE, tileOf, type Tile } from "./tiles";
 
 export type MeldKind = "group" | "run";
 export type MeldError =
-  | "too_short"
-  | "too_long"
-  | "repeated_color"
-  | "mixed_colors"
-  | "gap"
-  | "out_of_range";
+  "too_short" | "too_long" | "repeated_color" | "mixed_colors" | "gap" | "out_of_range";
 
 export type Classified = { kind: MeldKind } | { error: MeldError };
 

@@ -58,7 +58,10 @@ function roomsFrom(
   rooms: { id: string; mode: RummyMode; players: PlayerId[]; phase: RummyPhase; lobbyMs: number }[],
   at: number,
 ): RummyRoom[] {
-  return rooms.map(({ lobbyMs, ...r }) => ({ ...r, lobbyEndsAt: lobbyMs > 0 ? at + lobbyMs : null }));
+  return rooms.map(({ lobbyMs, ...r }) => ({
+    ...r,
+    lobbyEndsAt: lobbyMs > 0 ? at + lobbyMs : null,
+  }));
 }
 
 /**
@@ -82,8 +85,15 @@ export function rummyReducer(
         rooms: roomsFrom(r.rooms, at),
       };
     }
-    case "rummy.rooms":
-      return { ...state, rooms: roomsFrom(msg.data.rooms, at) };
+    case "rummy.rooms": {
+      const rooms = roomsFrom(msg.data.rooms, at);
+      const mine = you === null ? undefined : rooms.find((r) => r.players.includes(you));
+      // Back in the lobby after "Jogar de novo": the last match is over (RN7).
+      if (mine?.phase === "lobby" && state.match) {
+        return { ...state, rooms, match: null, results: null, lastTurn: null };
+      }
+      return { ...state, rooms };
+    }
     case "rummy.status": {
       const next = { ...state, playing: msg.data.playing, tables: msg.data.tables };
       // Released from the table: the match and the scoreboard are over for us.
@@ -116,7 +126,11 @@ export function rummyReducer(
       if (!m || m.turn !== msg.data.turn || m.current === you) return state;
       return {
         ...state,
-        match: { ...m, melds: msg.data.melds, counts: { ...m.counts, [m.current]: msg.data.handCount } },
+        match: {
+          ...m,
+          melds: msg.data.melds,
+          counts: { ...m.counts, [m.current]: msg.data.handCount },
+        },
       };
     }
     case "rummy.turn":

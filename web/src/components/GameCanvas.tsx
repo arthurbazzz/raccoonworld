@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 
 import type { ChatBalloons } from "@/game/chat";
 import type { CupsState } from "@/game/cups/cupsState";
+import type { RummyState } from "@/game/rummy/rummyState";
 import type { Interpolator } from "@/game/interpolation";
 import type { RoomScene } from "@/game/scene";
 import { loadTileMap, type TileMap } from "@/game/tilemap";
@@ -17,6 +18,7 @@ interface Props {
   interpolator: Interpolator;
   balloons: ChatBalloons;
   cups: CupsState;
+  rummy: RummyState;
   /** Called once the map is loaded (the world needs the booth, RW-005). */
   onMap?: (map: TileMap) => void;
 }
@@ -30,13 +32,14 @@ export function GameCanvas({
   interpolator,
   balloons,
   cups,
+  rummy,
   onMap,
 }: Props) {
   const hostRef = useRef<HTMLDivElement>(null);
   const sceneRef = useRef<RoomScene | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const latest = useRef({ players, you, cups, onMap });
-  latest.current = { players, you, cups, onMap };
+  const latest = useRef({ players, you, cups, rummy, onMap });
+  latest.current = { players, you, cups, rummy, onMap };
 
   useEffect(() => {
     const host = hostRef.current;
@@ -61,6 +64,7 @@ export function GameCanvas({
         sceneRef.current = created;
         created.sync(latest.current.players, latest.current.you);
         created.syncCups(latest.current.cups);
+        created.syncRummy(latest.current.rummy);
       } catch (e) {
         if (!cancelled) setError(e instanceof Error ? e.message : String(e));
       }
@@ -80,6 +84,10 @@ export function GameCanvas({
   useEffect(() => {
     sceneRef.current?.syncCups(cups);
   }, [cups]);
+
+  useEffect(() => {
+    sceneRef.current?.syncRummy(rummy);
+  }, [rummy]);
 
   return (
     <div ref={hostRef} style={{ position: "absolute", inset: 0 }}>

@@ -55,13 +55,13 @@ RW-001 a RW-005).
 
 ## Fase 4 — Frontend
 
-- [ ] **T14** Lógica pura em `src/game/rummy/`: `tiles.ts` (ID → peça, mesmos dados do Go),
+- [x] **T14** Lógica pura em `src/game/rummy/`: `tiles.ts` (ID → peça, mesmos dados do Go),
   `melds.ts` (lendo a tabela da T4), `rummyState.ts` (reducer) e o protocolo, com Vitest.
-- [ ] **T15** Mesa na Praça: sprite na `scene.ts` ordenado por profundidade, aviso "Aperte E
+- [x] **T15** Mesa na Praça: sprite na `scene.ts` ordenado por profundidade, aviso "Aperte E
   para jogar", número de salas jogando e etiqueta "jogando" sobre o guaxinim (RN25, RN27).
-- [ ] **T16** `TableRoomsPanel`: lista de salas, criar com modo, entrar, espera com contagem
+- [x] **T16** `TableRoomsPanel`: lista de salas, criar com modo, entrar, espera com contagem
   (RN5–RN7).
-- [ ] **T17** `RummyPanel`: mesa e mão com arrastar e soltar, destaque de inválidas, ordenar a mão,
+- [x] **T17** `RummyPanel`: mesa e mão com arrastar e soltar, destaque de inválidas, ordenar a mão,
   relógio, contagem de peças dos outros, ausentes, rascunho ao vivo de quem joga, botões e
   placar (RN9–RN19, RN26).
 

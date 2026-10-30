@@ -1,11 +1,15 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import { nearBooth } from "@/game/cups/booth";
 import { cupsRole } from "@/game/cups/cupsState";
 import { cupsAt } from "@/game/cups/timeline";
 import { useCupsKeys } from "@/game/cups/useCupsKeys";
+import { roomOf } from "@/game/rummy/rummyState";
+import { loadRummyManifest, type RummyManifest } from "@/game/rummy/sheet";
+import { nearTable } from "@/game/rummy/table";
+import { useRummyKeys } from "@/game/rummy/useRummyKeys";
 import { useMotionAttributes } from "@/game/useMotionAttributes";
 import { useMovementKeys } from "@/game/useMovementKeys";
 import type { Rect, TileMap } from "@/game/tilemap";
@@ -18,6 +22,8 @@ import { CupsPanel } from "./CupsPanel";
 import cupsStyles from "./CupsPanel.module.css";
 import { GameCanvas } from "./GameCanvas";
 import { NicknameForm } from "./NicknameForm";
+import { RummyPanel } from "./RummyPanel";
+import { TableRoomsPanel } from "./TableRoomsPanel";
 import styles from "./RaccoonWorld.module.css";
 
 const wsUrl = defaultServerUrl();
@@ -31,9 +37,22 @@ export function RaccoonWorld() {
 
   // Three cups (RW-005): near the booth, E plays; at the booth, Esc leaves.
   const [booth, setBooth] = useState<Rect | null>(null);
-  const onMap = useCallback((map: TileMap) => setBooth(map.booth), []);
+  const [table, setTable] = useState<Rect | null>(null);
+  const onMap = useCallback((map: TileMap) => {
+    setBooth(map.booth);
+    setTable(map.table);
+  }, []);
   const me = state.you ? state.players[state.you] : undefined;
   const role = cupsRole(state.cups, state.you);
+  // Rummy das Nozes (RW-006): near the table, E opens the room list.
+  const rummyState = state.rummy;
+  const seated = state.you !== null && rummyState.playing.includes(state.you);
+  const atTable = seated || rummyState.listOpen;
+  const nearT = me !== undefined && nearTable(table, me.x, me.y);
+  const [manifest, setManifest] = useState<RummyManifest | null>(null);
+  useEffect(() => {
+    loadRummyManifest().then(setManifest);
+  }, []);
   const near = me !== undefined && nearBooth(booth, me.x, me.y);
   const canPick = useCallback(() => {
     const { round, reveal, myPick, players } = state.cups;
@@ -42,12 +61,20 @@ export function RaccoonWorld() {
     return cupsAt(round, performance.now() - round.startedAt).stage === "choose";
   }, [state.cups, state.you]);
   useCupsKeys({
-    canJoin: state.phase === "playing" && near && role === null,
+    canJoin: state.phase === "playing" && near && role === null && !atTable,
     canLeave: role !== null,
     canPick,
     onJoin: joinCups,
     onLeave: leaveCups,
     onPick: pickCup,
+  });
+
+  const rummy = room.rummy;
+  useRummyKeys({
+    canOpen: state.phase === "playing" && nearT && !atTable && role === null,
+    canClose: atTable,
+    onOpen: rummy.openList,
+    onClose: seated ? rummy.leave : rummy.closeList,
   });
 
   if (state.phase !== "playing" || !state.map) {
@@ -73,6 +100,7 @@ export function RaccoonWorld() {
         interpolator={interpolator}
         balloons={balloons}
         cups={state.cups}
+        rummy={state.rummy}
         onMap={onMap}
       />
       <header className={styles.hud}>
@@ -84,6 +112,31 @@ export function RaccoonWorld() {
       </header>
       <ChatBox onSend={sendChat} />
 
+      {nearT && !atTable && role === null && (
+        <p className={cupsStyles.prompt} role="status">
+          Aperte <kbd>E</kbd> para jogar Rummy das Nozes
+        </p>
+      )}
+      {atTable && state.you && !rummyState.match && !rummyState.results && (
+        <TableRoomsPanel
+          rummy={rummyState}
+          you={state.you}
+          players={state.players}
+          onCreate={rummy.create}
+          onJoin={rummy.join}
+          onLeave={rummy.leave}
+          onClose={rummy.closeList}
+        />
+      )}
+      {state.you && (rummyState.match || rummyState.results) && (
+        <RummyPanel
+          rummy={rummyState}
+          you={state.you}
+          players={state.players}
+          actions={rummy}
+          manifest={manifest}
+        />
+      )}
       {near && role === null && (
         <p className={cupsStyles.prompt} role="status">
           Aperte <kbd>E</kbd> para jogar
@@ -113,6 +166,7 @@ export function RaccoonWorld() {
             data-moving={motions[p.id]?.moving}
             data-ring={p.id === state.you}
             data-cups={cupsRole(state.cups, p.id) ?? undefined}
+            data-rummy={roomOf(rummyState, p.id)?.id}
           >
             {p.nickname}
           </li>

@@ -5,6 +5,9 @@ import type { PlayerId, PlayerState } from "@/net/protocol";
 import type { ChatBalloons } from "./chat";
 import { BoothView, drawPlayingSign } from "./cups/boothView";
 import { initialCupsState, type CupsState } from "./cups/cupsState";
+import { initialRummyState, type RummyState } from "./rummy/rummyState";
+import { loadRummyManifest } from "./rummy/sheet";
+import { TableView } from "./rummy/tableView";
 import { playerDepth, tileDepth } from "./depth";
 import type { Interpolator } from "./interpolation";
 import { loadRaccoonSheet, RaccoonView, type RaccoonSheet } from "./raccoon";
@@ -53,6 +56,7 @@ export class RoomScene {
   private readonly raccoons = new Map<PlayerId, RaccoonSprite>();
   private readonly booth: BoothView | null;
   private cups: CupsState = initialCupsState;
+  private rummy: RummyState = initialRummyState;
   private readonly onResize = () => this.layout();
   private readonly onFrame = () => this.place(performance.now());
 
@@ -62,12 +66,14 @@ export class RoomScene {
     private readonly interpolator: Interpolator,
     private readonly balloons: ChatBalloons,
     private readonly sheet: RaccoonSheet,
+    private readonly table: TableView | null,
   ) {
     this.world.addChild(this.floor, this.entities, this.overlay);
     app.stage.addChild(this.world);
     this.drawFloor();
     for (const tile of map.solidTiles()) this.entities.addChild(drawBlock(tile));
     this.booth = map.booth ? this.entities.addChild(new BoothView(map.booth)) : null;
+    if (table) this.entities.addChild(table);
     app.renderer.on("resize", this.onResize);
     app.ticker.add(this.onFrame);
     this.layout();
@@ -81,6 +87,8 @@ export class RoomScene {
   ): Promise<RoomScene> {
     // RW-004: the raccoon art; a failure surfaces in GameCanvas as an error.
     const sheet = await loadRaccoonSheet();
+    // RW-006: the pieces table; without its art it is drawn plain.
+    const table = map.table ? await TableView.create(map.table, await loadRummyManifest()) : null;
     const app = new Application();
     await app.init({
       resizeTo: parent,
@@ -90,7 +98,7 @@ export class RoomScene {
       resolution: Math.min(window.devicePixelRatio || 1, 2),
     });
     parent.appendChild(app.canvas);
-    return new RoomScene(app, map, interpolator, balloons, sheet);
+    return new RoomScene(app, map, interpolator, balloons, sheet, table);
   }
 
   /**
@@ -122,6 +130,11 @@ export class RoomScene {
     this.cups = cups;
   }
 
+  /** The pieces table state (RW-006); the scene reads it every frame. */
+  syncRummy(rummy: RummyState): void {
+    this.rummy = rummy;
+  }
+
   destroy(): void {
     this.app.ticker.remove(this.onFrame);
     this.app.renderer.off("resize", this.onResize);
@@ -144,11 +157,13 @@ export class RoomScene {
         if (motion.facing !== sprite.body.facing) sprite.body.setFacing(motion.facing);
         sprite.body.animate(motion.moving, now);
       }
-      sprite.sign.visible = this.cups.players.includes(id);
+      // "Jogando" sign: at the booth (RC22) or at the pieces table (RN27).
+      sprite.sign.visible = this.cups.players.includes(id) || this.rummy.playing.includes(id);
       this.updateBalloon(sprite, this.balloons.textFor(id, now));
       sprite.balloon?.position.copyFrom(sprite.body.position);
     }
     this.booth?.update(this.cups, now);
+    this.table?.update(this.rummy.tables);
   }
 
   private updateBalloon(sprite: RaccoonSprite, text: string | null): void {
