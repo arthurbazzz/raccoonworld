@@ -1,11 +1,11 @@
 "use client";
 
-import { useCallback, useEffect, useState, type PointerEvent } from "react";
+import { useCallback, useEffect, useRef, useState, type PointerEvent } from "react";
 
 import { useFrameTime } from "@/game/cups/useFrameTime";
 import { moveTile, type DropTarget } from "@/game/rummy/layout";
 import { classify, points, REASONS } from "@/game/rummy/melds";
-import type { RummyState } from "@/game/rummy/rummyState";
+import { secondsUntil, type RummyState } from "@/game/rummy/rummyState";
 import type { RummyManifest } from "@/game/rummy/sheet";
 import { byColor, byNumber } from "@/game/rummy/tiles";
 import type { RummyActions } from "@/net/useRoom";
@@ -96,26 +96,27 @@ export function RummyPanel({ rummy, you, players, actions, manifest }: Props) {
     [m, myTurn, actions],
   );
 
+  // The latest drop, for listeners added when a drag starts.
+  const dropRef = useRef(drop);
   useEffect(() => {
-    if (!drag) return;
-    const onMove = (e: globalThis.PointerEvent) =>
-      setDrag((d) => (d ? { ...d, x: e.clientX, y: e.clientY } : d));
-    const onUp = (e: globalThis.PointerEvent) => {
-      drop(e.clientX, e.clientY, drag.id);
-      setDrag(null);
-    };
-    window.addEventListener("pointermove", onMove);
-    window.addEventListener("pointerup", onUp, { once: true });
-    return () => {
-      window.removeEventListener("pointermove", onMove);
-      window.removeEventListener("pointerup", onUp);
-    };
-  }, [drag?.id, drop]); // eslint-disable-line react-hooks/exhaustive-deps
+    dropRef.current = drop;
+  }, [drop]);
 
+  // Listeners go on the window right at pointerdown: a quick drag can end
+  // before React would run an effect.
   const startDrag = (e: PointerEvent<HTMLDivElement>, id: number) => {
     if (!myTurn || e.button !== 0) return;
     e.preventDefault();
     setDrag({ id, x: e.clientX, y: e.clientY });
+    const onMove = (ev: globalThis.PointerEvent) =>
+      setDrag((d) => (d ? { ...d, x: ev.clientX, y: ev.clientY } : d));
+    const onUp = (ev: globalThis.PointerEvent) => {
+      window.removeEventListener("pointermove", onMove);
+      setDrag(null);
+      dropRef.current(ev.clientX, ev.clientY, id);
+    };
+    window.addEventListener("pointermove", onMove);
+    window.addEventListener("pointerup", onUp, { once: true });
   };
 
   if (results) {
@@ -170,7 +171,7 @@ export function RummyPanel({ rummy, you, players, actions, manifest }: Props) {
 
   if (!m) return null;
 
-  const secondsLeft = Math.max(0, Math.ceil((m.turnEndsAt - now) / 1000));
+  const secondsLeft = secondsUntil(m.turnEndsAt, now);
   const hand = [...m.hand].sort(sort === "color" ? byColor : byNumber);
   const opening = m.mode === "classic" && !m.opened.includes(you);
   const newMelds = m.melds.filter((meld) => !m.startMelds.some((s) => sameMeld(s, meld)));

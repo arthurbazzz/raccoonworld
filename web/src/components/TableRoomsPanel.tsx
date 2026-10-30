@@ -1,6 +1,6 @@
 "use client";
 
-import { roomOf, type RummyState } from "@/game/rummy/rummyState";
+import { roomOf, secondsUntil, type RummyState } from "@/game/rummy/rummyState";
 import { useFrameTime } from "@/game/cups/useFrameTime";
 import type { PlayerId, PlayerState, RummyMode } from "@/net/protocol";
 
@@ -50,8 +50,7 @@ export function TableRoomsPanel({
   const rejection = rummy.rejection ? (REJECTIONS[rummy.rejection] ?? rummy.rejection) : null;
 
   if (mine) {
-    const left =
-      mine.lobbyEndsAt === null ? null : Math.max(0, Math.ceil((mine.lobbyEndsAt - now) / 1000));
+    const left = mine.lobbyEndsAt === null ? null : secondsUntil(mine.lobbyEndsAt, now);
     return (
       <section
         className={`${styles.card} ${styles.rooms}`}

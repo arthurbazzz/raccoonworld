@@ -158,3 +158,12 @@ export function roomOf(state: RummyState, id: PlayerId | null): RummyRoom | null
   if (id === null) return null;
   return state.rooms.find((r) => r.players.includes(id)) ?? null;
 }
+
+/**
+ * Whole seconds left until `endsAt`. The frame time stops in a background
+ * tab, so the clock is read too, to never show more than the server gave.
+ */
+export function secondsUntil(endsAt: number, frameNow: number): number {
+  const now = Math.max(frameNow, performance.now());
+  return Math.max(0, Math.ceil((endsAt - now) / 1000));
+}
