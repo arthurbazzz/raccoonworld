@@ -36,6 +36,7 @@ Variáveis de ambiente:
 | `RW_ADDR` | `:8080` | endereço HTTP |
 | `RW_ALLOWED_ORIGINS` | `localhost:3000` | origens do navegador aceitas no `/ws`, separadas por vírgula |
 | `RW_DEBUG` | — | `1` liga os logs de debug |
+| `RW_CUPS_FAST` | — | `1` acelera os três copos (espera, noz, trocas e placar ÷10; escolha e revelação no tempo real). Só para testes |
 
 ```bash
 go test ./...
@@ -95,3 +96,11 @@ npm run format
 costas e lado direito; 6 colunas: 2 parado + 4 andando; fundo transparente). `npm run sprites`
 gera a folha alinhada em `web/public/sprites/` e roda sozinho antes de `dev`, `build` e
 `test:e2e`. Para trocar a arte, basta substituir o arquivo.
+
+## Como jogar
+
+- **WASD** anda, **Enter** abre o chat.
+- **Três copos (RW-005):** a barraca fica acima da fonte (dê a volta pela esquerda). Perto dela,
+  **E** entra na partida; espere a noz, acompanhe as trocas e escolha com **1**, **2**, **3** ou
+  clicando no copo. **Esc** sai. Vários jogadores jogam a mesma partida; quem chega no meio
+  entra na próxima.

@@ -31,6 +31,9 @@ type UseCases struct {
 	SendChat  *usecase.SendChat
 	Leave     *usecase.LeaveRoom
 	KeepAlive *usecase.KeepAlive
+	JoinCups  *usecase.JoinCups
+	PickCup   *usecase.PickCup
+	LeaveCups *usecase.LeaveCups
 }
 
 // Options configure the handler. Zero values use the defaults.
@@ -122,6 +125,12 @@ func (h *Handler) dispatch(id room.PlayerID, msg ClientMessage, log *slog.Logger
 		err = h.uc.SetInput.Execute(m.ToInput(id))
 	case ChatRequest:
 		err = h.uc.SendChat.Execute(m.ToInput(id))
+	case CupsJoinRequest:
+		err = h.uc.JoinCups.Execute(id)
+	case CupsPickRequest:
+		err = h.uc.PickCup.Execute(m.ToInput(id))
+	case CupsLeaveRequest:
+		err = h.uc.LeaveCups.Execute(id)
 	}
 	if err != nil {
 		// Rejections were already sent to the player or are silent by spec.

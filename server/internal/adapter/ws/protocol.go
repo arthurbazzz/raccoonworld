@@ -44,7 +44,7 @@ type envelope struct {
 }
 
 // ClientMessage is a decoded client-to-server message. The set is closed:
-// JoinRequest, InputRequest or ChatRequest.
+// JoinRequest, InputRequest, ChatRequest or one of the Cups*Request.
 type ClientMessage interface {
 	isClientMessage()
 }
@@ -106,6 +106,12 @@ func DecodeClient(raw []byte) (ClientMessage, error) {
 		return decodeData[InputRequest](env.Data)
 	case TypeChatSend:
 		return decodeData[ChatRequest](env.Data)
+	case TypeCupsJoin:
+		return decodeData[CupsJoinRequest](env.Data)
+	case TypeCupsPick:
+		return decodeData[CupsPickRequest](env.Data)
+	case TypeCupsLeave:
+		return decodeData[CupsLeaveRequest](env.Data)
 	default:
 		return nil, fmt.Errorf("%w: %q", ErrUnknownType, env.Type)
 	}
@@ -137,9 +143,10 @@ type (
 		Y  float64       `json:"y"`
 	}
 	joinedJSON struct {
-		You     room.PlayerID `json:"you"`
-		Map     string        `json:"map"`
-		Players []playerJSON  `json:"players"`
+		You     room.PlayerID    `json:"you"`
+		Map     string           `json:"map"`
+		Players []playerJSON     `json:"players"`
+		Cups    cupsSnapshotJSON `json:"cups"`
 	}
 	rejectedJSON struct {
 		Reason usecase.RejectReason `json:"reason"`
@@ -175,13 +182,16 @@ func EncodeEvent(ev usecase.Event) ([]byte, error) {
 }
 
 func wireData(ev usecase.Event) (string, any, error) {
+	if typ, data, ok := cupsWireData(ev); ok {
+		return typ, data, nil
+	}
 	switch e := ev.(type) {
 	case usecase.Joined:
 		players := make([]playerJSON, len(e.Players))
 		for i, p := range e.Players {
 			players[i] = toPlayerJSON(p)
 		}
-		return TypeRoomJoined, joinedJSON{You: e.You.ID, Map: e.MapName, Players: players}, nil
+		return TypeRoomJoined, joinedJSON{You: e.You.ID, Map: e.MapName, Players: players, Cups: toCupsSnapshotJSON(e.Cups)}, nil
 	case usecase.JoinRejected:
 		return TypeRoomJoinRejected, rejectedJSON{Reason: e.Reason}, nil
 	case usecase.PlayerJoined:

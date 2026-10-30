@@ -16,6 +16,9 @@ type Config struct {
 	AllowedOrigins []string
 	// Debug enables debug logs. Env: RW_DEBUG=1.
 	Debug bool
+	// CupsSpeedup divides every three cups duration, so browser tests do not
+	// take minutes (RW-005). Env: RW_CUPS_FAST=1 sets 10; default 1 (real speed).
+	CupsSpeedup int
 }
 
 // FromEnv loads the configuration, applying defaults.
@@ -24,6 +27,7 @@ func FromEnv() Config {
 		Addr:           getenv("RW_ADDR", ":8080"),
 		AllowedOrigins: splitList(getenv("RW_ALLOWED_ORIGINS", "localhost:3000")),
 		Debug:          os.Getenv("RW_DEBUG") == "1",
+		CupsSpeedup:    cupsSpeedup(),
 	}
 }
 
@@ -42,4 +46,14 @@ func splitList(s string) []string {
 		}
 	}
 	return out
+}
+
+// FastCupsSpeedup is the speedup RW_CUPS_FAST=1 turns on.
+const FastCupsSpeedup = 10
+
+func cupsSpeedup() int {
+	if os.Getenv("RW_CUPS_FAST") == "1" {
+		return FastCupsSpeedup
+	}
+	return 1
 }

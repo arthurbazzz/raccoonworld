@@ -28,3 +28,19 @@ func TestPracaMap(t *testing.T) {
 		}
 	}
 }
+
+// The three cups booth sits above the fountain, away from the spawn point
+// (RW-005, plan section 2).
+func TestPracaBooth(t *testing.T) {
+	m, err := room.ParseTileMap(maps.Praca)
+	if err != nil {
+		t.Fatal(err)
+	}
+	b, ok := m.Booth()
+	if want := (room.Rect{X: 448, Y: 128, W: 96, H: 32}); !ok || b != want {
+		t.Fatalf("Praça booth = %+v (%v), want %+v", b, ok, want)
+	}
+	if m.NearBooth(m.Spawn()) {
+		t.Fatal("the spawn point must be away from the booth")
+	}
+}

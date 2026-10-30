@@ -42,6 +42,7 @@ func run(cfg config.Config, logger *slog.Logger) error {
 		AllowedOrigins: cfg.AllowedOrigins,
 		Clock:          clock.System{},
 		Logger:         logger,
+		CupsSpeedup:    cfg.CupsSpeedup,
 	})
 	if err != nil {
 		return err

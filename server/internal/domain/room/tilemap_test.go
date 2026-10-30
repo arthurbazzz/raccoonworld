@@ -137,3 +137,69 @@ func TestMoveDoesNotTunnelThroughWalls(t *testing.T) {
 		t.Fatalf("Move() = %+v tunneled through the wall at x=96", got)
 	}
 }
+
+// boothMap has a 2-tile booth at cols 2-3, row 1: the box (64,32)-(128,64).
+const boothMap = `{
+  "name": "booth",
+  "tileSize": 32,
+  "spawn": {"x": 48, "y": 150},
+  "rows": [
+    "######",
+    "#.BB.#",
+    "#....#",
+    "#....#",
+    "#....#",
+    "######"
+  ]
+}`
+
+func TestBoothTilesAreSolid(t *testing.T) {
+	m := mustParse(t, boothMap)
+	if !m.IsSolid(2, 1) || !m.IsSolid(3, 1) {
+		t.Fatal("booth tiles must block movement (RC1)")
+	}
+	b, ok := m.Booth()
+	if !ok {
+		t.Fatal("map with 'B' tiles has no booth")
+	}
+	if want := (room.Rect{X: 64, Y: 32, W: 64, H: 32}); b != want {
+		t.Fatalf("Booth() = %+v, want %+v", b, want)
+	}
+}
+
+func TestNoBooth(t *testing.T) {
+	m := mustParse(t, testMap)
+	if _, ok := m.Booth(); ok {
+		t.Fatal("map without 'B' tiles reports a booth")
+	}
+	if m.NearBooth(room.Vec{X: 64, Y: 80}) {
+		t.Fatal("NearBooth without a booth must be false")
+	}
+}
+
+func TestNearBooth(t *testing.T) {
+	m := mustParse(t, boothMap)
+	tests := []struct {
+		name string
+		pos  room.Vec
+		want bool
+	}{
+		{"below, touching", room.Vec{X: 96, Y: 64}, true},
+		{"below, at reach", room.Vec{X: 96, Y: 64 + room.BoothReach}, true},
+		{"below, past reach", room.Vec{X: 96, Y: 64 + room.BoothReach + 1}, false},
+		{"above, at reach", room.Vec{X: 96, Y: 32 - room.BoothReach}, true},
+		{"left, at reach", room.Vec{X: 64 - room.BoothReach, Y: 48}, true},
+		{"left, past reach", room.Vec{X: 64 - room.BoothReach - 1, Y: 48}, false},
+		{"right, at reach", room.Vec{X: 128 + room.BoothReach, Y: 48}, true},
+		{"right, past reach", room.Vec{X: 128 + room.BoothReach + 1, Y: 48}, false},
+		{"corner, inside the circle", room.Vec{X: 128 + 30, Y: 64 + 30}, true},
+		{"corner, outside the circle", room.Vec{X: 128 + 35, Y: 64 + 35}, false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := m.NearBooth(tt.pos); got != tt.want {
+				t.Fatalf("NearBooth(%v) = %v, want %v", tt.pos, got, tt.want)
+			}
+		})
+	}
+}

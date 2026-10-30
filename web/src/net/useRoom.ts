@@ -4,17 +4,26 @@ import { useCallback, useEffect, useReducer, useRef, useState } from "react";
 
 import { ChatBalloons } from "@/game/chat";
 import { Interpolator } from "@/game/interpolation";
+import { pickLocally } from "@/game/cups/cupsState";
 import { initialRoomState, roomReducer, startJoin, type RoomState } from "@/game/roomState";
 
 import { defaultServerUrl, RoomClient, type Status } from "./client";
 import type { Keys, ServerMessage } from "./protocol";
 
-type Action = { kind: "server"; msg: ServerMessage } | { kind: "join"; nickname: string };
+type Action =
+  | { kind: "server"; msg: ServerMessage; at: number }
+  | { kind: "join"; nickname: string }
+  | { kind: "pick"; slot: number };
 
 function reducer(state: RoomState, action: Action): RoomState {
-  return action.kind === "join"
-    ? startJoin(state, action.nickname)
-    : roomReducer(state, action.msg);
+  switch (action.kind) {
+    case "join":
+      return startJoin(state, action.nickname);
+    case "pick":
+      return { ...state, cups: pickLocally(state.cups, action.slot) };
+    default:
+      return roomReducer(state, action.msg, action.at);
+  }
 }
 
 export interface Room {
@@ -23,6 +32,10 @@ export interface Room {
   join: (nickname: string) => void;
   sendInput: (keys: Keys) => void;
   sendChat: (text: string) => void;
+  /** Three cups (RW-005): E near the booth, pick a slot, Esc / Sair. */
+  joinCups: () => void;
+  pickCup: (slot: number) => void;
+  leaveCups: () => void;
   /** Smoothed positions for rendering, fed as messages arrive. */
   interpolator: Interpolator;
   /** Chat balloons above raccoons, fed as messages arrive. */
@@ -44,7 +57,7 @@ export function useRoom(url: string = defaultServerUrl()): Room {
         const now = performance.now();
         interpolator.ingest(msg, now);
         balloons.ingest(msg, now);
-        dispatch({ kind: "server", msg });
+        dispatch({ kind: "server", msg, at: now });
       },
       onStatus: setStatus,
     });
@@ -61,6 +74,27 @@ export function useRoom(url: string = defaultServerUrl()): Room {
   }, []);
   const sendInput = useCallback((keys: Keys) => clientRef.current?.sendInput(keys), []);
   const sendChat = useCallback((text: string) => clientRef.current?.sendChat(text), []);
+  const joinCups = useCallback(() => clientRef.current?.joinCups(), []);
+  const leaveCups = useCallback(() => clientRef.current?.leaveCups(), []);
+  const round = state.cups.round?.round ?? 0;
+  const pickCup = useCallback(
+    (slot: number) => {
+      dispatch({ kind: "pick", slot });
+      clientRef.current?.pickCup(round, slot);
+    },
+    [round],
+  );
 
-  return { state, status, join, sendInput, sendChat, interpolator, balloons };
+  return {
+    state,
+    status,
+    join,
+    sendInput,
+    sendChat,
+    joinCups,
+    pickCup,
+    leaveCups,
+    interpolator,
+    balloons,
+  };
 }

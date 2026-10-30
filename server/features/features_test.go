@@ -1,4 +1,4 @@
-// Package features runs the RW-001 Gherkin scenarios against the use cases.
+// Package features runs the RW-001 and RW-005 Gherkin scenarios against the use cases.
 //
 // The .feature files live in specs/ and are the single source of truth;
 // both godog (here) and playwright-bdd (web/) read them from there.
@@ -19,6 +19,7 @@ import (
 // featurePaths are relative to this package directory (go test runs here).
 var featurePaths = []string{
 	"../../specs/001-sala-inicial/features",
+	"../../specs/005-tres-copos/features",
 }
 
 func TestFeatures(t *testing.T) {
@@ -28,7 +29,7 @@ func TestFeatures(t *testing.T) {
 	}
 
 	suite := godog.TestSuite{
-		Name:                "rw-001",
+		Name:                "raccoons-world",
 		ScenarioInitializer: initializeScenario,
 		Options: &godog.Options{
 			Format:   "pretty",
@@ -58,6 +59,11 @@ type world struct {
 	setInput  *usecase.SetInput
 	sendChat  *usecase.SendChat
 	keepAlive *usecase.KeepAlive
+	joinCups  *usecase.JoinCups
+	pickCup   *usecase.PickCup
+	leaveCups *usecase.LeaveCups
+
+	cups cupsWorld // tres_copos.feature
 
 	dropped map[string]bool // nickname -> connection dropped (no more heartbeats)
 
@@ -89,4 +95,5 @@ func initializeScenario(sc *godog.ScenarioContext) {
 	w.registerMovementSteps(sc)
 	w.registerChatSteps(sc)
 	w.registerConnectionSteps(sc)
+	w.registerCupsSteps(sc)
 }

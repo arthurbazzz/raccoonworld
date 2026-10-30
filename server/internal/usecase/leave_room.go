@@ -13,12 +13,14 @@ func NewLeaveRoom(runner *RoomRunner, b Broadcaster) *LeaveRoom {
 	return &LeaveRoom{runner: runner, broadcaster: b}
 }
 
-// Execute removes the player. Leaving twice, or after a timeout already
-// removed them, is a no-op.
+// Execute removes the player, from the three cups booth too (RC15).
+// Leaving twice, or after a timeout already removed them, is a no-op.
 func (uc *LeaveRoom) Execute(id room.PlayerID) error {
-	return uc.runner.Exec(func(r *room.Room) {
-		if r.Leave(id) {
-			uc.broadcaster.ToRoom(r.ID(), PlayerLeft{ID: id})
+	rr := uc.runner
+	return rr.do(func() {
+		if rr.room.Leave(id) {
+			rr.leaveBooth(id, rr.clock.Now())
+			uc.broadcaster.ToRoom(rr.room.ID(), PlayerLeft{ID: id})
 		}
 	})
 }

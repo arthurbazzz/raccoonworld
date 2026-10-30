@@ -15,7 +15,9 @@ export default defineConfig({
   testDir,
   fullyParallel: false,
   workers: 1,
-  timeout: 30_000,
+  // RW-005: two players loading the game (~20 s each), walking to the booth
+  // and playing a round take ~50 s.
+  timeout: 90_000,
   reporter: [["list"]],
   use: {
     baseURL: "http://localhost:3000",
@@ -26,6 +28,8 @@ export default defineConfig({
     {
       command: "go run ./cmd/server",
       cwd: "../server",
+      // Fast three cups (RW-005): a match takes seconds, not a minute.
+      env: { RW_CUPS_FAST: "1" },
       url: "http://localhost:8080/health",
       reuseExistingServer: !process.env.CI,
       timeout: 120_000,

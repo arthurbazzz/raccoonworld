@@ -3,6 +3,8 @@ import { Application, Container, Graphics, Text } from "pixi.js";
 import type { PlayerId, PlayerState } from "@/net/protocol";
 
 import type { ChatBalloons } from "./chat";
+import { BoothView, drawPlayingSign } from "./cups/boothView";
+import { initialCupsState, type CupsState } from "./cups/cupsState";
 import { playerDepth, tileDepth } from "./depth";
 import type { Interpolator } from "./interpolation";
 import { loadRaccoonSheet, RaccoonView, type RaccoonSheet } from "./raccoon";
@@ -31,6 +33,8 @@ const BALLOON_MAX_WIDTH = 160;
 
 interface RaccoonSprite {
   body: RaccoonView;
+  /** Small cup before the nickname while playing the three cups (RC22). */
+  sign: Container;
   balloon: Container | null;
   balloonText: string | null;
 }
@@ -47,6 +51,8 @@ export class RoomScene {
   // Balloons are drawn above everything so scenery never hides a message.
   private readonly overlay = new Container();
   private readonly raccoons = new Map<PlayerId, RaccoonSprite>();
+  private readonly booth: BoothView | null;
+  private cups: CupsState = initialCupsState;
   private readonly onResize = () => this.layout();
   private readonly onFrame = () => this.place(performance.now());
 
@@ -61,6 +67,7 @@ export class RoomScene {
     app.stage.addChild(this.world);
     this.drawFloor();
     for (const tile of map.solidTiles()) this.entities.addChild(drawBlock(tile));
+    this.booth = map.booth ? this.entities.addChild(new BoothView(map.booth)) : null;
     app.renderer.on("resize", this.onResize);
     app.ticker.add(this.onFrame);
     this.layout();
@@ -101,13 +108,18 @@ export class RoomScene {
     }
     for (const p of Object.values(players)) {
       if (this.raccoons.has(p.id)) continue;
-      const body = drawRaccoon(this.sheet, p.nickname, p.id === you);
+      const { view: body, sign } = drawRaccoon(this.sheet, p.nickname, p.id === you);
       body.position.set(p.x, p.y);
       body.zIndex = playerDepth(p.y);
       this.entities.addChild(body);
-      this.raccoons.set(p.id, { body, balloon: null, balloonText: null });
+      this.raccoons.set(p.id, { body, sign, balloon: null, balloonText: null });
     }
     this.place(performance.now());
+  }
+
+  /** The three cups booth state; the scene reads it every frame. */
+  syncCups(cups: CupsState): void {
+    this.cups = cups;
   }
 
   destroy(): void {
@@ -132,9 +144,11 @@ export class RoomScene {
         if (motion.facing !== sprite.body.facing) sprite.body.setFacing(motion.facing);
         sprite.body.animate(motion.moving, now);
       }
+      sprite.sign.visible = this.cups.players.includes(id);
       this.updateBalloon(sprite, this.balloons.textFor(id, now));
       sprite.balloon?.position.copyFrom(sprite.body.position);
     }
+    this.booth?.update(this.cups, now);
   }
 
   private updateBalloon(sprite: RaccoonSprite, text: string | null): void {
@@ -178,8 +192,15 @@ function drawBlock(tile: SolidTile): Graphics {
   return g;
 }
 
-/** A raccoon (RW-004 sprites) with its nickname above the head. */
-function drawRaccoon(sheet: RaccoonSheet, nickname: string, isYou: boolean): RaccoonView {
+/**
+ * A raccoon (RW-004 sprites) with its nickname above the head and, hidden
+ * until they play the three cups, a small cup before the nickname.
+ */
+function drawRaccoon(
+  sheet: RaccoonSheet,
+  nickname: string,
+  isYou: boolean,
+): { view: RaccoonView; sign: Container } {
   const view = new RaccoonView(sheet, { isYou });
   const label = new Text({
     text: nickname,
@@ -195,7 +216,11 @@ function drawRaccoon(sheet: RaccoonSheet, nickname: string, isYou: boolean): Rac
   label.anchor.set(0.5, 1);
   label.position.set(0, LABEL_BOTTOM);
   view.addChild(label); // outside the body, so it never flips
-  return view;
+  const sign = drawPlayingSign();
+  sign.position.set(-label.width / 2 - 7, LABEL_BOTTOM - 1); // before the name
+  sign.visible = false;
+  view.addChild(sign);
+  return { view, sign };
 }
 
 /** A speech balloon whose tail points down at (0, BALLOON_BOTTOM). */

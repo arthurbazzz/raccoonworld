@@ -221,3 +221,37 @@ func TestStepReportsOnlyPlayersThatMoved(t *testing.T) {
 		t.Fatalf("Step() = %+v, want nothing when idle", moved)
 	}
 }
+
+func TestBusyPlayerDoesNotMove(t *testing.T) {
+	r := newTestRoom(t)
+	mustJoin(t, r, "p1", "rocky")
+	if err := r.SetBusy("p1", true); err != nil {
+		t.Fatal(err)
+	}
+	if err := r.SetInput("p1", room.Input{Right: true}); err != nil {
+		t.Fatal(err)
+	}
+	if moved := r.Step(tick); len(moved) != 0 {
+		t.Fatalf("busy player moved: %v (RC21)", moved)
+	}
+
+	// Done playing: the keys held during the game are dropped.
+	if err := r.SetBusy("p1", false); err != nil {
+		t.Fatal(err)
+	}
+	if moved := r.Step(tick); len(moved) != 0 {
+		t.Fatalf("player walked off after the game: %v", moved)
+	}
+	if err := r.SetInput("p1", room.Input{Right: true}); err != nil {
+		t.Fatal(err)
+	}
+	if moved := r.Step(tick); len(moved) != 1 {
+		t.Fatal("player cannot move again after the game")
+	}
+}
+
+func TestSetBusyUnknownPlayer(t *testing.T) {
+	if err := newTestRoom(t).SetBusy("ghost", true); !errors.Is(err, room.ErrPlayerNotFound) {
+		t.Fatalf("SetBusy(ghost) = %v, want ErrPlayerNotFound", err)
+	}
+}

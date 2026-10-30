@@ -25,7 +25,18 @@ export interface TileMap {
   width: number;
   height: number;
   isSolid(col: number, row: number): boolean;
+  /** The '#' tiles; the booth tiles are drawn apart, as the booth. */
   solidTiles(): SolidTile[];
+  /** Box covered by the 'B' tiles (three cups booth, RW-005), if any. */
+  booth: Rect | null;
+}
+
+/** Axis-aligned box in room pixels; (x, y) is its top-left corner. */
+export interface Rect {
+  x: number;
+  y: number;
+  w: number;
+  h: number;
 }
 
 export function parseTileMap(raw: TileMapJSON): TileMap {
@@ -35,13 +46,17 @@ export function parseTileMap(raw: TileMapJSON): TileMap {
   const cols = rows[0].length;
 
   const solid: boolean[] = [];
+  const wall: boolean[] = [];
+  let booth: Rect | null = null;
   rows.forEach((row, r) => {
     if (row.length !== cols) throw new Error(`row ${r} has ${row.length} tiles, want ${cols}`);
-    for (const ch of row) {
-      if (ch !== "#" && ch !== ".")
+    [...row].forEach((ch, c) => {
+      if (ch !== "#" && ch !== "." && ch !== "B")
         throw new Error(`unknown tile ${JSON.stringify(ch)} at row ${r}`);
-      solid.push(ch === "#");
-    }
+      solid.push(ch !== ".");
+      wall.push(ch === "#");
+      if (ch === "B") booth = grow(booth, c * tileSize, r * tileSize, tileSize);
+    });
   });
 
   const isSolid = (col: number, row: number) =>
@@ -59,14 +74,25 @@ export function parseTileMap(raw: TileMapJSON): TileMap {
       const out: SolidTile[] = [];
       for (let row = 0; row < rows.length; row++) {
         for (let col = 0; col < cols; col++) {
-          if (solid[row * cols + col]) {
+          if (wall[row * cols + col]) {
             out.push({ col, row, x: col * tileSize, y: row * tileSize, size: tileSize });
           }
         }
       }
       return out;
     },
+    booth,
   };
+}
+
+/** `box` grown to also cover the tile at (x, y). */
+function grow(box: Rect | null, x: number, y: number, size: number): Rect {
+  if (!box) return { x, y, w: size, h: size };
+  const left = Math.min(box.x, x);
+  const top = Math.min(box.y, y);
+  const right = Math.max(box.x + box.w, x + size);
+  const bottom = Math.max(box.y + box.h, y + size);
+  return { x: left, y: top, w: right - left, h: bottom - top };
 }
 
 const MAX_SCALE = 2;

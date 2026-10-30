@@ -10,6 +10,7 @@ import (
 	"github.com/coder/websocket"
 
 	"raccoons-world/server/internal/adapter/ws"
+	"raccoons-world/server/internal/domain/cups"
 	"raccoons-world/server/internal/domain/room"
 	"raccoons-world/server/internal/usecase"
 	"raccoons-world/server/maps"
@@ -27,7 +28,7 @@ func newServer(t *testing.T, origins []string) *httptest.Server {
 		t.Fatal(err)
 	}
 	hub := ws.NewHub(nil)
-	runner := usecase.NewRoomRunner(room.New("praca", tiles), hub, wallClock{})
+	runner := usecase.NewRoomRunner(room.New("praca", tiles), cups.NewGame(cups.DefaultTiming(), cups.RandomShuffler{}), hub, wallClock{})
 
 	ctx, cancel := context.WithCancel(context.Background())
 	done := make(chan struct{})

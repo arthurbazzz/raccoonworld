@@ -1,0 +1,210 @@
+/* The three cups panel (RW-005): a card in the middle of the screen, over
+   the Praça, which stays visible around it (RC19). */
+.panel {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+/* The lobby and the queue notice wait low, above the chat, out of the way. */
+.waiting {
+  top: auto;
+  bottom: 68px;
+  transform: translateX(-50%);
+  width: min(380px, calc(100% - 32px));
+  padding: 14px 16px 12px;
+  border-radius: 16px;
+  background: rgb(30 24 20 / 88%);
+  color: #fff;
+  box-shadow: 0 8px 28px rgb(0 0 0 / 35%);
+  backdrop-filter: blur(4px);
+}
+
+.header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.title {
+  margin: 0;
+  font-size: 1.05rem;
+}
+
+.round {
+  font-size: 0.85rem;
+  color: rgb(255 255 255 / 70%);
+  font-variant-numeric: tabular-nums;
+}
+
+.message {
+  margin: 10px 0 0;
+  min-height: 1.4em;
+  font-size: 0.92rem;
+  text-align: center;
+}
+
+.hit {
+  color: #9be37c;
+}
+
+.miss {
+  color: #ff9c8a;
+}
+
+/* The counter the cups sit on. */
+.table {
+  position: relative;
+  height: 140px;
+  margin-top: 8px;
+  border-radius: 12px;
+  background: linear-gradient(#a8754a, #8a5a35);
+  box-shadow: inset 0 -10px 0 rgb(0 0 0 / 18%);
+  overflow: hidden;
+}
+
+.cup {
+  position: absolute;
+  bottom: 24px;
+  width: 56px;
+  height: 66px;
+  padding: 0;
+  border: 0;
+  background: linear-gradient(90deg, #f08a7f 0 14%, #d9483b 14% 68%, #a8352b 68%);
+  clip-path: polygon(0 100%, 100% 100%, 82% 0, 18% 0);
+  cursor: pointer;
+  transition: filter 120ms;
+}
+
+.cup:disabled {
+  cursor: default;
+}
+
+.cup:not(:disabled):hover,
+.cup:not(:disabled):focus-visible {
+  filter: brightness(1.15);
+  outline: none;
+}
+
+.chosen {
+  filter: drop-shadow(0 0 0 #ffe08a) brightness(1.2);
+  box-shadow: inset 0 -6px 0 #ffe08a;
+}
+
+.cupNumber {
+  position: absolute;
+  left: 50%;
+  bottom: 8px;
+  transform: translateX(-50%);
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: rgb(255 255 255 / 85%);
+}
+
+.nut {
+  position: absolute;
+  bottom: 26px;
+  width: 22px;
+  height: 18px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #c48a52, #8b5a2b 60%);
+  z-index: 1;
+}
+
+.names,
+.scores {
+  margin: 10px 0 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 4px;
+  font-size: 0.92rem;
+}
+
+.names {
+  grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+  text-align: center;
+}
+
+.names li,
+.scores li {
+  padding: 4px 8px;
+  border-radius: 8px;
+  background: rgb(255 255 255 / 8%);
+}
+
+.scores li {
+  display: grid;
+  grid-template-columns: 2.5em 1fr auto;
+}
+
+.you {
+  color: #ffe08a;
+  font-weight: 700;
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.primary,
+.secondary {
+  font: inherit;
+  font-size: 0.88rem;
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 0;
+  cursor: pointer;
+}
+
+.primary {
+  background: #ffe08a;
+  color: #2b2622;
+  font-weight: 700;
+}
+
+.secondary {
+  background: rgb(255 255 255 / 14%);
+  color: #fff;
+}
+
+.secondary kbd {
+  margin-left: 4px;
+  font-size: 0.7rem;
+  opacity: 0.7;
+}
+
+.note {
+  font-size: 0.85rem;
+  color: rgb(255 255 255 / 70%);
+}
+
+/* "Aperte E para jogar" for whoever is near the booth; low, like the panel,
+   so it never covers the booth at the top of the Praça. */
+.prompt {
+  position: absolute;
+  bottom: 68px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 6px 14px;
+  border-radius: 999px;
+  background: rgb(0 0 0 / 65%);
+  color: #fff;
+  font-size: 0.92rem;
+  pointer-events: none;
+}
+
+.prompt kbd {
+  display: inline-block;
+  padding: 0 6px;
+  border-radius: 4px;
+  background: #ffe08a;
+  color: #2b2622;
+  font-weight: 700;
+}

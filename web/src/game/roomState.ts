@@ -1,5 +1,7 @@
 import type { PlayerId, PlayerState, RejectReason, ServerMessage } from "@/net/protocol";
 
+import { cupsReducer, initialCupsState, type CupsState } from "./cups/cupsState";
+
 export type Phase = "nickname" | "joining" | "playing";
 
 export interface ChatLine {
@@ -21,6 +23,8 @@ export interface RoomState {
   tick: number;
   rejection: RejectReason | null;
   messages: ChatLine[];
+  /** The three cups booth (RW-005). */
+  cups: CupsState;
 }
 
 export const initialRoomState: RoomState = {
@@ -32,6 +36,7 @@ export const initialRoomState: RoomState = {
   tick: 0,
   rejection: null,
   messages: [],
+  cups: initialCupsState,
 };
 
 /** The player submitted a nickname and is waiting for the server. */
@@ -39,8 +44,11 @@ export function startJoin(state: RoomState, nickname: string): RoomState {
   return { ...state, phase: "joining", nickname, rejection: null };
 }
 
-/** Applies one server message. Returns the same object when nothing changes. */
-export function roomReducer(state: RoomState, msg: ServerMessage): RoomState {
+/**
+ * Applies one server message, received at `at` (performance.now; only the
+ * booth uses it). Returns the same object when nothing changes.
+ */
+export function roomReducer(state: RoomState, msg: ServerMessage, at = 0): RoomState {
   switch (msg.type) {
     case "room.joined": {
       const players: Record<PlayerId, PlayerState> = {};
@@ -53,6 +61,7 @@ export function roomReducer(state: RoomState, msg: ServerMessage): RoomState {
         players,
         rejection: null,
         messages: [],
+        cups: cupsReducer(initialCupsState, msg, at),
       };
     }
     case "room.join_rejected":
@@ -61,6 +70,10 @@ export function roomReducer(state: RoomState, msg: ServerMessage): RoomState {
       return { ...initialRoomState, nickname: state.nickname, rejection: msg.data.reason };
     default:
       if (state.phase !== "playing") return state;
+      if (msg.type.startsWith("cups.")) {
+        const cups = cupsReducer(state.cups, msg, at);
+        return cups === state.cups ? state : { ...state, cups };
+      }
       return applyRoomEvent(state, msg);
   }
 }
