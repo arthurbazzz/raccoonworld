@@ -22,7 +22,7 @@ import { CupsPanel } from "./CupsPanel";
 import cupsStyles from "./CupsPanel.module.css";
 import { GameCanvas } from "./GameCanvas";
 import { NicknameForm } from "./NicknameForm";
-import { RummyPanel } from "./RummyPanel";
+import { RummyTableScene } from "./RummyTableScene";
 import { TableRoomsPanel } from "./TableRoomsPanel";
 import styles from "./RaccoonWorld.module.css";
 
@@ -110,7 +110,8 @@ export function RaccoonWorld() {
         </span>
         {status === "reconnecting" && <span role="status">Reconectando…</span>}
       </header>
-      <ChatBox onSend={sendChat} />
+      {/* At the table, the table chat takes its place (RN37). */}
+      {!(rummyState.match || rummyState.results) && <ChatBox onSend={sendChat} />}
 
       {nearT && !atTable && role === null && (
         <p className={cupsStyles.prompt} role="status">
@@ -129,7 +130,7 @@ export function RaccoonWorld() {
         />
       )}
       {state.you && (rummyState.match || rummyState.results) && (
-        <RummyPanel
+        <RummyTableScene
           rummy={rummyState}
           you={state.you}
           players={state.players}

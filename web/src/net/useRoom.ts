@@ -5,6 +5,7 @@ import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from "r
 import { ChatBalloons } from "@/game/chat";
 import { Interpolator } from "@/game/interpolation";
 import { pickLocally } from "@/game/cups/cupsState";
+import type { Layout } from "@/game/rummy/layout";
 import { moveLocally, setListOpen } from "@/game/rummy/rummyState";
 import { initialRoomState, roomReducer, startJoin, type RoomState } from "@/game/roomState";
 
@@ -16,7 +17,7 @@ type Action =
   | { kind: "join"; nickname: string }
   | { kind: "pick"; slot: number }
   | { kind: "rummyList"; open: boolean }
-  | { kind: "rummyMove"; melds: number[][]; hand: number[] };
+  | { kind: "rummyMove"; layout: Layout };
 
 function reducer(state: RoomState, action: Action): RoomState {
   switch (action.kind) {
@@ -27,7 +28,7 @@ function reducer(state: RoomState, action: Action): RoomState {
     case "rummyList":
       return { ...state, rummy: setListOpen(state.rummy, action.open) };
     case "rummyMove":
-      return { ...state, rummy: moveLocally(state.rummy, action.melds, action.hand) };
+      return { ...state, rummy: moveLocally(state.rummy, action.layout) };
     default:
       return roomReducer(state, action.msg, action.at);
   }
@@ -58,11 +59,13 @@ export interface RummyActions {
   closeList: () => void;
   create: (mode: RummyMode) => void;
   join: (room: string) => void;
-  /** Our turn: the whole new arrangement (RN11). */
-  move: (turn: number, melds: number[][], hand: number[]) => void;
+  /** Our turn: the whole new arrangement (RN11, RN32). */
+  move: (turn: number, layout: Layout) => void;
   turn: (action: "end" | "draw" | "undo", turn: number) => void;
   leave: () => void;
   again: () => void;
+  /** A line to the table chat (RN37). */
+  say: (text: string) => void;
 }
 
 /** Owns one RoomClient for the lifetime of the component. */
@@ -117,9 +120,9 @@ export function useRoom(url: string = defaultServerUrl()): Room {
       closeList: () => dispatch({ kind: "rummyList", open: false }),
       create: (mode) => clientRef.current?.rummyCreate(mode),
       join: (room) => clientRef.current?.rummyJoin(room),
-      move: (turn, melds, hand) => {
-        dispatch({ kind: "rummyMove", melds, hand });
-        clientRef.current?.rummyMove(turn, melds, hand);
+      move: (turn, layout) => {
+        dispatch({ kind: "rummyMove", layout });
+        clientRef.current?.rummyMove(turn, layout.melds, layout.pos, layout.hand);
       },
       turn: (action, turn) => clientRef.current?.rummyTurn(action, turn),
       leave: () => {
@@ -127,6 +130,7 @@ export function useRoom(url: string = defaultServerUrl()): Room {
         clientRef.current?.rummyLeave();
       },
       again: () => clientRef.current?.rummyAgain(),
+      say: (text) => clientRef.current?.rummySay(text),
     }),
     [],
   );

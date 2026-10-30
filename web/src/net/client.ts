@@ -2,6 +2,7 @@ import {
   decodeServerMessage,
   encodeClientMessage,
   type Keys,
+  type MeldPos,
   type RummyMode,
   type ServerMessage,
 } from "./protocol";
@@ -91,8 +92,8 @@ export class RoomClient {
     this.send({ type: "rummy.join", data: { room } });
   }
 
-  rummyMove(turn: number, melds: number[][], hand: number[]): void {
-    this.send({ type: "rummy.move", data: { turn, melds, hand } });
+  rummyMove(turn: number, melds: number[][], pos: MeldPos[], hand: number[]): void {
+    this.send({ type: "rummy.move", data: { turn, melds, pos, hand } });
   }
 
   rummyTurn(action: "end" | "draw" | "undo", turn: number): void {
@@ -105,6 +106,11 @@ export class RoomClient {
 
   rummyAgain(): void {
     this.send({ type: "rummy.again", data: {} });
+  }
+
+  /** A line to the table chat, seen only by the match (RN37). */
+  rummySay(text: string): void {
+    this.send({ type: "rummy.say", data: { text } });
   }
 
   /** Closes for good: no reconnect. */

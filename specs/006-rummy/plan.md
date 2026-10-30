@@ -321,7 +321,18 @@ Status: **Aprovado** (2026-10-30) · Spec: Emenda A aprovada em 2026-10-30.
   `melds: [{tiles, x, y}]`. Servidor e cliente estão na mesma versão do repositório, então não
   há compatibilidade a manter.
 
-### 9.8 Tasks (vão para `tasks.md`)
+### 9.8 O que mudou durante a implementação da emenda
+
+| Mudança | Task | Por quê |
+|---|---|---|
+| As posições vão num array paralelo, `pos: [[x, y], ...]`, e não dentro de cada combinação | T23 | Menos mudanças no cliente e no servidor; `melds` continua igual |
+| Um `rummy.move` sem `pos` recebe posições automáticas (`AutoPos`, em linhas de três) | T23 | Mantém os testes antigos e os steps simples |
+| O chat da mesa usa `rummy.say` (cliente) e `rummy.chat` (servidor), com o mesmo limitador do chat da Praça | T24 | Um só caso de uso, `SendChat`, com `Table: true` |
+| Na partida, o chat da Praça some e o chat da mesa fica no lugar | T30 | A cena ocupa a tela inteira |
+| Cortar, juntar, mover várias peças e arrumar o suporte viraram cenários `@ui` | T20 | São gestos do navegador; o servidor só recebe a mesa resultante |
+| Em telas com menos de 1100 px, o chat começa fechado, no canto de cima | T30 | Ele cobria os botões |
+
+### 9.9 Tasks (vão para `tasks.md`)
 
 - T20: cenários alterados e novos no godog (RED).
 - T21: `Issue` em `Classify` e na abertura, mais `melds.json`.

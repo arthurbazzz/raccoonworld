@@ -1,0 +1,576 @@
+/* The match of the Rummy das Nozes as a full-screen table (RW-006, Emenda A,
+   RN28-RN39): a felt oval in the middle, the others around it, our rack at
+   the bottom and the table chat on the right. */
+
+.scene {
+  --felt: #2f6b3f;
+  --felt-edge: #6b3f22;
+  --ink: #fff;
+  --muted: rgb(255 255 255 / 70%);
+  --gold: #ffd54a;
+  --danger: #ff7a63;
+
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto auto;
+  gap: 6px;
+  padding: 8px 16px 10px;
+  color: var(--ink);
+  background: radial-gradient(ellipse at 50% 45%, #8a3b1d 0%, #4a1d0d 55%, #1f0c05 100%);
+  font-size: 0.92rem;
+  overflow: hidden;
+}
+
+.scene button {
+  font: inherit;
+  padding: 6px 14px;
+  border-radius: 999px;
+  border: 1px solid rgb(255 255 255 / 35%);
+  background: rgb(255 255 255 / 12%);
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.scene button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.scene button:not(:disabled):hover {
+  background: rgb(255 255 255 / 22%);
+}
+
+.scene .primary {
+  background: #f0b429;
+  border-color: #f0b429;
+  color: #2b1a07;
+  font-weight: 700;
+}
+
+.scene .primary:not(:disabled):hover {
+  background: #ffc94a;
+}
+
+/* Top bar */
+
+.bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-right: 240px; /* the chat toggle */
+}
+
+.title {
+  margin: 0;
+  font-size: 1rem;
+  white-space: nowrap;
+}
+
+.status {
+  flex: 1;
+  margin: 0;
+  text-align: center;
+}
+
+.lastTurn {
+  color: var(--muted);
+}
+
+.timer {
+  font-variant-numeric: tabular-nums;
+}
+
+.timerLow {
+  font-variant-numeric: tabular-nums;
+  color: var(--danger);
+  font-weight: 700;
+}
+
+.leave {
+  flex: none;
+}
+
+/* The table: seats around the felt */
+
+.table {
+  position: relative;
+  display: grid;
+  grid-template-columns: 120px minmax(0, 1fr) 120px;
+  grid-template-rows: 110px minmax(0, 1fr);
+  grid-template-areas:
+    ". top ."
+    "left felt right";
+  min-height: 0;
+  margin-right: 230px; /* the chat panel */
+}
+
+.felt {
+  grid-area: felt;
+  position: relative;
+  display: grid;
+  place-items: center;
+  min-height: 0;
+  padding: 3% 6%;
+  border-radius: 50% / 46%;
+  background: radial-gradient(ellipse at 50% 40%, #3f8a52 0%, var(--felt) 60%, #1f4a2b 100%);
+  box-shadow:
+    inset 0 0 0 10px var(--felt-edge),
+    inset 0 0 0 13px #a36a3c,
+    inset 0 0 40px 18px rgb(0 0 0 / 35%),
+    0 18px 40px rgb(0 0 0 / 45%);
+}
+
+.board {
+  position: relative;
+  width: min(100%, calc((100vh - 330px) * 48 / 28));
+  max-height: 100%;
+  border-radius: 12px;
+  outline: 1px dashed rgb(255 255 255 / 10%);
+  touch-action: none;
+}
+
+.empty {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  margin: 0;
+  color: rgb(255 255 255 / 45%);
+  font-size: 1.05rem;
+  pointer-events: none;
+}
+
+.meld {
+  position: absolute;
+  display: flex;
+  align-items: stretch;
+  border-radius: 8px;
+  padding: 0;
+  background: rgb(0 0 0 / 14%);
+  box-shadow: 0 4px 8px rgb(0 0 0 / 25%);
+}
+
+.fresh {
+  background: rgb(255 213 74 / 16%);
+}
+
+.invalid {
+  box-shadow:
+    0 0 0 2px var(--danger),
+    0 4px 8px rgb(0 0 0 / 25%);
+}
+
+.lifted {
+  opacity: 0.35;
+}
+
+.handle {
+  flex: none;
+  border-radius: 8px 0 0 8px;
+  background:
+    radial-gradient(circle, rgb(255 255 255 / 55%) 1.5px, transparent 2px) 50% 30% / 100% 25%
+      repeat-y,
+    rgb(0 0 0 / 30%);
+  cursor: grab;
+}
+
+.slotOnTable {
+  position: relative;
+  display: grid;
+  place-items: center;
+}
+
+/* The gap between two tiles: click to cut the meld there (RN33). */
+.scene .cut {
+  position: absolute;
+  z-index: 2;
+  left: -5px;
+  top: 10%;
+  width: 10px;
+  height: 80%;
+  padding: 0;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  cursor: col-resize;
+}
+
+.scene .cut:hover {
+  background: rgb(255 213 74 / 85%);
+}
+
+.meldError {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  z-index: 3;
+  margin: 3px 0 0;
+  padding: 2px 8px;
+  border-radius: 6px;
+  max-width: 320px;
+  background: rgb(120 20 10 / 90%);
+  color: #fff;
+  font-size: 0.75rem;
+  line-height: 1.3;
+  white-space: normal;
+  width: max-content;
+  pointer-events: none;
+}
+
+.selectBox {
+  position: absolute;
+  z-index: 4;
+  border: 1px solid var(--gold);
+  background: rgb(255 213 74 / 15%);
+  pointer-events: none;
+}
+
+.pool {
+  position: absolute;
+  right: 8%;
+  bottom: 9%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 700;
+  text-shadow: 0 1px 2px rgb(0 0 0 / 60%);
+}
+
+.poolStack {
+  width: 30px;
+  height: 42px;
+  border-radius: 5px;
+  background: #8b5a2b;
+  border: 2px solid #f4e6c8;
+  box-shadow:
+    3px 3px 0 #6b4220,
+    6px 6px 0 #4e2f16;
+}
+
+/* Seats */
+
+.seat {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  z-index: 2;
+}
+
+.top {
+  grid-area: top;
+  justify-self: center;
+}
+
+.left {
+  grid-area: left;
+  align-self: center;
+}
+
+.right {
+  grid-area: right;
+  align-self: center;
+}
+
+.me {
+  flex: none;
+}
+
+.avatarWrap {
+  position: relative;
+  width: 80px;
+  height: 80px;
+}
+
+.ring {
+  position: absolute;
+  inset: 0;
+}
+
+.ringBack {
+  fill: none;
+  stroke: rgb(255 255 255 / 18%);
+  stroke-width: 5;
+}
+
+.ringOn,
+.ringLow {
+  fill: none;
+  stroke-width: 6;
+  stroke-linecap: round;
+  transition: stroke 0.3s;
+}
+
+.ringOn {
+  stroke: var(--gold);
+}
+
+.ringLow {
+  stroke: var(--danger);
+}
+
+.avatar {
+  position: absolute;
+  inset: 8px;
+  overflow: hidden;
+  border-radius: 50%;
+  background: linear-gradient(#f6d8a8, #d9a066);
+}
+
+.avatar::before {
+  content: "";
+  position: absolute;
+  left: 2px;
+  top: 2px;
+  width: 109px;
+  height: 120px;
+  background: url("/sprites/raccoon.png") 0 0 no-repeat;
+  transform: scale(0.55);
+  transform-origin: top left;
+}
+
+.current .nameplate {
+  background: var(--gold);
+  color: #2b1a07;
+}
+
+.nameplate {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 10px;
+  border-radius: 999px;
+  background: rgb(0 0 0 / 45%);
+  white-space: nowrap;
+}
+
+.count {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-weight: 700;
+}
+
+.back {
+  display: inline-block;
+  width: 10px;
+  height: 14px;
+  border-radius: 2px;
+  background: #8b5a2b;
+  border: 1px solid #f4e6c8;
+}
+
+.absent {
+  color: var(--danger);
+  font-size: 0.8rem;
+}
+
+.balloon {
+  position: absolute;
+  left: 70px;
+  top: -6px;
+  z-index: 5;
+  margin: 0;
+  padding: 6px 10px;
+  max-width: 200px;
+  width: max-content;
+  border-radius: 12px 12px 12px 2px;
+  background: #fff;
+  color: #2b2622;
+  font-size: 0.85rem;
+  box-shadow: 0 4px 10px rgb(0 0 0 / 35%);
+  animation: pop 0.2s ease-out;
+}
+
+.right .balloon {
+  left: auto;
+  right: 70px;
+  border-radius: 12px 12px 2px;
+}
+
+@keyframes pop {
+  from {
+    transform: scale(0.6);
+    opacity: 0;
+  }
+}
+
+/* Problems with the play (RN12a, RN14) */
+
+.problems {
+  margin: 0 230px 0 0;
+  padding: 6px 12px;
+  border-radius: 10px;
+  background: rgb(120 20 10 / 85%);
+  border: 1px solid var(--danger);
+}
+
+.problems ul {
+  margin: 2px 0 0;
+  padding-left: 18px;
+}
+
+/* Bottom: our seat, the rack and the buttons (RN30, RN31) */
+
+.bottom {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  margin-right: 230px;
+  min-width: 0;
+}
+
+.rackWrap {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.rack {
+  display: grid;
+  gap: 3px 2px;
+  padding: 6px 10px 10px;
+  border-radius: 6px 6px 14px 14px;
+  background: linear-gradient(#2a2a2a, #111);
+  box-shadow:
+    inset 0 -6px 0 #000,
+    0 8px 18px rgb(0 0 0 / 55%);
+  overflow-x: auto;
+}
+
+.rackSlot {
+  display: grid;
+  place-items: end center;
+  border-bottom: 3px solid #3a3a3a;
+}
+
+.sort {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.82rem;
+}
+
+.scene .sort button {
+  padding: 2px 10px;
+}
+
+.marks {
+  color: var(--gold);
+}
+
+.actions {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 128px;
+}
+
+.ghost {
+  position: fixed;
+  z-index: 40;
+  display: flex;
+  pointer-events: none;
+  transform: rotate(-3deg);
+  filter: drop-shadow(0 8px 12px rgb(0 0 0 / 50%));
+}
+
+/* Table chat (RN37) */
+
+.chat {
+  position: absolute;
+  top: 8px;
+  right: 12px;
+  bottom: 10px;
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  width: 218px;
+  pointer-events: none;
+}
+
+.chat > * {
+  pointer-events: auto;
+}
+
+.chatOpen {
+  border-radius: 12px;
+  background: rgb(0 0 0 / 45%);
+}
+
+.scene .chatToggle {
+  align-self: stretch;
+  border-radius: 12px;
+  text-align: left;
+}
+
+.chatLines {
+  flex: 1;
+  margin: 0;
+  padding: 8px 10px;
+  list-style: none;
+  overflow-y: auto;
+  font-size: 0.85rem;
+  line-height: 1.35;
+}
+
+.chatLines li + li {
+  margin-top: 4px;
+}
+
+.mine strong {
+  color: var(--gold);
+}
+
+.chatEmpty {
+  color: var(--muted);
+}
+
+.chatForm {
+  display: flex;
+  gap: 4px;
+  padding: 6px;
+}
+
+.chatForm input {
+  flex: 1;
+  min-width: 0;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid rgb(255 255 255 / 35%);
+  background: rgb(255 255 255 / 92%);
+  color: #2b2622;
+  font: inherit;
+}
+
+.scene .chatForm button {
+  padding: 6px 10px;
+}
+
+@media (max-width: 1100px) {
+  .table,
+  .bottom,
+  .problems {
+    margin-right: 0;
+  }
+
+  .bar {
+    padding-right: 190px;
+  }
+
+  .chat {
+    top: 6px;
+    bottom: auto;
+    width: 180px;
+  }
+
+  .chatOpen {
+    width: 260px;
+    height: 55%;
+  }
+}

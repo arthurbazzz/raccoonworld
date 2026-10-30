@@ -74,16 +74,16 @@ RW-001 a RW-005).
 
 ## Fase 6 — Emenda A (plano, seção 9)
 
-- [ ] **T20** Cenários novos e alterados no godog (RED).
-- [ ] **T21** `Issue` em `Classify` e na abertura, mais os casos em `melds.json` (RN12a).
-- [ ] **T22** Jogada recusada não encerra a vez: evento `Refused` e mensagem `rummy.refused`
+- [x] **T20** Cenários novos e alterados no godog (RED).
+- [x] **T21** `Issue` em `Classify` e na abertura, mais os casos em `melds.json` (RN12a).
+- [x] **T22** Jogada recusada não encerra a vez: evento `Refused` e mensagem `rummy.refused`
   (RN14, RN15).
-- [ ] **T23** Posições das combinações em `Meld` e no protocolo (RN32, RN36).
-- [ ] **T24** Chat da sala: `rummy.chat.send` e `rummy.chat` (RN37–RN39).
-- [ ] **T25** `melds.ts` com issues e `describeIssue`.
-- [ ] **T26** `layout.ts`: posições, `cutAt`, `joinEnds` e `moveMany` (RN32–RN35).
-- [ ] **T27** `rack.ts` e `selection.ts` (RN30, RN35).
-- [ ] **T28** `RummyTableScene`: feltro, lugares, anel da vez e monte (RN28, RN29).
-- [ ] **T29** `TileRack`, arrasto e seleção (RN30, RN31, RN35).
-- [ ] **T30** `TableChat` e balões (RN37, RN38).
-- [ ] **T31** Teste no navegador e playwright.
+- [x] **T23** Posições das combinações em `Meld` e no protocolo (RN32, RN36).
+- [x] **T24** Chat da sala: `rummy.chat.send` e `rummy.chat` (RN37–RN39).
+- [x] **T25** `melds.ts` com issues e `describeIssue`.
+- [x] **T26** `layout.ts`: posições, `cutAt`, `joinEnds` e `moveMany` (RN32–RN35).
+- [x] **T27** `rack.ts` e `selection.ts` (RN30, RN35).
+- [x] **T28** `RummyTableScene`: feltro, lugares, anel da vez e monte (RN28, RN29).
+- [x] **T29** `TileRack`, arrasto e seleção (RN30, RN31, RN35).
+- [x] **T30** `TableChat` e balões (RN37, RN38).
+- [ ] **T31** Teste no navegador e playwright. Teste manual feito (dois jogadores: jogar, erro ao vivo, tempo esgotado, suporte, chat e balão); faltam os steps playwright dos cenários @ui.

@@ -359,3 +359,16 @@
   justify-content: space-between;
   gap: 12px;
 }
+
+/* Marked to move together (RN35) and to blame for an error (RN12a). */
+.marked {
+  outline: 3px solid #ffd54a;
+  outline-offset: 1px;
+  transform: translateY(-3px);
+}
+
+.blamed {
+  box-shadow:
+    0 0 0 3px #ff5a43,
+    0 0 12px 2px rgb(255 90 67 / 70%);
+}

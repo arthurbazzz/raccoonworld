@@ -13,6 +13,7 @@ const state = (over: Partial<RummyStateData> = {}): ServerMessage => ({
     current: "p1",
     turnMs: 40000,
     melds: [[1, 2, 3]],
+    pos: [[0, 0]],
     hand: [10, 11],
     counts: { p1: 2, p2: 14 },
     pool: 75,
@@ -50,7 +51,14 @@ describe("rummyReducer", () => {
   it("keeps the start of the turn while moves come in, and resets it on a new turn", () => {
     let s = rummyReducer(initialRummyState, state(), 0, "p1");
     expect(s.match?.turnEndsAt).toBe(40000);
-    s = moveLocally(s, [[1, 2, 3], [10]], [11]);
+    s = moveLocally(s, {
+      melds: [[1, 2, 3], [10]],
+      pos: [
+        [0, 0],
+        [10, 10],
+      ],
+      hand: [11],
+    });
     expect(s.match?.hand).toEqual([11]);
     expect(s.match?.startHand).toEqual([10, 11]);
 
@@ -66,6 +74,10 @@ describe("rummyReducer", () => {
         melds: [
           [1, 2, 3],
           [7, 8, 9],
+        ],
+        pos: [
+          [0, 0],
+          [16, 0],
         ],
         handCount: 11,
       },
@@ -116,5 +128,24 @@ describe("rummyReducer", () => {
     expect(roomOf(s, "p3")?.id).toBe("s2");
     expect(roomOf(s, "p9")).toBeNull();
     expect(s.rooms[0].lobbyEndsAt).toBeNull();
+  });
+  it("keeps a refusal for the turn, and drops it when we move", () => {
+    let s = rummyReducer(initialRummyState, state(), 0, "p1");
+    const issues = [{ meld: 0, code: "too_short", tiles: [], params: { count: 2 } }];
+    s = rummyReducer(s, { type: "rummy.refused", data: { turn: 3, issues } }, 0, "p1");
+    expect(s.refusal).toEqual(issues);
+    expect(
+      rummyReducer(s, { type: "rummy.refused", data: { turn: 2, issues: [] } }, 0, "p1").refusal,
+    ).toEqual(issues);
+    expect(moveLocally(s, { melds: [], pos: [], hand: [10, 11, 1, 2, 3] }).refusal).toBeNull();
+    expect(rummyReducer(s, state({ turn: 4 }), 0, "p1").refusal).toBeNull();
+  });
+
+  it("collects the table chat for the match", () => {
+    let s = rummyReducer(initialRummyState, state(), 0, "p1");
+    s = rummyReducer(s, { type: "rummy.chat", data: { from: "p2", text: "oi" } }, 7, "p1");
+    expect(s.chat).toEqual([{ from: "p2", text: "oi", at: 7 }]);
+    s = rummyReducer(s, { type: "rummy.status", data: { playing: ["p2"], tables: 0 } }, 0, "p1");
+    expect(s.chat).toEqual([]);
   });
 });

@@ -1,5 +1,7 @@
 import type {
+  MeldPos,
   PlayerId,
+  RummyIssue,
   RummyMode,
   RummyPhase,
   RummyResultsData,
@@ -7,6 +9,8 @@ import type {
   RummyTurnData,
   ServerMessage,
 } from "@/net/protocol";
+
+import { autoPos, type Layout } from "./layout";
 
 /** A room of the table, with its countdown as a local time. */
 export interface RummyRoom {
@@ -22,10 +26,24 @@ export interface RummyRoom {
 export interface RummyMatch extends RummyStateData {
   /** When the turn ends (performance.now). */
   turnEndsAt: number;
+  /** How long the turn lasts in all, for the ring around the avatar (RN29). */
+  turnTotal: number;
   /** The table and our hand when the turn started: Desfazer goes back here. */
   startMelds: number[][];
+  startPos: MeldPos[];
   startHand: number[];
 }
+
+/** A line of the table chat (RN37), with when it arrived for its balloon (RN38). */
+export interface TableChatLine {
+  from: PlayerId;
+  text: string;
+  at: number;
+}
+
+/** How long a chat balloon stays next to an avatar (RN38). */
+export const BALLOON_MS = 5000;
+const CHAT_KEEP = 50;
 
 /** What the client knows about the pieces table (RW-006). */
 export interface RummyState {
@@ -41,6 +59,10 @@ export interface RummyState {
   results: RummyResultsData | null;
   /** Why the last request was refused, until the next one. */
   rejection: string | null;
+  /** Why our last play was refused, until we move again or the turn ends (RN12a). */
+  refusal: RummyIssue[] | null;
+  /** The table chat of this match (RN37). */
+  chat: TableChatLine[];
 }
 
 export const initialRummyState: RummyState = {
@@ -52,6 +74,8 @@ export const initialRummyState: RummyState = {
   lastTurn: null,
   results: null,
   rejection: null,
+  refusal: null,
+  chat: [],
 };
 
 function roomsFrom(
@@ -90,7 +114,15 @@ export function rummyReducer(
       const mine = you === null ? undefined : rooms.find((r) => r.players.includes(you));
       // Back in the lobby after "Jogar de novo": the last match is over (RN7).
       if (mine?.phase === "lobby" && state.match) {
-        return { ...state, rooms, match: null, results: null, lastTurn: null };
+        return {
+          ...state,
+          rooms,
+          match: null,
+          results: null,
+          lastTurn: null,
+          refusal: null,
+          chat: [],
+        };
       }
       return { ...state, rooms };
     }
@@ -98,7 +130,7 @@ export function rummyReducer(
       const next = { ...state, playing: msg.data.playing, tables: msg.data.tables };
       // Released from the table: the match and the scoreboard are over for us.
       if (you !== null && !msg.data.playing.includes(you)) {
-        return { ...next, match: null, results: null, lastTurn: null };
+        return { ...next, match: null, results: null, lastTurn: null, refusal: null, chat: [] };
       }
       return next;
     }
@@ -108,15 +140,22 @@ export function rummyReducer(
       const d = msg.data;
       const prev = state.match;
       const newTurn = !prev || prev.room !== d.room || prev.turn !== d.turn;
+      const sameRoom = prev !== null && prev.room === d.room;
+      const pos = d.pos?.length === d.melds.length ? d.pos : autoPos(d.melds.length);
       return {
         ...state,
         listOpen: false,
-        results: prev && prev.room === d.room ? state.results : null,
+        results: sameRoom ? state.results : null,
         rejection: null,
+        refusal: newTurn ? null : state.refusal,
+        chat: sameRoom ? state.chat : [],
         match: {
           ...d,
+          pos,
           turnEndsAt: at + d.turnMs,
+          turnTotal: newTurn ? d.turnMs : prev.turnTotal,
           startMelds: newTurn ? d.melds : prev.startMelds,
+          startPos: newTurn ? pos : prev.startPos,
           startHand: newTurn ? d.hand : prev.startHand,
         },
       };
@@ -129,6 +168,10 @@ export function rummyReducer(
         match: {
           ...m,
           melds: msg.data.melds,
+          pos:
+            msg.data.pos?.length === msg.data.melds.length
+              ? msg.data.pos
+              : autoPos(msg.data.melds.length),
           counts: { ...m.counts, [m.current]: msg.data.handCount },
         },
       };
@@ -137,15 +180,21 @@ export function rummyReducer(
       return { ...state, lastTurn: msg.data };
     case "rummy.results":
       return { ...state, results: msg.data };
+    case "rummy.refused":
+      if (!state.match || state.match.turn !== msg.data.turn) return state;
+      return { ...state, refusal: msg.data.issues };
+    case "rummy.chat":
+      return { ...state, chat: [...state.chat, { ...msg.data, at }].slice(-CHAT_KEEP) };
     default:
       return state;
   }
 }
 
 /** Our own move, shown at once while it goes to the server (RN11). */
-export function moveLocally(state: RummyState, melds: number[][], hand: number[]): RummyState {
+export function moveLocally(state: RummyState, layout: Layout): RummyState {
   if (!state.match) return state;
-  return { ...state, match: { ...state.match, melds, hand } };
+  const { melds, pos, hand } = layout;
+  return { ...state, refusal: null, match: { ...state.match, melds, pos, hand } };
 }
 
 /** Opens or closes the room list. */

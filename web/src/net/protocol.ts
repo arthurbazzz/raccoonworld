@@ -24,10 +24,14 @@ export type ClientMessage =
   | { type: "rummy.open"; data: Record<string, never> }
   | { type: "rummy.create"; data: { mode: RummyMode } }
   | { type: "rummy.join"; data: { room: string } }
-  | { type: "rummy.move"; data: { turn: number; melds: number[][]; hand: number[] } }
+  | {
+      type: "rummy.move";
+      data: { turn: number; melds: number[][]; pos: MeldPos[]; hand: number[] };
+    }
   | { type: "rummy.end" | "rummy.draw" | "rummy.undo"; data: { turn: number } }
   | { type: "rummy.leave"; data: Record<string, never> }
   | { type: "rummy.again"; data: Record<string, never> }
+  | { type: "rummy.say"; data: { text: string } }
   | { type: "cups.leave"; data: Record<string, never> };
 
 export interface PlayerState {
@@ -81,6 +85,9 @@ export interface CupsScore {
 // IDs 0-105; game/rummy/tiles.ts says what each one is.
 
 export type RummyMode = "classic" | "free";
+
+/** Where a meld lies on the table grid: [x, y] in cells (RN32). */
+export type MeldPos = [number, number];
 export type RummyPhase = "lobby" | "playing" | "results";
 
 export interface RummyRoomData {
@@ -107,6 +114,7 @@ export interface RummyStateData {
   /** Time left in the turn when the message was sent. */
   turnMs: number;
   melds: number[][];
+  pos: MeldPos[];
   hand: number[];
   counts: Record<PlayerId, number>;
   pool: number;
@@ -114,15 +122,21 @@ export interface RummyStateData {
   absent: PlayerId[];
 }
 
-export type RummyResult = "ok" | "invalid" | "drew" | "timeout";
+export type RummyResult = "ok" | "drew" | "timeout";
 
 export interface RummyTurnData {
   turn: number;
   result: RummyResult;
-  /** Why a play was refused (a meld error or an opening rule), or "". */
-  reason: string;
   by: PlayerId;
   drew: boolean;
+}
+
+/** Why a play is wrong (RN12a): the meld (-1 for the whole play), the tiles to blame and the numbers. */
+export interface RummyIssue {
+  meld: number;
+  code: string;
+  tiles: number[];
+  params: Record<string, number>;
 }
 
 export interface RummyResultsData {
@@ -165,7 +179,12 @@ export type ServerMessage =
   | { type: "rummy.status"; data: RummyStatusData }
   | { type: "rummy.rejected"; data: { reason: string } }
   | { type: "rummy.state"; data: RummyStateData }
-  | { type: "rummy.draft"; data: { turn: number; melds: number[][]; handCount: number } }
+  | {
+      type: "rummy.draft";
+      data: { turn: number; melds: number[][]; pos: MeldPos[]; handCount: number };
+    }
+  | { type: "rummy.refused"; data: { turn: number; issues: RummyIssue[] } }
+  | { type: "rummy.chat"; data: { from: PlayerId; text: string } }
   | { type: "rummy.turn"; data: RummyTurnData }
   | { type: "rummy.results"; data: RummyResultsData };
 
@@ -189,6 +208,8 @@ const serverTypes: ReadonlySet<string> = new Set<ServerMessage["type"]>([
   "rummy.draft",
   "rummy.turn",
   "rummy.results",
+  "rummy.refused",
+  "rummy.chat",
 ]);
 
 export function encodeClientMessage(msg: ClientMessage): string {

@@ -3,7 +3,7 @@ import path from "node:path";
 
 import { describe, expect, it } from "vitest";
 
-import { classify, points } from "./melds";
+import { checkDraft, classify, describeIssue, diagnose, points } from "./melds";
 import { byColor, byNumber, DECK_SIZE, faceOf, tileName, tileOf } from "./tiles";
 
 // The same cases as the Go domain's TestClassify (plan, section 6).
@@ -13,6 +13,8 @@ interface MeldCase {
   kind?: string;
   points?: number;
   error?: string;
+  culprits?: number[];
+  params?: Record<string, number>;
 }
 
 const cases = JSON.parse(
@@ -41,6 +43,9 @@ describe("classify (shared cases with the server)", () => {
     const tiles = ids(c.tiles);
     if (c.error) {
       expect(classify(tiles)).toEqual({ error: c.error });
+      expect(diagnose(tiles)).toEqual({
+        issue: { code: c.error, tiles: (c.culprits ?? []).map((i) => tiles[i]), params: c.params },
+      });
       expect(points(tiles)).toBe(0);
     } else {
       expect(classify(tiles)).toEqual({ kind: c.kind });
@@ -76,5 +81,76 @@ describe("tiles", () => {
       "brown-9",
       "joker",
     ]);
+  });
+});
+
+describe("describeIssue (RN12a)", () => {
+  const say = (faces: string[]) => {
+    const d = diagnose(ids(faces));
+    if (!("issue" in d)) throw new Error("valid meld");
+    return describeIssue(d.issue);
+  };
+
+  it("names the repeated color", () => {
+    expect(say(["green-7", "green-7", "blue-7", "red-7"])).toBe(
+      "O grupo de 7 tem dois 7 verdes. Tire um deles.",
+    );
+  });
+
+  it("says how many tiles a short meld has", () => {
+    expect(say(["blue-7", "green-7"])).toBe(
+      "Esta combinação tem só 2 peças; precisa de pelo menos 3.",
+    );
+  });
+
+  it("points at the tile of the wrong color", () => {
+    expect(say(["blue-3", "red-4", "blue-5"])).toBe(
+      "Sequência com cores diferentes: o 4 vermelho não combina com as azuis.",
+    );
+  });
+
+  it("says which number is missing", () => {
+    expect(say(["blue-3", "blue-4", "blue-6"])).toBe(
+      "Depois do 4 azul vem o 5, não o 6. Falta o 5 azul.",
+    );
+  });
+
+  it("explains a run past 13", () => {
+    expect(say(["red-12", "red-13", "joker"])).toBe(
+      "A sequência passou do 13. Tire o coringa do fim.",
+    );
+  });
+
+  it("explains the opening", () => {
+    expect(
+      describeIssue({ code: "opening_too_low", tiles: [], params: { points: 24, need: 6 } }),
+    ).toBe("Sua abertura soma 24 pontos; faltam 6 para 30.");
+  });
+});
+
+describe("checkDraft", () => {
+  it("lists every invalid meld with its index", () => {
+    const issues = checkDraft(
+      [ids(["blue-3", "blue-4", "blue-5"]), ids(["red-7", "blue-7"])],
+      [],
+      [],
+      false,
+    );
+    expect(issues.map((i) => [i.meld, i.code])).toEqual([[1, "too_short"]]);
+  });
+
+  it("checks the opening points", () => {
+    const run = ids(["blue-3", "blue-4", "blue-5"]);
+    const issues = checkDraft([run], [], run, true);
+    expect(issues).toEqual([
+      { meld: -1, code: "opening_too_low", tiles: [], params: { points: 12, need: 18 } },
+    ]);
+  });
+
+  it("blames table tiles used in the opening", () => {
+    const table = ids(["red-10", "blue-10", "green-10"]);
+    const ten = ids(["brown-10"]);
+    const issues = checkDraft([[...table, ...ten]], [table], ten, true);
+    expect(issues[0]).toMatchObject({ meld: 0, code: "opening_used_table" });
   });
 });
