@@ -31,7 +31,7 @@ RW-001 a RW-005).
   mão vazia, placar com coringa valendo 30 (RN15–RN19).
 - [x] **T8** Saída e ausência: peças de volta ao monte, vez passada se era dele, último jogador
   ganha; assento ausente guardado pelo apelido por 30 s e recuperado (RN20–RN22, plano 3.2).
-- [ ] **T9** `Table`: criar sala com modo, entrar, vagas, contagem de 15 s que para com 1,
+- [x] **T9** `Table`: criar sala com modo, entrar, vagas, contagem de 15 s que para com 1,
   início na hora com 4, sala "jogando" fechada, "Jogar de novo" volta à espera, sala vazia some
   (RN5–RN7).
 

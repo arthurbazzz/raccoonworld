@@ -49,3 +49,29 @@ func (TurnStarted) rummyEvent()   {}
 func (TurnEnded) rummyEvent()     {}
 func (PlayerRemoved) rummyEvent() {}
 func (MatchOver) rummyEvent()     {}
+
+// RoomsChanged says the room list changed (RN5-RN7).
+type RoomsChanged struct{}
+
+// MatchStarted says a room started a match with these players, in turn order.
+type MatchStarted struct {
+	Room    string
+	Players []Player
+}
+
+// InMatch is a match event of one room. Event is nil when only the match
+// state changed (someone dropped, RN21).
+type InMatch struct {
+	Room  string
+	Event Event
+}
+
+// Released says these players are no longer at the table.
+type Released struct {
+	IDs []room.PlayerID
+}
+
+func (RoomsChanged) rummyEvent() {}
+func (MatchStarted) rummyEvent() {}
+func (InMatch) rummyEvent()      {}
+func (Released) rummyEvent()     {}
