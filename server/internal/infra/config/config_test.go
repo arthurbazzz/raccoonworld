@@ -37,3 +37,22 @@ func TestFromEnv(t *testing.T) {
 		t.Fatalf("FromEnv() = %+v, want %+v", got, want)
 	}
 }
+
+func TestRummySettings(t *testing.T) {
+	t.Setenv("RW_RUMMY_FAST", "")
+	t.Setenv("RW_RUMMY_SEED", "")
+	if c := config.FromEnv(); c.RummyFast || c.RummySeed != 0 {
+		t.Fatalf("defaults = fast %v, seed %d; want off and random", c.RummyFast, c.RummySeed)
+	}
+
+	t.Setenv("RW_RUMMY_FAST", "1")
+	t.Setenv("RW_RUMMY_SEED", "42")
+	if c := config.FromEnv(); !c.RummyFast || c.RummySeed != 42 {
+		t.Fatalf("FromEnv = fast %v, seed %d; want on and 42", c.RummyFast, c.RummySeed)
+	}
+
+	t.Setenv("RW_RUMMY_SEED", "abc")
+	if c := config.FromEnv(); c.RummySeed != 0 {
+		t.Fatalf("a bad seed gave %d, want 0 (random)", c.RummySeed)
+	}
+}

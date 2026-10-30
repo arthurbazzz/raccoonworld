@@ -44,7 +44,7 @@ RW-001 a RW-005).
 - [x] **T11** Protocolo v1: mensagens `rummy.*` no `adapter/ws`, com `rummy.state` mandado a cada
   jogador separadamente e `rummy` no `room.joined`. Testes que fixam o JSON exato e que conferem
   que nenhuma mensagem leva a mão de outro jogador nem o monte. Smoke `@smoke` com servidor real.
-- [ ] **T12** `RW_RUMMY_FAST=1` (espera de 1,5 s) e `RW_RUMMY_SEED=<n>` na config, desligados por
+- [x] **T12** `RW_RUMMY_FAST=1` (espera de 1,5 s) e `RW_RUMMY_SEED=<n>` na config, desligados por
   padrão.
 
 ## Fase 3 — Arte
