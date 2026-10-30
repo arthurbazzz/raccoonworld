@@ -216,3 +216,17 @@ mãos conhecidas: `RW_RUMMY_SEED=<n>` fixa o embaralhamento (só em teste).
 5. **Mesa com tiles `M`** nas colunas 13–16, linhas 15–16.
 6. **Recorte da arte** no `npm run sprites`, só com o verso marrom.
 7. **`RW_RUMMY_FAST` e `RW_RUMMY_SEED`** só para testes.
+
+## 8. O que mudou durante a implementação
+
+| Mudança | Task | Por quê |
+|---|---|---|
+| Cores dos cenários: marrom, vermelho, verde e azul (em vez de preto e laranja) | T1 | São as cores da arte entregue (Q6) |
+| Frases dos cenários diferentes das dos copos ("cria uma sala", "sai da mesa", "sai da Praça") | T1 | Os steps dos copos já usam "aperta a tecla E/Esc" e "a conexão cai" |
+| `rummy.rooms` vai para toda a Praça a cada mudança, e não só para quem abriu a lista | T10 | Mais simples e pequeno; o cliente só mostra a lista com o painel aberto |
+| Mensagem nova `rummy.again` (Jogar de novo) | T11 | O plano previa o botão, mas não a mensagem |
+| `rummy.state` ganhou `mode`; `rummy.turn` ganhou `drew`; `cups.rejected` ganhou o motivo `busy` | T10, T11 | O painel precisa do modo e de saber se houve compra; os copos recusam quem está na mesa |
+| O "ocupado" do runner virou dois conjuntos, copos e rummy | T10 | Uma mudança na barraca liberava quem estava jogando rummy |
+| A arte sai como PNG com o manifesto apontando os recortes na imagem original, sem remontar a folha | T13 | As peças são retângulos simples; não há pés a alinhar como no guaxinim |
+| Corte da tira de peças nas colunas escuras do contorno | T13 | O entalhe do coringa também é um vale de opacidade e virava uma 15ª peça |
+| T5 a T8 num commit só | T5–T8 | As quatro ficaram no mesmo arquivo (`match.go`) |
