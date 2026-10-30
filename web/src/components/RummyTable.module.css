@@ -109,6 +109,9 @@
 .felt {
   grid-area: felt;
   position: relative;
+  /* Never wider than the board needs (ultrawide screens), so the whole felt is usable. */
+  justify-self: center;
+  width: min(100%, calc((100vh - 330px) * 48 / 28 * 1.16 + 40px));
   display: grid;
   place-items: center;
   min-height: 0;
@@ -220,8 +223,8 @@
 }
 
 .selectBox {
-  position: absolute;
-  z-index: 4;
+  position: fixed;
+  z-index: 35;
   border: 1px solid var(--gold);
   background: rgb(255 213 74 / 15%);
   pointer-events: none;

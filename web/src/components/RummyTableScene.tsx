@@ -271,7 +271,8 @@ export function RummyTableScene({ rummy, you, players, actions, manifest }: Prop
       e,
       (x, y) => ({ kind: "tiles", ids: dragged(selected, id, order), x, y, dx, dy }),
       (d, x, y) => d.kind === "tiles" && dropTiles(d.ids, x, y, d.dx, d.dy),
-      () => setSelected([]),
+      // A click without dragging marks or unmarks the tile (RN35).
+      () => setSelected((s) => toggle(s, id)),
     );
   };
 
@@ -289,10 +290,16 @@ export function RummyTableScene({ rummy, you, players, actions, manifest }: Prop
     );
   };
 
-  // The selection box on an empty part of the felt (RN35).
+  // The selection box on an empty part of the felt or the rack (RN35).
+  const rackRef = useRef<HTMLDivElement>(null);
   const onFeltDown = (e: ReactPointerEvent<HTMLDivElement>) => {
-    if (e.button !== 0 || !myTurn) return;
-    if ((e.target as HTMLElement).closest("[data-meld]")) return;
+    if (!myTurn) return;
+    onBoxDown(e, boardRef.current);
+  };
+  const onBoxDown = (e: ReactPointerEvent<HTMLDivElement>, area: HTMLElement | null) => {
+    if (e.button !== 0 || !area) return;
+    if ((e.target as HTMLElement).closest("[data-meld], [data-tile]")) return;
+    e.preventDefault();
     const sx = e.clientX;
     const sy = e.clientY;
     const onMove = (ev: PointerEvent) => setBox(boxFrom(sx, sy, ev.clientX, ev.clientY));
@@ -304,15 +311,13 @@ export function RummyTableScene({ rummy, you, players, actions, manifest }: Prop
         setSelected([]);
         return;
       }
-      const tiles = [...(boardRef.current?.querySelectorAll<HTMLElement>("[data-tile]") ?? [])].map(
-        (t) => {
-          const r = t.getBoundingClientRect();
-          return {
-            id: Number(t.dataset.tile),
-            rect: { left: r.left, top: r.top, right: r.right, bottom: r.bottom },
-          };
-        },
-      );
+      const tiles = [...area.querySelectorAll<HTMLElement>("[data-tile]")].map((t) => {
+        const r = t.getBoundingClientRect();
+        return {
+          id: Number(t.dataset.tile),
+          rect: { left: r.left, top: r.top, right: r.right, bottom: r.bottom },
+        };
+      });
       const inBox = tilesInBox(b, tiles).filter((t) => !opening || m!.startHand.includes(t));
       setSelected((s) => (ev.shiftKey ? [...new Set([...s, ...inBox])] : inBox));
     };
@@ -390,12 +395,10 @@ export function RummyTableScene({ rummy, you, players, actions, manifest }: Prop
           />
         ))}
 
-        <div className={styles.felt}>
+        <div className={styles.felt} data-felt onPointerDown={onFeltDown}>
           <div
             ref={boardRef}
             className={styles.board}
-            data-felt
-            onPointerDown={onFeltDown}
             style={{ aspectRatio: `${TABLE_COLS} / ${TABLE_ROWS}` }}
             aria-label="Mesa"
           >
@@ -460,7 +463,6 @@ export function RummyTableScene({ rummy, you, players, actions, manifest }: Prop
                 </div>
               );
             })}
-            {box && boardRef.current && <SelectionBox box={box} board={boardRef.current} />}
           </div>
           <div className={styles.pool} aria-label={`Monte: ${m.pool} peças`}>
             <span className={styles.poolStack} />
@@ -498,7 +500,9 @@ export function RummyTableScene({ rummy, you, players, actions, manifest }: Prop
         />
         <div className={styles.rackWrap}>
           <div
+            ref={rackRef}
             className={styles.rack}
+            onPointerDown={(e) => onBoxDown(e, rackRef.current)}
             style={{ gridTemplateColumns: `repeat(${per}, ${rackH * 0.66}px)` }}
             aria-label="Seu suporte"
           >
@@ -575,6 +579,7 @@ export function RummyTableScene({ rummy, you, players, actions, manifest }: Prop
         onSend={actions.say}
       />
 
+      {box && <SelectionBox box={box} />}
       {drag?.kind === "tiles" && (
         <div
           className={styles.ghost}
@@ -658,14 +663,13 @@ function Seat({ where, name, count, current, absent, fraction, low, balloon }: S
   );
 }
 
-function SelectionBox({ box, board }: { box: Box; board: HTMLElement }) {
-  const r = board.getBoundingClientRect();
+function SelectionBox({ box }: { box: Box }) {
   return (
     <div
       className={styles.selectBox}
       style={{
-        left: box.left - r.left,
-        top: box.top - r.top,
+        left: box.left,
+        top: box.top,
         width: box.right - box.left,
         height: box.bottom - box.top,
       }}
