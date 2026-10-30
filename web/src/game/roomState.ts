@@ -1,6 +1,7 @@
 import type { PlayerId, PlayerState, RejectReason, ServerMessage } from "@/net/protocol";
 
 import { cupsReducer, initialCupsState, type CupsState } from "./cups/cupsState";
+import { initialRummyState, rummyReducer, type RummyState } from "./rummy/rummyState";
 
 export type Phase = "nickname" | "joining" | "playing";
 
@@ -25,6 +26,8 @@ export interface RoomState {
   messages: ChatLine[];
   /** The three cups booth (RW-005). */
   cups: CupsState;
+  /** The pieces table (RW-006). */
+  rummy: RummyState;
 }
 
 export const initialRoomState: RoomState = {
@@ -37,6 +40,7 @@ export const initialRoomState: RoomState = {
   rejection: null,
   messages: [],
   cups: initialCupsState,
+  rummy: initialRummyState,
 };
 
 /** The player submitted a nickname and is waiting for the server. */
@@ -62,6 +66,7 @@ export function roomReducer(state: RoomState, msg: ServerMessage, at = 0): RoomS
         rejection: null,
         messages: [],
         cups: cupsReducer(initialCupsState, msg, at),
+        rummy: rummyReducer(initialRummyState, msg, at, msg.data.you),
       };
     }
     case "room.join_rejected":
@@ -73,6 +78,10 @@ export function roomReducer(state: RoomState, msg: ServerMessage, at = 0): RoomS
       if (msg.type.startsWith("cups.")) {
         const cups = cupsReducer(state.cups, msg, at);
         return cups === state.cups ? state : { ...state, cups };
+      }
+      if (msg.type.startsWith("rummy.")) {
+        const rummy = rummyReducer(state.rummy, msg, at, state.you);
+        return rummy === state.rummy ? state : { ...state, rummy };
       }
       return applyRoomEvent(state, msg);
   }

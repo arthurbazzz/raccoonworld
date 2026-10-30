@@ -1,5 +1,6 @@
 // WebSocket protocol v1 (specs/001-sala-inicial/plan.md, section 3.4, and
-// specs/005-tres-copos/plan.md, section 3.4).
+// specs/005-tres-copos/plan.md, section 3.4, and specs/006-rummy/plan.md,
+// section 3.5).
 // Mirrors server/internal/adapter/ws/protocol.go.
 
 export const PROTOCOL_VERSION = 1;
@@ -20,6 +21,13 @@ export type ClientMessage =
   | { type: "chat.send"; data: { text: string } }
   | { type: "cups.join"; data: Record<string, never> }
   | { type: "cups.pick"; data: { round: number; slot: number } }
+  | { type: "rummy.open"; data: Record<string, never> }
+  | { type: "rummy.create"; data: { mode: RummyMode } }
+  | { type: "rummy.join"; data: { room: string } }
+  | { type: "rummy.move"; data: { turn: number; melds: number[][]; hand: number[] } }
+  | { type: "rummy.end" | "rummy.draw" | "rummy.undo"; data: { turn: number } }
+  | { type: "rummy.leave"; data: Record<string, never> }
+  | { type: "rummy.again"; data: Record<string, never> }
   | { type: "cups.leave"; data: Record<string, never> };
 
 export interface PlayerState {
@@ -69,6 +77,60 @@ export interface CupsScore {
   place: number;
 }
 
+// Rummy das Nozes (specs/006-rummy/plan.md, section 3.5). Tiles travel as
+// IDs 0-105; game/rummy/tiles.ts says what each one is.
+
+export type RummyMode = "classic" | "free";
+export type RummyPhase = "lobby" | "playing" | "results";
+
+export interface RummyRoomData {
+  id: string;
+  mode: RummyMode;
+  players: PlayerId[];
+  phase: RummyPhase;
+  /** Countdown left when the message was sent; 0 without one. */
+  lobbyMs: number;
+}
+
+export interface RummyStatusData {
+  playing: PlayerId[];
+  /** Rooms playing a match. */
+  tables: number;
+}
+
+/** One player's view of their match; only their own hand (RN9). */
+export interface RummyStateData {
+  room: string;
+  mode: RummyMode;
+  turn: number;
+  current: PlayerId;
+  /** Time left in the turn when the message was sent. */
+  turnMs: number;
+  melds: number[][];
+  hand: number[];
+  counts: Record<PlayerId, number>;
+  pool: number;
+  opened: PlayerId[];
+  absent: PlayerId[];
+}
+
+export type RummyResult = "ok" | "invalid" | "drew" | "timeout";
+
+export interface RummyTurnData {
+  turn: number;
+  result: RummyResult;
+  /** Why a play was refused (a meld error or an opening rule), or "". */
+  reason: string;
+  by: PlayerId;
+  drew: boolean;
+}
+
+export interface RummyResultsData {
+  /** null on a tie. */
+  winner: PlayerId | null;
+  scores: { id: PlayerId; points: number; place: number }[];
+}
+
 export type RejectReason = "nickname_taken" | "nickname_invalid" | "room_full" | "already_joined";
 
 // Server -> client.
@@ -81,6 +143,8 @@ export type ServerMessage =
         players: PlayerState[];
         /** The three cups booth right now (RW-005). */
         cups?: CupsStatusData & { round: CupsRoundData | null };
+        /** The pieces table right now (RW-006). */
+        rummy?: RummyStatusData & { rooms: RummyRoomData[] };
       };
     }
   | { type: "room.join_rejected"; data: { reason: RejectReason } }
@@ -96,7 +160,14 @@ export type ServerMessage =
   | { type: "cups.round"; data: CupsRoundData }
   | { type: "cups.picked"; data: { id: PlayerId } }
   | { type: "cups.reveal"; data: CupsRevealData }
-  | { type: "cups.results"; data: { scores: CupsScore[] } };
+  | { type: "cups.results"; data: { scores: CupsScore[] } }
+  | { type: "rummy.rooms"; data: { rooms: RummyRoomData[] } }
+  | { type: "rummy.status"; data: RummyStatusData }
+  | { type: "rummy.rejected"; data: { reason: string } }
+  | { type: "rummy.state"; data: RummyStateData }
+  | { type: "rummy.draft"; data: { turn: number; melds: number[][]; handCount: number } }
+  | { type: "rummy.turn"; data: RummyTurnData }
+  | { type: "rummy.results"; data: RummyResultsData };
 
 const serverTypes: ReadonlySet<string> = new Set<ServerMessage["type"]>([
   "room.joined",
@@ -111,6 +182,13 @@ const serverTypes: ReadonlySet<string> = new Set<ServerMessage["type"]>([
   "cups.picked",
   "cups.reveal",
   "cups.results",
+  "rummy.rooms",
+  "rummy.status",
+  "rummy.rejected",
+  "rummy.state",
+  "rummy.draft",
+  "rummy.turn",
+  "rummy.results",
 ]);
 
 export function encodeClientMessage(msg: ClientMessage): string {

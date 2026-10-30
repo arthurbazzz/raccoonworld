@@ -2,6 +2,7 @@ import {
   decodeServerMessage,
   encodeClientMessage,
   type Keys,
+  type RummyMode,
   type ServerMessage,
 } from "./protocol";
 
@@ -75,6 +76,35 @@ export class RoomClient {
 
   leaveCups(): void {
     this.send({ type: "cups.leave", data: {} });
+  }
+
+  /** Rummy das Nozes (RW-006): the room list, rooms, turns and leaving. */
+  rummyOpen(): void {
+    this.send({ type: "rummy.open", data: {} });
+  }
+
+  rummyCreate(mode: RummyMode): void {
+    this.send({ type: "rummy.create", data: { mode } });
+  }
+
+  rummyJoin(room: string): void {
+    this.send({ type: "rummy.join", data: { room } });
+  }
+
+  rummyMove(turn: number, melds: number[][], hand: number[]): void {
+    this.send({ type: "rummy.move", data: { turn, melds, hand } });
+  }
+
+  rummyTurn(action: "end" | "draw" | "undo", turn: number): void {
+    this.send({ type: `rummy.${action}`, data: { turn } });
+  }
+
+  rummyLeave(): void {
+    this.send({ type: "rummy.leave", data: {} });
+  }
+
+  rummyAgain(): void {
+    this.send({ type: "rummy.again", data: {} });
   }
 
   /** Closes for good: no reconnect. */

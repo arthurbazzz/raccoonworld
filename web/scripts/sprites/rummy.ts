@@ -23,6 +23,8 @@ export interface Box {
 /** Where each piece is in the sheet (rummy.json). */
 export interface RummyManifest {
   image: string;
+  /** Size of the whole sheet, to scale it as a CSS background. */
+  size: { w: number; h: number };
   /** tiles[color][value - 1], colors in the order brown, red, green, blue. */
   tiles: Box[][];
   joker: Box;
@@ -109,6 +111,7 @@ export function rummyManifest(img: RGBAImage, image: string): RummyManifest {
   }
   return {
     image,
+    size: { w: img.width, h: img.height },
     tiles,
     joker: joker!,
     // Only the brown back is used: a back per color would show the color of

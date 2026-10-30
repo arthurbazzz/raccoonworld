@@ -65,6 +65,7 @@ describe("rummyManifest", () => {
     rect(img, 150, 175, 25, 30);
 
     const m = rummyManifest(img, "/sprites/rummy.png");
+    expect(m.size).toEqual({ w: 500, h: 260 });
     expect(m.tiles).toHaveLength(4);
     expect(m.tiles.every((row) => row.length === 13)).toBe(true);
     expect(m.tiles[2][0]).toEqual({ x: 70, y: 85, w: 20, h: 30 });
