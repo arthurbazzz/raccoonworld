@@ -2,7 +2,9 @@ package rummy_test
 
 import (
 	"encoding/json"
+	"maps"
 	"os"
+	"slices"
 	"testing"
 
 	"raccoons-world/server/internal/domain/rummy"
@@ -16,6 +18,9 @@ type meldCase struct {
 	Kind   string   `json:"kind"`
 	Points int      `json:"points"`
 	Error  string   `json:"error"`
+
+	Culprits []int          `json:"culprits"`
+	Params   map[string]int `json:"params"`
 }
 
 // idsByName maps "red-7" to a tile ID with that face, using a fresh copy for
@@ -57,6 +62,14 @@ func TestClassify(t *testing.T) {
 			if tc.Error != "" {
 				if err == nil || err.Error() != tc.Error {
 					t.Fatalf("Classify = %v, %v; want error %s", kind, err, tc.Error)
+				}
+				_, issue := rummy.Diagnose(ids)
+				want := make([]rummy.TileID, len(tc.Culprits))
+				for i, c := range tc.Culprits {
+					want[i] = ids[c]
+				}
+				if !slices.Equal(issue.Tiles, want) || !maps.Equal(issue.Params, tc.Params) {
+					t.Fatalf("Diagnose = %v %v; want %v %v", issue.Tiles, issue.Params, want, tc.Params)
 				}
 				if p := rummy.Points(ids); p != 0 {
 					t.Fatalf("Points of an invalid meld = %d, want 0", p)

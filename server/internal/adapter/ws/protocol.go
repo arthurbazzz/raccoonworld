@@ -131,6 +131,8 @@ func DecodeClient(raw []byte) (ClientMessage, error) {
 		return decodeData[RummyLeaveRequest](env.Data)
 	case TypeRummyAgain:
 		return decodeData[RummyAgainRequest](env.Data)
+	case TypeRummySay:
+		return decodeData[RummySayRequest](env.Data)
 	default:
 		return nil, fmt.Errorf("%w: %q", ErrUnknownType, env.Type)
 	}

@@ -20,6 +20,7 @@ const (
 	TypeRummyUndo   = "rummy.undo"
 	TypeRummyLeave  = "rummy.leave"
 	TypeRummyAgain  = "rummy.again"
+	TypeRummySay    = "rummy.say"
 
 	TypeRummyRooms    = "rummy.rooms"
 	TypeRummyStatus   = "rummy.status"
@@ -28,6 +29,8 @@ const (
 	TypeRummyDraft    = "rummy.draft"
 	TypeRummyTurn     = "rummy.turn"
 	TypeRummyResults  = "rummy.results"
+	TypeRummyRefused  = "rummy.refused"
+	TypeRummyChat     = "rummy.chat"
 )
 
 // RummyOpenRequest is "rummy.open": E near the table, to see the rooms.
@@ -46,9 +49,22 @@ type RummyJoinRequest struct {
 // RummyMoveRequest is "rummy.move": the whole draft after a drag. Tiles are
 // IDs 0-105; anything else makes the layout invalid and it is ignored.
 type RummyMoveRequest struct {
-	Turn  int     `json:"turn"`
-	Melds [][]int `json:"melds"`
-	Hand  []int   `json:"hand"`
+	Turn  int      `json:"turn"`
+	Melds [][]int  `json:"melds"`
+	Pos   [][2]int `json:"pos"` // [x, y] of each meld on the table grid (RN32)
+	Hand  []int    `json:"hand"`
+}
+
+// RummySayRequest is "rummy.say": a chat line to the player's match (RN37).
+type RummySayRequest struct {
+	Text string `json:"text"`
+}
+
+func (RummySayRequest) isClientMessage() {}
+
+// ToInput builds the SendChat input for the connection's player ID.
+func (m RummySayRequest) ToInput(id room.PlayerID) usecase.SendChatInput {
+	return usecase.SendChatInput{PlayerID: id, Text: m.Text, Table: true}
 }
 
 // RummyTurnRequest is "rummy.end", "rummy.draw" or "rummy.undo".
@@ -90,7 +106,26 @@ func (m RummyMoveRequest) ToInput(id room.PlayerID) usecase.TurnInput {
 	for i, meld := range m.Melds {
 		melds[i] = toTileIDs(meld)
 	}
-	return usecase.TurnInput{PlayerID: id, Action: usecase.ActionMove, Turn: m.Turn, Melds: melds, Hand: toTileIDs(m.Hand)}
+	in := usecase.TurnInput{PlayerID: id, Action: usecase.ActionMove, Turn: m.Turn, Melds: melds, Hand: toTileIDs(m.Hand)}
+	if m.Pos != nil {
+		in.Pos = make([]rummy.Pos, len(m.Pos))
+		for i, p := range m.Pos {
+			in.Pos[i] = rummy.Pos{X: p[0], Y: p[1]}
+		}
+	}
+	return in
+}
+
+// posJSON encodes the positions of melds, laying them out when missing.
+func posJSON(melds [][]rummy.TileID, pos []rummy.Pos) [][2]int {
+	if len(pos) != len(melds) {
+		pos = rummy.AutoPos(len(melds))
+	}
+	out := make([][2]int, len(pos))
+	for i, p := range pos {
+		out[i] = [2]int{p.X, p.Y}
+	}
+	return out
 }
 
 // ToInput builds the PlayTurn input for the connection's player ID.
@@ -139,6 +174,7 @@ type (
 		Current room.PlayerID         `json:"current"`
 		TurnMs  int64                 `json:"turnMs"`
 		Melds   [][]int               `json:"melds"`
+		Pos     [][2]int              `json:"pos"`
 		Hand    []int                 `json:"hand"`
 		Counts  map[room.PlayerID]int `json:"counts"`
 		Pool    int                   `json:"pool"`
@@ -146,16 +182,26 @@ type (
 		Absent  []room.PlayerID       `json:"absent"`
 	}
 	rummyDraftJSON struct {
-		Turn      int     `json:"turn"`
-		Melds     [][]int `json:"melds"`
-		HandCount int     `json:"handCount"`
+		Turn      int      `json:"turn"`
+		Melds     [][]int  `json:"melds"`
+		Pos       [][2]int `json:"pos"`
+		HandCount int      `json:"handCount"`
 	}
 	rummyTurnJSON struct {
 		Turn   int           `json:"turn"`
 		Result rummy.Result  `json:"result"`
-		Reason string        `json:"reason"`
 		By     room.PlayerID `json:"by"`
 		Drew   bool          `json:"drew"`
+	}
+	rummyIssueJSON struct {
+		Meld   int            `json:"meld"` // -1: the whole play
+		Code   string         `json:"code"`
+		Tiles  []int          `json:"tiles"`
+		Params map[string]int `json:"params"`
+	}
+	rummyRefusedJSON struct {
+		Turn   int              `json:"turn"`
+		Issues []rummyIssueJSON `json:"issues"`
 	}
 	rummyScoreJSON struct {
 		ID     room.PlayerID `json:"id"`
@@ -230,7 +276,7 @@ func toRummyStateJSON(s usecase.RummyState) rummyStateJSON {
 	}
 	return rummyStateJSON{
 		Room: s.Room, Mode: v.Mode.String(), Turn: v.Turn, Current: v.Current,
-		TurnMs: left(v.TurnEnds, s.Now), Melds: meldsJSON(v.Table), Hand: tilesJSON(v.Hand),
+		TurnMs: left(v.TurnEnds, s.Now), Melds: meldsJSON(v.Table), Pos: posJSON(v.Table, v.Pos), Hand: tilesJSON(v.Hand),
 		Counts: counts, Pool: v.Pool, Opened: ids(v.Opened), Absent: ids(v.Absent),
 	}
 }
@@ -259,10 +305,22 @@ func rummyWireData(ev usecase.Event) (typ string, data any, ok bool) {
 	case usecase.RummyState:
 		return TypeRummyState, toRummyStateJSON(e), true
 	case usecase.RummyDraft:
-		return TypeRummyDraft, rummyDraftJSON{Turn: e.Turn, Melds: meldsJSON(e.Melds), HandCount: e.HandCount}, true
+		return TypeRummyDraft, rummyDraftJSON{Turn: e.Turn, Melds: meldsJSON(e.Melds), Pos: posJSON(e.Melds, e.Pos), HandCount: e.HandCount}, true
 	case usecase.RummyTurn:
 		t := e.Turn
-		return TypeRummyTurn, rummyTurnJSON{Turn: t.Turn, Result: t.Result, Reason: t.Reason, By: t.By, Drew: t.Drew}, true
+		return TypeRummyTurn, rummyTurnJSON{Turn: t.Turn, Result: t.Result, By: t.By, Drew: t.Drew}, true
+	case usecase.RummyRefused:
+		r := rummyRefusedJSON{Turn: e.Refused.Turn, Issues: make([]rummyIssueJSON, len(e.Refused.Issues))}
+		for i, is := range e.Refused.Issues {
+			params := is.Params
+			if params == nil {
+				params = map[string]int{}
+			}
+			r.Issues[i] = rummyIssueJSON{Meld: is.Meld, Code: is.Code, Tiles: tilesJSON(is.Tiles), Params: params}
+		}
+		return TypeRummyRefused, r, true
+	case usecase.RummyChat:
+		return TypeRummyChat, chatJSON{From: e.From, Text: e.Text}, true
 	case usecase.RummyResults:
 		return TypeRummyResults, toRummyResultsJSON(e.Results), true
 	}

@@ -21,7 +21,7 @@ const (
 	defaultPongTimeout = 10 * time.Second // RN5
 	writeTimeout       = 5 * time.Second
 	sendBuffer         = 64      // messages queued per connection
-	readLimit          = 4 << 10 // bytes; the largest client message is a 120-char chat
+	readLimit          = 8 << 10 // bytes; the largest client message is a full rummy.move
 )
 
 // UseCases are the room operations a connection can trigger.
@@ -152,6 +152,8 @@ func (h *Handler) dispatch(id room.PlayerID, msg ClientMessage, log *slog.Logger
 		err = h.uc.LeaveTableRoom.Execute(id)
 	case RummyAgainRequest:
 		err = h.uc.PlayAgain.Execute(id)
+	case RummySayRequest:
+		err = h.uc.SendChat.Execute(m.ToInput(id))
 	}
 	if err != nil {
 		// Rejections were already sent to the player or are silent by spec.

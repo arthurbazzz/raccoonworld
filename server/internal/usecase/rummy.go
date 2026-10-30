@@ -1,6 +1,7 @@
 package usecase
 
 import (
+	"errors"
 	"time"
 
 	"raccoons-world/server/internal/domain/room"
@@ -49,7 +50,20 @@ type RummyState struct {
 type RummyDraft struct {
 	Turn      int
 	Melds     [][]rummy.TileID
+	Pos       []rummy.Pos
 	HandCount int
+}
+
+// RummyRefused tells the current player why their play was refused; the
+// turn goes on (RN12a, RN14).
+type RummyRefused struct {
+	Refused rummy.Refused
+}
+
+// RummyChat is a chat line of a match, sent only to its players (RN37).
+type RummyChat struct {
+	From room.PlayerID
+	Text string
 }
 
 // RummyTurn is how a turn ended, sent to the match.
@@ -74,6 +88,8 @@ func (RummyRejected) isEvent() {}
 func (RummyState) isEvent()    {}
 func (RummyDraft) isEvent()    {}
 func (RummyTurn) isEvent()     {}
+func (RummyRefused) isEvent()  {}
+func (RummyChat) isEvent()     {}
 func (RummyResults) isEvent()  {}
 
 func (rr *RoomRunner) rummyStatus() RummyStatus {
@@ -104,6 +120,11 @@ func (rr *RoomRunner) publishRummy(events []rummy.Event, now time.Time) {
 			switch me := e.Event.(type) {
 			case rummy.TurnEnded:
 				rr.toMatch(e.Room, RummyTurn{Turn: me})
+			case rummy.Refused:
+				// Nothing changed for the others; the player keeps their draft.
+				delete(dirty, e.Room)
+				rr.broadcaster.ToPlayer(me.Player, RummyRefused{Refused: me})
+				continue
 			case rummy.MatchOver:
 				for _, s := range me.Scores {
 					rr.broadcaster.ToPlayer(s.ID, RummyResults{Results: me})
@@ -149,10 +170,10 @@ func (rr *RoomRunner) sendDraft(roomID string, from room.PlayerID) {
 	if !ok {
 		return
 	}
-	turn, melds, n := m.Draft()
+	turn, melds, pos, n := m.Draft()
 	for _, p := range m.Players() {
 		if p.ID != from {
-			rr.broadcaster.ToPlayer(p.ID, RummyDraft{Turn: turn, Melds: melds, HandCount: n})
+			rr.broadcaster.ToPlayer(p.ID, RummyDraft{Turn: turn, Melds: melds, Pos: pos, HandCount: n})
 		}
 	}
 }
@@ -334,6 +355,7 @@ type TurnInput struct {
 	Action   TurnAction
 	Turn     int
 	Melds    [][]rummy.TileID
+	Pos      []rummy.Pos
 	Hand     []rummy.TileID
 }
 
@@ -367,7 +389,7 @@ func (uc *PlayTurn) Execute(in TurnInput) error {
 		var err error
 		switch in.Action {
 		case ActionMove:
-			if err = m.Move(in.PlayerID, in.Turn, rummy.Layout{Melds: in.Melds, Hand: in.Hand}); err == nil {
+			if err = m.Move(in.PlayerID, in.Turn, rummy.Layout{Melds: in.Melds, Pos: in.Pos, Hand: in.Hand}); err == nil {
 				rr.sendDraft(roomID, in.PlayerID)
 				return
 			}
@@ -392,4 +414,25 @@ func (uc *PlayTurn) Execute(in TurnInput) error {
 		}
 		rr.publishRummy(rr.table.Settle(roomID, events, now), now)
 	})
+}
+
+// ErrNotInMatch is returned for a table chat line from someone not playing.
+var ErrNotInMatch = errors.New("not in a match")
+
+// matchMates returns who plays the same match as id, id included.
+func (rr *RoomRunner) matchMates(id room.PlayerID) ([]room.PlayerID, bool) {
+	roomID, ok := rr.table.RoomOf(id)
+	if !ok {
+		return nil, false
+	}
+	m, ok := rr.table.Match(roomID)
+	if !ok {
+		return nil, false
+	}
+	players := m.Players()
+	out := make([]room.PlayerID, len(players))
+	for i, p := range players {
+		out[i] = p.ID
+	}
+	return out, true
 }

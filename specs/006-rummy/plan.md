@@ -230,3 +230,108 @@ mãos conhecidas: `RW_RUMMY_SEED=<n>` fixa o embaralhamento (só em teste).
 | A arte sai como PNG com o manifesto apontando os recortes na imagem original, sem remontar a folha | T13 | As peças são retângulos simples; não há pés a alinhar como no guaxinim |
 | Corte da tira de peças nas colunas escuras do contorno | T13 | O entalhe do coringa também é um vale de opacidade e virava uma 15ª peça |
 | T5 a T8 num commit só | T5–T8 | As quatro ficaram no mesmo arquivo (`match.go`) |
+
+## 9. Emenda A (RN12a, RN14–RN15, RN28–RN39)
+
+Status: **Aprovado** (2026-10-30) · Spec: Emenda A aprovada em 2026-10-30.
+
+### 9.1 Jogada recusada não encerra a vez (RN14, RN15)
+
+- `Match.EndTurn` deixa de chamar `drawAndPass` quando a jogada é inválida. O rascunho continua
+  como está, e o resultado é um novo evento `Refused{Player, Issues}`, enviado **só ao jogador
+  da vez**. A vez não muda e o relógio continua.
+- Quando o tempo acaba, `Advance` desfaz e compra, como hoje. Com "nada baixado", o servidor
+  recusa sem comprar. O cliente já desabilita o botão nesse caso.
+- `rummy.turn` com `result: "invalid"` deixa de existir.
+
+### 9.2 Erros claros (RN12a)
+
+- `Classify` passa a devolver um `Issue{Code, Tiles []int, Params}`, além do tipo de combinação:
+  - `Tiles` são as peças culpadas (as duas da mesma cor, a de cor diferente, a vizinha do buraco);
+  - `Params` traz o que falta para montar a frase: cor e número repetidos, número faltando,
+    pontos que faltam na abertura e a peça da mesa usada na abertura.
+- O servidor manda `Issues []{meld, code, tiles, params}`. O cliente monta a frase em
+  português com `describeIssue`. O texto fica no cliente, e o servidor só manda códigos.
+- O TypeScript (`melds.ts`) faz a mesma conta, para mostrar o erro ao vivo. Os casos novos
+  entram em `testdata/melds.json`, que já é usado pelo Go e pelo TS, e isso garante que os dois
+  concordam.
+
+### 9.3 Posição das combinações (RN32–RN36)
+
+- `Meld` vira `{tiles []int, x, y int}` em unidades de grade da mesa (48×28 células). O cliente
+  manda o layout inteiro em `rummy.move`, como hoje, e agora com as posições.
+- O servidor só confere os limites da mesa e repassa as posições no rascunho (`rummy.draft`).
+  A regra de não sobrepor é resolvida no cliente: ele empurra a combinação para a vaga livre
+  mais perto (`layout.ts`, função pura).
+- **Dividir, juntar e várias peças** são operações puras em `layout.ts` (`insertAt`, `cutAt`,
+  `joinEnds`, `moveMany`) que geram o próximo layout. O servidor não precisa saber qual foi o
+  gesto.
+- No modo Clássico antes de abrir, o servidor já recusa mexer nas combinações da mesa. Mudar
+  só a posição continua permitido, porque não altera as peças.
+- Desfazer volta às posições do começo da vez, que já ficam guardadas em `startMelds`.
+
+### 9.4 Chat da mesa (RN37–RN39)
+
+- Novas mensagens: `rummy.chat.send {text}` e `rummy.chat {from, text}`. Elas vão só para os
+  jogadores da sala.
+- O tamanho de 120 caracteres e o limite de envio usam o mesmo limitador do `chat.send`, por
+  jogador.
+- O histórico fica só no cliente e é apagado no fim da partida. O servidor não guarda nada.
+
+### 9.5 Frontend: cena da mesa (RN28–RN31)
+
+- `RummyPanel` dá lugar a `RummyTableScene`, uma camada em tela cheia feita em React/DOM (não
+  em Pixi), por cima da Praça. É DOM porque arrastar, selecionar e mostrar balões são mais
+  simples e testáveis assim. Ela tem:
+  - `TableFelt`: mesa oval com as combinações em posição absoluta pela grade (9.3), o monte
+    num canto e o retângulo de seleção;
+  - `OpponentSeat`: avatar do guaxinim (o sprite da Praça), apelido, número de peças, anel da
+    vez em SVG (`stroke-dashoffset` a partir de `secondsUntil`) e o balão de chat. Os lugares
+    são em cima, à esquerda e à direita, conforme quantos jogadores há;
+  - `TileRack`: suporte de 2 fileiras × 14 vagas, desenhado em CSS como um porta-peças escuro;
+  - `TableChat`: painel recolhível à direita;
+  - a barra de ações ao lado do suporte.
+- **Suporte** (`rack.ts`, função pura, Vitest): um mapa local `vaga → peça`.
+  - O suporte se ajusta à mão que vem do servidor: peças novas entram na primeira vaga livre e
+    peças que saíram liberam a vaga.
+  - "Por cor" e "Por número" refazem o mapa.
+  - Nada disso vai para o servidor.
+- **Seleção** (`selection.ts`): Shift+clique, retângulo e Esc. Ao arrastar, todas as peças
+  marcadas vão juntas.
+- A `TableRoomsPanel` (lista de salas e espera) continua como está.
+
+### 9.6 Testes
+
+- **godog:** os cenários novos e os alterados do `.feature` (recusa sem comprar, corrigir
+  depois, tempo depois de recusar, cor repetida, posição, cortar, juntar, chat só da sala).
+  "Arrumar o suporte" é `@e2e`, porque é só cliente.
+- **Vitest:**
+  - `rack.ts`, `selection.ts` e as novas funções de `layout.ts`;
+  - `describeIssue` para cada código;
+  - `melds.json` com issues.
+- **playwright-bdd:** suporte, mover várias peças, chat e balão.
+
+### 9.7 Riscos
+
+- Com quatro jogadores e um suporte de duas fileiras, a tela fica cheia. O alvo é 1280×720.
+  Abaixo disso, a mesa e o suporte diminuem juntos (escala CSS).
+- `rummy.move` fica maior por causa das posições: são até 106 peças e cerca de 40 combinações,
+  menos de 2 KB. O limite de leitura do ws continua alto o bastante (sobe para 8 KB).
+- Mudança de protocolo: `rummy.move`, `rummy.state` e `rummy.draft` passam a usar
+  `melds: [{tiles, x, y}]`. Servidor e cliente estão na mesma versão do repositório, então não
+  há compatibilidade a manter.
+
+### 9.8 Tasks (vão para `tasks.md`)
+
+- T20: cenários alterados e novos no godog (RED).
+- T21: `Issue` em `Classify` e na abertura, mais `melds.json`.
+- T22: recusa sem encerrar a vez, com `Refused` e `rummy.refused`.
+- T23: posições em `Meld` e no protocolo.
+- T24: chat da sala.
+- T25: `melds.ts` com issues e `describeIssue`.
+- T26: `layout.ts`: posições, `cutAt`, `joinEnds` e `moveMany`.
+- T27: `rack.ts` e `selection.ts`.
+- T28: `RummyTableScene`: feltro, lugares, anel e monte.
+- T29: `TileRack`, arrasto e seleção.
+- T30: `TableChat` e balões.
+- T31: teste no navegador e playwright.

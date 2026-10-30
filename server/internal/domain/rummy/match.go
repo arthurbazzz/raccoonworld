@@ -31,7 +31,6 @@ type Result string
 // The turn results.
 const (
 	ResultOK      Result = "ok"      // the play was accepted
-	ResultInvalid Result = "invalid" // refused, undone, drew a tile (RN14)
 	ResultDrew    Result = "drew"    // chose to draw, or played nothing
 	ResultTimeout Result = "timeout" // ran out of time (RN15)
 )
@@ -43,10 +42,31 @@ type Player struct {
 }
 
 // Layout is a full arrangement of the table and one hand: what the client
-// sends while dragging tiles (plan, section 3.1).
+// sends while dragging tiles (plan, section 3.1). Pos has one entry per
+// meld.
 type Layout struct {
 	Melds [][]TileID
+	Pos   []Pos
 	Hand  []TileID
+}
+
+// The table is a grid where each meld has a position (RN32, plan 9.3).
+const (
+	TableCols = 48
+	TableRows = 28
+)
+
+// Pos is where a meld lies on the table, in grid cells.
+type Pos struct{ X, Y int }
+
+// AutoPos lays n melds out in rows of three, for a layout sent without
+// positions (tests and older clients).
+func AutoPos(n int) []Pos {
+	pos := make([]Pos, n)
+	for i := range pos {
+		pos[i] = Pos{X: i % 3 * (TableCols / 3), Y: i / 3 * 3 % TableRows}
+	}
+	return pos
 }
 
 func (l Layout) clone() Layout {
@@ -54,7 +74,7 @@ func (l Layout) clone() Layout {
 	for i, m := range l.Melds {
 		melds[i] = slices.Clone(m)
 	}
-	return Layout{Melds: melds, Hand: slices.Clone(l.Hand)}
+	return Layout{Melds: melds, Pos: slices.Clone(l.Pos), Hand: slices.Clone(l.Hand)}
 }
 
 type seat struct {
@@ -77,6 +97,7 @@ type Match struct {
 	turnEnds time.Time
 	pool     []TileID
 	table    [][]TileID // confirmed melds
+	tablePos []Pos      // where each confirmed meld lies
 	draft    Layout     // the current player's arrangement this turn
 	passes   int        // turns in a row ended without a tile, with an empty pool
 
@@ -107,8 +128,13 @@ func NewMatch(mode Mode, players []Player, s Shuffler, t Timing, now time.Time) 
 func (m *Match) startTurn(now time.Time) TurnStarted {
 	m.turn++
 	m.turnEnds = now.Add(m.timing.Turn)
-	m.draft = Layout{Melds: m.table, Hand: m.seats[m.current].hand}.clone()
+	m.draft = m.startLayout()
 	return TurnStarted{Turn: m.turn, Player: m.seats[m.current].ID, Ends: m.turnEnds}
+}
+
+// startLayout is the table and the current hand as the turn started.
+func (m *Match) startLayout() Layout {
+	return Layout{Melds: m.table, Pos: m.tablePos, Hand: m.seats[m.current].hand}.clone()
 }
 
 func (m *Match) seatOf(id room.PlayerID) (int, bool) {
@@ -141,7 +167,7 @@ func (m *Match) checkTurn(id room.PlayerID, turn int) error {
 // Move replaces the current player's draft (RN11, RN12). Melds may be
 // invalid for now; only the tiles are checked: the layout must hold exactly
 // the table and hand tiles of the start of the turn, and no table tile may
-// go to the hand.
+// go to the hand. Positions must be inside the table (RN32).
 func (m *Match) Move(id room.PlayerID, turn int, l Layout) error {
 	if err := m.checkTurn(id, turn); err != nil {
 		return err
@@ -165,11 +191,22 @@ func (m *Match) Move(id room.PlayerID, turn int, l Layout) error {
 		seen[t] = true
 		return true
 	}
+	if l.Pos == nil {
+		l.Pos = AutoPos(len(l.Melds))
+	}
+	if len(l.Pos) != len(l.Melds) {
+		return ErrBadLayout
+	}
 	melds := make([][]TileID, 0, len(l.Melds))
-	for _, meld := range l.Melds {
+	pos := make([]Pos, 0, len(l.Melds))
+	for i, meld := range l.Melds {
 		if len(meld) == 0 {
 			continue
 		}
+		if p := l.Pos[i]; p.X < 0 || p.Y < 0 || p.X >= TableCols || p.Y >= TableRows {
+			return ErrBadLayout
+		}
+		pos = append(pos, l.Pos[i])
 		for _, t := range meld {
 			if !use(t) {
 				return ErrBadLayout
@@ -185,7 +222,7 @@ func (m *Match) Move(id room.PlayerID, turn int, l Layout) error {
 	if len(seen) != len(want) {
 		return ErrBadLayout
 	}
-	m.draft = Layout{Melds: melds, Hand: l.Hand}.clone()
+	m.draft = Layout{Melds: melds, Pos: pos, Hand: l.Hand}.clone()
 	return nil
 }
 
@@ -194,25 +231,27 @@ func (m *Match) Undo(id room.PlayerID, turn int) error {
 	if err := m.checkTurn(id, turn); err != nil {
 		return err
 	}
-	m.draft = Layout{Melds: m.table, Hand: m.seats[m.current].hand}.clone()
+	m.draft = m.startLayout()
 	return nil
 }
 
 // EndTurn checks the draft (RN2, RN11, RN13, RN14). A valid play becomes the
-// table; anything else is undone and the player draws a tile.
+// table. A refused one stays as the player left it and the turn goes on, so
+// they can fix it while there is time (Q12).
 func (m *Match) EndTurn(id room.PlayerID, turn int, now time.Time) ([]Event, error) {
 	if err := m.checkTurn(id, turn); err != nil {
 		return nil, err
 	}
 	s := m.seats[m.current]
 	if len(m.draft.Hand) == len(s.hand) {
-		return m.drawAndPass(ResultDrew, ErrNothingPlaced, now), nil
+		return []Event{m.refuse(Issue{Meld: -1, Code: ErrNothingPlaced.Error()})}, nil
 	}
-	if err := m.checkDraft(s); err != nil {
-		return m.drawAndPass(ResultInvalid, err, now), nil
+	if issues := m.checkDraft(s); len(issues) > 0 {
+		return []Event{m.refuse(issues...)}, nil
 	}
 
-	m.table = m.draft.clone().Melds
+	d := m.draft.clone()
+	m.table, m.tablePos = d.Melds, d.Pos
 	s.hand = slices.Clone(m.draft.Hand)
 	s.opened = true
 	m.passes = 0
@@ -223,14 +262,22 @@ func (m *Match) EndTurn(id room.PlayerID, turn int, now time.Time) ([]Event, err
 	return append(events, m.nextTurn(now)), nil
 }
 
-func (m *Match) checkDraft(s *seat) error {
-	for _, meld := range m.draft.Melds {
-		if _, err := Classify(meld); err != nil {
-			return err
+func (m *Match) refuse(issues ...Issue) Refused {
+	return Refused{Turn: m.turn, Player: m.seats[m.current].ID, Issues: issues}
+}
+
+// checkDraft returns what is wrong with the draft: every invalid meld, or
+// else what breaks the opening (RN12a, RN13).
+func (m *Match) checkDraft(s *seat) []Issue {
+	var issues []Issue
+	for i, meld := range m.draft.Melds {
+		if _, issue := Diagnose(meld); issue != nil {
+			issue.Meld = i
+			issues = append(issues, *issue)
 		}
 	}
-	if m.mode != Classic || s.opened {
-		return nil
+	if len(issues) > 0 || m.mode != Classic || s.opened {
+		return issues
 	}
 	// Opening (RN13): the table melds stay as they were, and the new ones,
 	// made only of hand tiles, add up to at least 30 points.
@@ -240,25 +287,31 @@ func (m *Match) checkDraft(s *seat) error {
 	for _, t := range s.hand {
 		inHand[t] = true
 	}
-	for _, meld := range m.draft.Melds {
-		if i := slices.IndexFunc(left, func(o []TileID) bool { return slices.Equal(o, meld) }); i >= 0 {
-			left = slices.Delete(left, i, i+1)
+	for i, meld := range m.draft.Melds {
+		if j := slices.IndexFunc(left, func(o []TileID) bool { return slices.Equal(o, meld) }); j >= 0 {
+			left = slices.Delete(left, j, j+1)
 			continue
 		}
+		var fromTable []TileID
 		for _, t := range meld {
 			if !inHand[t] {
-				return ErrOpeningTable
+				fromTable = append(fromTable, t)
 			}
+		}
+		if len(fromTable) > 0 {
+			issues = append(issues, Issue{Meld: i, Code: ErrOpeningTable.Error(), Tiles: fromTable})
 		}
 		points += Points(meld)
 	}
-	if len(left) > 0 {
-		return ErrOpeningTable
+	if len(issues) == 0 && len(left) > 0 {
+		issues = append(issues, Issue{Meld: -1, Code: ErrOpeningTable.Error(), Tiles: slices.Concat(left...)})
 	}
-	if points < OpeningPoints {
-		return ErrOpeningLow
+	if len(issues) == 0 && points < OpeningPoints {
+		issues = append(issues, Issue{Meld: -1, Code: ErrOpeningLow.Error(), Params: map[string]int{
+			"points": points, "need": OpeningPoints - points,
+		}})
 	}
-	return nil
+	return issues
 }
 
 // Draw undoes the draft and draws a tile, ending the turn (RN10). With an
@@ -267,17 +320,14 @@ func (m *Match) Draw(id room.PlayerID, turn int, now time.Time) ([]Event, error)
 	if err := m.checkTurn(id, turn); err != nil {
 		return nil, err
 	}
-	return m.drawAndPass(ResultDrew, nil, now), nil
+	return m.drawAndPass(ResultDrew, now), nil
 }
 
 // drawAndPass ends the current turn without a play: the draft is dropped
 // and the player draws a tile if there is one.
-func (m *Match) drawAndPass(r Result, reason error, now time.Time) []Event {
+func (m *Match) drawAndPass(r Result, now time.Time) []Event {
 	s := m.seats[m.current]
 	ev := TurnEnded{Turn: m.turn, By: s.ID, Result: r}
-	if reason != nil {
-		ev.Reason = reason.Error()
-	}
 	if len(m.pool) > 0 {
 		s.hand = append(s.hand, m.pool[0])
 		m.pool = m.pool[1:]
@@ -306,7 +356,7 @@ func (m *Match) Advance(now time.Time) []Event {
 		}
 	}
 	if !m.over && !now.Before(m.turnEnds) {
-		events = append(events, m.drawAndPass(ResultTimeout, nil, now)...)
+		events = append(events, m.drawAndPass(ResultTimeout, now)...)
 	}
 	return events
 }
@@ -427,6 +477,7 @@ type View struct {
 	TurnEnds time.Time
 	Mode     Mode
 	Table    [][]TileID // confirmed table, or the viewer's draft on their turn
+	Pos      []Pos      // where each meld of Table lies
 	Hand     []TileID   // the viewer's hand, or their draft hand on their turn
 	Counts   map[room.PlayerID]int
 	Pool     int
@@ -439,7 +490,7 @@ func (m *Match) ViewFor(id room.PlayerID) View {
 	cur := m.seats[m.current]
 	v := View{
 		Turn: m.turn, Current: cur.ID, TurnEnds: m.turnEnds, Mode: m.mode,
-		Table: m.table, Counts: map[room.PlayerID]int{}, Pool: len(m.pool),
+		Table: m.table, Pos: m.tablePos, Counts: map[room.PlayerID]int{}, Pool: len(m.pool),
 	}
 	for _, s := range m.seats {
 		v.Counts[s.ID] = len(s.hand)
@@ -454,15 +505,16 @@ func (m *Match) ViewFor(id room.PlayerID) View {
 		}
 	}
 	if id == cur.ID && !m.over {
-		v.Table, v.Hand = m.draft.Melds, m.draft.Hand
+		v.Table, v.Pos, v.Hand = m.draft.Melds, m.draft.Pos, m.draft.Hand
 	}
-	v.Table, v.Hand = Layout{Melds: v.Table, Hand: v.Hand}.clone().Melds, slices.Clone(v.Hand)
+	c := Layout{Melds: v.Table, Pos: v.Pos, Hand: v.Hand}.clone()
+	v.Table, v.Pos, v.Hand = c.Melds, c.Pos, c.Hand
 	return v
 }
 
 // Draft returns the current player's arrangement, which the others watch
 // live (plan, section 3.5): the melds and how many tiles are left in hand.
-func (m *Match) Draft() (turn int, melds [][]TileID, handCount int) {
+func (m *Match) Draft() (turn int, melds [][]TileID, pos []Pos, handCount int) {
 	d := m.draft.clone()
-	return m.turn, d.Melds, len(d.Hand)
+	return m.turn, d.Melds, d.Pos, len(d.Hand)
 }

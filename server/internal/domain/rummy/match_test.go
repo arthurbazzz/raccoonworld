@@ -118,6 +118,22 @@ func play(t *testing.T, m *rummy.Match, id room.PlayerID, melds ...[]string) []r
 	return ev
 }
 
+// refused returns the codes of the Refused event in events.
+func refused(t *testing.T, events []rummy.Event) []string {
+	t.Helper()
+	for _, e := range events {
+		if r, ok := e.(rummy.Refused); ok {
+			codes := make([]string, len(r.Issues))
+			for i, is := range r.Issues {
+				codes[i] = is.Code
+			}
+			return codes
+		}
+	}
+	t.Fatalf("no Refused in %v", events)
+	return nil
+}
+
 func ended(t *testing.T, events []rummy.Event) rummy.TurnEnded {
 	t.Helper()
 	for _, e := range events {
@@ -175,26 +191,38 @@ func TestMoveMustKeepTheSameTiles(t *testing.T) {
 	}
 }
 
-func TestInvalidPlayIsUndoneAndDraws(t *testing.T) {
-	m := newMatch(t, rummy.Free, []string{"blue-7", "green-7"}, nil)
+func TestInvalidPlayKeepsTheTurn(t *testing.T) {
+	m := newMatch(t, rummy.Free, []string{"blue-7", "green-7", "red-7"}, nil)
 	ev := play(t, m, rocky.ID, []string{"blue-7", "green-7"})
-	if te := ended(t, ev); te.Result != rummy.ResultInvalid || te.Reason != "too_short" || !te.Drew {
-		t.Fatalf("TurnEnded = %+v, want invalid too_short with a draw (RN14)", te)
+	if got := refused(t, ev); !slices.Equal(got, []string{"too_short"}) {
+		t.Fatalf("Refused = %v, want too_short (RN14)", got)
 	}
 	v := m.ViewFor(rocky.ID)
-	if len(v.Table) != 0 || v.Counts[rocky.ID] != 15 {
-		t.Fatalf("table %v, rocky %d tiles; want empty table, 15 tiles", v.Table, v.Counts[rocky.ID])
+	if v.Current != rocky.ID || len(v.Table) != 1 || v.Counts[rocky.ID] != 14 {
+		t.Fatalf("current %s, draft %v, %d tiles; want rocky's turn with the draft kept and no draw (Q12)",
+			v.Current, v.Table, v.Counts[rocky.ID])
+	}
+
+	// Fixing the draft and ending again is accepted.
+	red := find(t, v.Hand, "red-7")
+	l := rummy.Layout{Melds: [][]rummy.TileID{append(v.Table[0], red...)}, Hand: without(v.Hand, red)}
+	if err := m.Move(rocky.ID, v.Turn, l); err != nil {
+		t.Fatal(err)
+	}
+	ev, _ = m.EndTurn(rocky.ID, v.Turn, t0)
+	if te := ended(t, ev); te.Result != rummy.ResultOK {
+		t.Fatalf("TurnEnded = %+v, want ok", te)
 	}
 }
 
-func TestEndTurnWithoutPlayingDraws(t *testing.T) {
+func TestEndTurnWithoutPlayingIsRefused(t *testing.T) {
 	m := newMatch(t, rummy.Free, nil, nil)
 	ev, _ := m.EndTurn(rocky.ID, 1, t0)
-	if te := ended(t, ev); te.Result != rummy.ResultDrew || !te.Drew {
-		t.Fatalf("TurnEnded = %+v, want drew", te)
+	if got := refused(t, ev); !slices.Equal(got, []string{"nothing_placed"}) {
+		t.Fatalf("Refused = %v, want nothing_placed", got)
 	}
-	if m.ViewFor(bandit.ID).Current != bandit.ID {
-		t.Fatal("turn did not pass to bandit")
+	if m.ViewFor(bandit.ID).Current != rocky.ID {
+		t.Fatal("turn passed; it should stay with rocky")
 	}
 }
 
@@ -202,8 +230,8 @@ func TestClassicOpening(t *testing.T) {
 	hand := []string{"blue-3", "blue-4", "blue-5", "red-10", "blue-10", "green-10"}
 
 	m := newMatch(t, rummy.Classic, hand, nil)
-	if te := ended(t, play(t, m, rocky.ID, []string{"blue-3", "blue-4", "blue-5"})); te.Reason != "opening_too_low" {
-		t.Fatalf("12-point opening: %+v, want opening_too_low (RN13)", te)
+	if got := refused(t, play(t, m, rocky.ID, []string{"blue-3", "blue-4", "blue-5"})); !slices.Equal(got, []string{"opening_too_low"}) {
+		t.Fatalf("12-point opening: %v, want opening_too_low (RN13)", got)
 	}
 
 	m = newMatch(t, rummy.Classic, hand, nil)
@@ -236,8 +264,8 @@ func TestClassicOpeningCannotUseTheTable(t *testing.T) {
 		t.Fatal(err)
 	}
 	ev, _ := m.EndTurn(bandit.ID, v.Turn, t0)
-	if te := ended(t, ev); te.Reason != "opening_used_table" {
-		t.Fatalf("TurnEnded = %+v, want opening_used_table", te)
+	if got := refused(t, ev); !slices.Equal(got, []string{"opening_used_table"}) {
+		t.Fatalf("Refused = %v, want opening_used_table", got)
 	}
 }
 
@@ -399,5 +427,26 @@ func TestAbsentSeatIsKeptThenFreed(t *testing.T) {
 	}
 	if _, ok := m.Reclaim("mel", "p8"); ok {
 		t.Fatal("reclaimed a freed seat")
+	}
+}
+
+func TestMeldPositions(t *testing.T) {
+	m := newMatch(t, rummy.Free, []string{"blue-3", "blue-4", "blue-5"}, nil)
+	v := m.ViewFor(rocky.ID)
+	ids := find(t, v.Hand, "blue-3", "blue-4", "blue-5")
+	l := rummy.Layout{Melds: [][]rummy.TileID{ids}, Pos: []rummy.Pos{{X: 20, Y: 9}}, Hand: without(v.Hand, ids)}
+	if err := m.Move(rocky.ID, v.Turn, l); err != nil {
+		t.Fatal(err)
+	}
+	if _, _, pos, _ := m.Draft(); !slices.Equal(pos, []rummy.Pos{{X: 20, Y: 9}}) {
+		t.Fatalf("draft positions = %v, want the ones sent (RN32)", pos)
+	}
+	l.Pos = []rummy.Pos{{X: rummy.TableCols, Y: 0}}
+	if err := m.Move(rocky.ID, v.Turn, l); !errors.Is(err, rummy.ErrBadLayout) {
+		t.Fatalf("Move off the table = %v, want ErrBadLayout", err)
+	}
+	m.EndTurn(rocky.ID, v.Turn, t0)
+	if got := m.ViewFor(bandit.ID).Pos; !slices.Equal(got, []rummy.Pos{{X: 20, Y: 9}}) {
+		t.Fatalf("table positions = %v, want them kept after the turn", got)
 	}
 }

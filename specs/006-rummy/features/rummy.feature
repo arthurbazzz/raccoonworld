@@ -58,9 +58,9 @@ Funcionalidade: Rummy das Nozes
   Cenário: Abertura com menos de 30 pontos no modo Clássico
     Dado que é a vez de "rocky", que ainda não abriu, no modo "Clássico"
     Quando "rocky" baixa a sequência "azul 3-4-5" e termina a vez
-    Então a jogada de "rocky" é recusada
-    E a mesa volta ao começo da vez
-    E "rocky" compra uma peça
+    Então a jogada de "rocky" é recusada com o motivo "Sua abertura soma 12 pontos; faltam 18 para 30."
+    E ainda é a vez de "rocky"
+    E "rocky" não compra peça
 
   Cenário: Abertura válida no modo Clássico
     Dado que é a vez de "rocky", que ainda não abriu, no modo "Clássico"
@@ -84,8 +84,23 @@ Funcionalidade: Rummy das Nozes
   Cenário: Mesa inválida ao terminar a vez
     Dado que é a vez de "rocky", que já abriu, com "7 azul, 7 verde" na mão
     Quando "rocky" baixa o grupo "7 azul, 7 verde" e termina a vez
-    Então a jogada de "rocky" é recusada
-    E "rocky" compra uma peça
+    Então a jogada de "rocky" é recusada com o motivo "Esta combinação tem só 2 peças; precisa de pelo menos 3."
+    E as peças "7 azul, 7 verde" ficam destacadas
+    E ainda é a vez de "rocky"
+
+  Cenário: Corrigir a jogada depois de recusada
+    Dado que é a vez de "rocky", que já abriu, com "7 azul, 7 verde, 7 vermelho" na mão
+    E que a jogada "7 azul, 7 verde" de "rocky" foi recusada
+    Quando "rocky" junta o "7 vermelho" à combinação e termina a vez
+    Então as peças de "rocky" ficam na mesa
+    E é a vez do próximo jogador
+
+  Cenário: Tempo acaba depois de uma jogada recusada
+    Dado que é a vez de "rocky", que já abriu, com "7 azul, 7 verde" na mão
+    E que a jogada "7 azul, 7 verde" de "rocky" foi recusada
+    Quando o tempo da vez acaba
+    Então a mesa volta ao começo da vez
+    E "rocky" compra uma peça automaticamente
 
   @e2e
   Cenário: Desfazer
@@ -126,3 +141,59 @@ Funcionalidade: Rummy das Nozes
     Dado que "rocky" e "bandit" estão jogando na mesma sala
     Quando "bandit" sai da mesa
     Então "rocky" ganha a partida
+
+  # Emenda A
+
+  Cenário: Grupo com cor repetida explica o motivo
+    Dado que é a vez de "rocky", que já abriu, com "7 verde, 7 verde, 7 azul, 7 vermelho" na mão
+    Quando "rocky" baixa o grupo "7 verde, 7 verde, 7 azul, 7 vermelho" e termina a vez
+    Então a jogada de "rocky" é recusada com o motivo "O grupo de 7 tem dois 7 verdes. Tire um deles."
+    E as peças "7 verde, 7 verde" ficam destacadas
+
+  Cenário: Mover uma combinação para outro lugar da mesa
+    Dado que a mesa tem a sequência "azul 3-4-5"
+    E que é a vez de "rocky", que já abriu, com "7 azul" na mão
+    Quando "rocky" arrasta a sequência "azul 3-4-5" para a posição 20, 9
+    Então "bandit" vê a sequência "azul 3-4-5" na posição 20, 9
+
+  # Os gestos abaixo são só do navegador: o servidor recebe apenas a mesa
+  # resultante, como em qualquer outra mexida.
+
+  @ui
+  Cenário: Cortar uma combinação em duas
+    Dado que é a vez de "rocky" com a sequência "verde 1-2-3-4-5-6" na mesa
+    Quando "rocky" clica entre o "3 verde" e o "4 verde"
+    Então a mesa mostra a sequência "verde 1-2-3" e a sequência "verde 4-5-6"
+
+  @ui
+  Cenário: Juntar duas combinações
+    Dado que é a vez de "rocky" com a sequência "verde 1-2-3-4-5-6" na mesa
+    E que "rocky" cortou a sequência entre o "3 verde" e o "4 verde"
+    Quando "rocky" arrasta a sequência "verde 4-5-6" até a ponta da sequência "verde 1-2-3"
+    Então a mesa mostra a sequência "verde 1-2-3-4-5-6"
+
+  @ui
+  Cenário: Mover várias peças de uma vez
+    Dado que é a vez de "rocky" com "8 vermelho, 9 vermelho, 10 vermelho" no suporte
+    Quando "rocky" marca "8 vermelho, 9 vermelho, 10 vermelho" com Shift+clique
+    E arrasta as peças marcadas para a mesa
+    Então a mesa mostra a sequência "vermelho 8-9-10"
+
+  @ui
+  Cenário: Arrumar o suporte à vontade
+    Dado que é a vez de "rocky" com "8 vermelho, 9 vermelho, 10 vermelho" no suporte
+    Quando "rocky" arrasta o "8 vermelho" para uma vaga vazia da fileira de baixo
+    Então o "8 vermelho" fica nessa vaga
+
+  Cenário: Chat só para quem está na sala
+    Dado que "rocky" e "bandit" estão jogando na mesma sala
+    E que "pip" está na Praça sem jogar
+    Quando "rocky" envia "boa sorte!" no chat da mesa
+    Então "bandit" recebe "boa sorte!" de "rocky" no chat da mesa
+    E "pip" não recebe mensagens do chat da mesa
+
+  @ui
+  Cenário: Balão do chat da mesa
+    Dado que "rocky" e "bandit" estão jogando na mesma sala
+    Quando "rocky" envia "boa sorte!" no chat da mesa
+    Então "bandit" vê "boa sorte!" num balão ao lado do avatar de "rocky"

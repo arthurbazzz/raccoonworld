@@ -97,18 +97,28 @@ func TestEncodeRummyEvents(t *testing.T) {
 				Opened: []room.PlayerID{"c1"},
 			}},
 			`{"type":"rummy.state","v":1,"data":{"room":"s1","mode":"classic","turn":7,"current":"c1",
-				"turnMs":31000,"melds":[[3,4,5]],"hand":[9,104],"counts":{"c1":2,"c2":14},"pool":75,
+				"turnMs":31000,"melds":[[3,4,5]],"pos":[[0,0]],"hand":[9,104],"counts":{"c1":2,"c2":14},"pool":75,
 				"opened":["c1"],"absent":[]}}`,
 		},
 		{
 			"draft",
 			usecase.RummyDraft{Turn: 7, Melds: [][]rummy.TileID{{3, 4, 5}, {}}, HandCount: 11},
-			`{"type":"rummy.draft","v":1,"data":{"turn":7,"melds":[[3,4,5],[]],"handCount":11}}`,
+			`{"type":"rummy.draft","v":1,"data":{"turn":7,"melds":[[3,4,5],[]],"pos":[[0,0],[16,0]],"handCount":11}}`,
 		},
 		{
-			"refused turn",
-			usecase.RummyTurn{Turn: rummy.TurnEnded{Turn: 7, By: "c1", Result: rummy.ResultInvalid, Reason: "gap", Drew: true}},
-			`{"type":"rummy.turn","v":1,"data":{"turn":7,"result":"invalid","reason":"gap","by":"c1","drew":true}}`,
+			"refused",
+			usecase.RummyRefused{Refused: rummy.Refused{Turn: 7, Player: "c1", Issues: []rummy.Issue{
+				{Meld: 0, Code: "repeated_color", Tiles: []rummy.TileID{19, 71}, Params: map[string]int{"color": 1, "value": 7}},
+				{Meld: -1, Code: "nothing_placed"},
+			}}},
+			`{"type":"rummy.refused","v":1,"data":{"turn":7,"issues":[
+				{"meld":0,"code":"repeated_color","tiles":[19,71],"params":{"color":1,"value":7}},
+				{"meld":-1,"code":"nothing_placed","tiles":[],"params":{}}]}}`,
+		},
+		{
+			"table chat",
+			usecase.RummyChat{From: "c1", Text: "boa sorte!"},
+			`{"type":"rummy.chat","v":1,"data":{"from":"c1","text":"boa sorte!"}}`,
 		},
 		{
 			"results",

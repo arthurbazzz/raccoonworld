@@ -20,6 +20,11 @@ type rummyWorld struct {
 	tableSeq   string              // "a mesa tem a sequência": the opener of the next setup
 	start      rummy.View          // the current player's view at the start of the turn
 	startHands map[string][]string // nickname -> faces in hand, before a disconnect
+	lastMove   struct {            // the last move sent, which a refusal keeps
+		turn  int
+		melds [][]rummy.TileID
+		hand  []rummy.TileID
+	}
 }
 
 // riggedShuffler deals the deck it is given, in order; with no deck, or for
@@ -113,9 +118,20 @@ func (w *world) registerRummySteps(sc *godog.ScenarioContext) {
 	sc.Step(`^"([^"]*)" tira o "([^"]*)" da sequência e forma o grupo "([^"]*)"$`, w.takeFromRun)
 	sc.Step(`^"([^"]*)" termina a vez$`, w.endTurn)
 	sc.Step(`^"([^"]*)" desfaz a vez$`, w.undoTurn)
-	sc.Step(`^a jogada de "([^"]*)" é recusada$`, w.playRefused)
+	sc.Step(`^a jogada de "([^"]*)" é recusada com o motivo "([^"]*)"$`, w.playRefusedWith)
+	sc.Step(`^as peças "([^"]*)" ficam destacadas$`, w.tilesBlamed)
+	sc.Step(`^ainda é a vez de "([^"]*)"$`, w.stillTurnOf)
+	sc.Step(`^"([^"]*)" não compra peça$`, w.didNotDraw)
+	sc.Step(`^que a jogada "([^"]*)" de "([^"]*)" foi recusada$`, w.refusedPlay)
+	sc.Step(`^"([^"]*)" junta o "([^"]*)" à combinação e termina a vez$`, w.addToLastAndEnd)
+	sc.Step(`^o tempo da vez acaba$`, w.turnTimeRunsOut)
+	sc.Step(`^"([^"]*)" compra uma peça automaticamente$`, w.timedOutAndDrewTile)
+	sc.Step(`^"([^"]*)" arrasta a sequência "([^"]*)" para a posição (\d+), (\d+)$`, w.moveMeldTo)
+	sc.Step(`^"([^"]*)" vê a sequência "([^"]*)" na posição (\d+), (\d+)$`, w.seesMeldAt)
+	sc.Step(`^"([^"]*)" envia "([^"]*)" no chat da mesa$`, w.tableSay)
+	sc.Step(`^"([^"]*)" recebe "([^"]*)" de "([^"]*)" no chat da mesa$`, w.receivesTableChat)
+	sc.Step(`^"([^"]*)" não recebe mensagens do chat da mesa$`, w.noTableChat)
 	sc.Step(`^a mesa volta ao começo da vez$`, w.tableBackToStart)
-	sc.Step(`^"([^"]*)" compra uma peça$`, w.drewTile)
 	sc.Step(`^as peças de "([^"]*)" ficam na mesa$`, w.playAccepted)
 	sc.Step(`^é a vez do próximo jogador$`, w.nextPlayersTurn)
 	sc.Step(`^a mesa tem a sequência "([^"]*)" e o grupo "([^"]*)"$`, w.tableHolds)
@@ -649,6 +665,9 @@ func (w *world) playTurn(nickname string, a usecase.TurnAction, melds [][]rummy.
 }
 
 func (w *world) playTurnOn(nickname string, turn int, a usecase.TurnAction, melds [][]rummy.TileID, hand []rummy.TileID) error {
+	if a == usecase.ActionMove {
+		w.rummy.lastMove.turn, w.rummy.lastMove.melds, w.rummy.lastMove.hand = turn, melds, hand
+	}
 	return w.playTurnUC.Execute(usecase.TurnInput{
 		PlayerID: w.ids[nickname], Action: a, Turn: turn, Melds: melds, Hand: hand,
 	})
@@ -731,13 +750,197 @@ func (w *world) lastTurn(nickname string) (rummy.TurnEnded, error) {
 	return t.Turn, err
 }
 
-func (w *world) playRefused(nickname string) error {
-	t, err := w.lastTurn(nickname)
+// pluralColors names the colors as the client does, in the plural (RN12a).
+var pluralColors = [rummy.Colors]string{"marrons", "vermelhos", "verdes", "azuis"}
+
+// describe is the sentence the client shows for an issue (web
+// src/game/rummy/issues.ts, describeIssue), for the codes the scenarios use.
+func describe(is rummy.Issue) string {
+	p := is.Params
+	switch is.Code {
+	case "opening_too_low":
+		return fmt.Sprintf("Sua abertura soma %d pontos; faltam %d para 30.", p["points"], p["need"])
+	case "too_short":
+		return fmt.Sprintf("Esta combinação tem só %d peças; precisa de pelo menos 3.", p["count"])
+	case "repeated_color":
+		return fmt.Sprintf("O grupo de %d tem dois %d %s. Tire um deles.", p["value"], p["value"], pluralColors[p["color"]])
+	}
+	return is.Code
+}
+
+func (w *world) lastRefusal(nickname string) (rummy.Refused, error) {
+	r, err := lastTo[usecase.RummyRefused](w, nickname)
+	return r.Refused, err
+}
+
+func (w *world) playRefusedWith(nickname, reason string) error {
+	r, err := w.lastRefusal(nickname)
 	if err != nil {
 		return err
 	}
-	if t.By != w.ids[nickname] || t.Result != rummy.ResultInvalid {
-		return fmt.Errorf("last turn = %+v, want %q's play refused", t, nickname)
+	var got []string
+	for _, is := range r.Issues {
+		if describe(is) == reason {
+			return nil
+		}
+		got = append(got, describe(is))
+	}
+	return fmt.Errorf("refused with %q, want %q", got, reason)
+}
+
+func (w *world) tilesBlamed(spec string) error {
+	want, err := faces(spec)
+	if err != nil {
+		return err
+	}
+	r, err := w.lastRefusal("rocky")
+	if err != nil {
+		return err
+	}
+	for _, is := range r.Issues {
+		got := facesOf(is.Tiles)
+		if len(got) == 0 && is.Meld >= 0 && is.Meld < len(w.rummy.lastMove.melds) {
+			got = facesOf(w.rummy.lastMove.melds[is.Meld]) // the whole meld
+		}
+		if slices.Equal(got, want) {
+			return nil
+		}
+	}
+	return fmt.Errorf("issues %+v do not blame %v", r.Issues, want)
+}
+
+func (w *world) stillTurnOf(nickname string) error {
+	v, err := w.state("bandit")
+	if err != nil {
+		return err
+	}
+	if v.Current != w.ids[nickname] || v.Turn != w.rummy.start.Turn {
+		return fmt.Errorf("turn %d of %s, want turn %d of %q", v.Turn, v.Current, w.rummy.start.Turn, nickname)
+	}
+	return nil
+}
+
+func (w *world) didNotDraw(nickname string) error {
+	if t, err := w.lastTurn(nickname); err == nil && t.Turn == w.rummy.start.Turn {
+		return fmt.Errorf("turn ended: %+v", t)
+	}
+	v, err := w.state("bandit")
+	if err != nil {
+		return err
+	}
+	if got, want := v.Counts[w.ids[nickname]], len(w.rummy.start.Hand); got > want {
+		return fmt.Errorf("%q has %d tiles, more than the %d at the start", nickname, got, want)
+	}
+	return nil
+}
+
+func (w *world) refusedPlay(spec, nickname string) error {
+	if err := w.layAndEnd(nickname, spec); err != nil {
+		return err
+	}
+	_, err := w.lastRefusal(nickname)
+	return err
+}
+
+// addToLastAndEnd moves a tile from the hand to the end of the last meld the
+// player laid. A refusal keeps the draft, so it starts from the last move.
+func (w *world) addToLastAndEnd(nickname, tile string) error {
+	want, err := faces(tile)
+	if err != nil {
+		return err
+	}
+	last := w.rummy.lastMove
+	if len(last.melds) == 0 {
+		return fmt.Errorf("%q has not moved yet", nickname)
+	}
+	melds := slices.Clone(last.melds)
+	ids, rest, err := pick(last.hand, want)
+	if err != nil {
+		return err
+	}
+	n := len(melds) - 1
+	melds[n] = append(slices.Clone(melds[n]), ids...)
+	if err := w.playTurnOn(nickname, last.turn, usecase.ActionMove, melds, rest); err != nil {
+		return err
+	}
+	return w.endTurn(nickname)
+}
+
+func (w *world) turnTimeRunsOut() error {
+	return w.passTime(rummy.DefaultTiming().Turn)
+}
+
+func (w *world) timedOutAndDrewTile(nickname string) error {
+	if err := w.timedOutAndDrew(nickname); err != nil {
+		return err
+	}
+	return w.drewTile(nickname)
+}
+
+func (w *world) moveMeldTo(nickname, spec string, x, y int) error {
+	want, err := faces(spec)
+	if err != nil {
+		return err
+	}
+	v, err := w.state(nickname)
+	if err != nil {
+		return err
+	}
+	pos := rummy.AutoPos(len(v.Table))
+	i := slices.IndexFunc(v.Table, func(m []rummy.TileID) bool { return slices.Equal(facesOf(m), want) })
+	if i < 0 {
+		return fmt.Errorf("no %v on the table", want)
+	}
+	pos[i] = rummy.Pos{X: x, Y: y}
+	return w.playTurnUC.Execute(usecase.TurnInput{
+		PlayerID: w.ids[nickname], Action: usecase.ActionMove, Turn: v.Turn,
+		Melds: v.Table, Pos: pos, Hand: v.Hand,
+	})
+}
+
+func (w *world) seesMeldAt(nickname, spec string, x, y int) error {
+	want, err := faces(spec)
+	if err != nil {
+		return err
+	}
+	d, err := lastTo[usecase.RummyDraft](w, nickname)
+	if err != nil {
+		return err
+	}
+	for i, m := range d.Melds {
+		if slices.Equal(facesOf(m), want) {
+			if d.Pos[i] != (rummy.Pos{X: x, Y: y}) {
+				return fmt.Errorf("%v at %v, want %d, %d", want, d.Pos[i], x, y)
+			}
+			return nil
+		}
+	}
+	return fmt.Errorf("draft %v has no %v", d.Melds, want)
+}
+
+func (w *world) tableSay(nickname, text string) error {
+	return w.sendChat.Execute(usecase.SendChatInput{PlayerID: w.ids[nickname], Text: text, Table: true})
+}
+
+func (w *world) receivesTableChat(nickname, text, from string) error {
+	c, err := lastTo[usecase.RummyChat](w, nickname)
+	if err != nil {
+		return err
+	}
+	if c.Text != text || c.From != w.ids[from] {
+		return fmt.Errorf("table chat %+v, want %q from %q", c, text, from)
+	}
+	return nil
+}
+
+func (w *world) noTableChat(nickname string) error {
+	if n := len(rummyTo[usecase.RummyChat](w, nickname)); n > 0 {
+		return fmt.Errorf("%q got %d table chat lines", nickname, n)
+	}
+	for _, e := range w.broadcaster.Events() {
+		if _, ok := e.Event.(usecase.RummyChat); ok && e.PlayerID == "" {
+			return fmt.Errorf("a table chat line went to the whole room")
+		}
 	}
 	return nil
 }

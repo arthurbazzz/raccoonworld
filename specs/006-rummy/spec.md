@@ -1,6 +1,6 @@
 # RW-006 — Rummy das Nozes (jogo de peças)
 
-Status: **Aprovada** (2026-10-30) · Criada: 2026-10-30 · Depende de: RW-001, RW-005
+Status: **Aprovada** (2026-10-30) · Emenda A: **Aprovada** (2026-10-30) · Criada: 2026-10-30 · Depende de: RW-001, RW-005
 
 ## Problema
 
@@ -67,17 +67,33 @@ Ganha quem **ficar sem peças** primeiro.
   sejam válidas e nenhuma peça da mesa vá para a mão.
 - RN12. Durante a vez, as combinações podem ficar inválidas. O jogo destaca as inválidas, e o
   botão **Desfazer** devolve a mesa e a mão como estavam no começo da vez.
+- RN12a. **Erros claros (Q11):** cada erro aponta **a combinação e as peças culpadas**, que
+  ficam destacadas na mesa, e explica em linguagem simples o que está errado e como resolver.
+  O erro aparece na hora, enquanto o jogador monta a mesa, e não só quando ele termina a vez.
+  Exemplos:
+  - cor repetida: "O grupo de 7 tem dois 7 verdes. Tire um deles.";
+  - poucas peças: "Esta combinação tem só 2 peças; precisa de pelo menos 3.";
+  - cores misturadas: "Sequência com cores diferentes: o 5 vermelho não combina com as azuis.";
+  - número faltando: "Falta o 6 azul entre o 5 e o 7.";
+  - fora da faixa: "A sequência passou do 13.";
+  - grupo grande demais: "Um grupo tem no máximo 4 peças, uma de cada cor.";
+  - abertura baixa: "Sua abertura soma 24 pontos; faltam 6 para 30.";
+  - abertura com peça da mesa: "Na abertura use só peças do seu suporte; o 4 azul é da mesa.";
+  - nada baixado: "Você não baixou nenhuma peça. Baixe uma combinação ou clique em Comprar."
 - RN13. **Modos** (Q2), escolhidos ao abrir a espera:
   - **Clássico:** a primeira jogada de cada jogador (a **abertura**) precisa usar só peças da
     mão e somar pelo menos **30 pontos** (soma dos números; o coringa vale o número que
     substitui). Antes de abrir, o jogador não mexe nas combinações da mesa.
   - **Livre:** não há abertura mínima. Desde a primeira vez, o jogador pode baixar e mexer na
     mesa.
-- RN14. Ao clicar **Terminar vez**, o servidor confere tudo (RN2, RN11, RN13). Se a jogada for
-  inválida, a mesa e a mão voltam ao começo da vez, o jogador vê o motivo e compra uma peça.
-  Se ele não baixou nenhuma peça, compra uma.
+- RN14. Ao clicar **Terminar vez**, o servidor confere tudo (RN2, RN11, RN13). **Se a jogada
+  for inválida, a vez não acaba** (Q12): a mesa e a mão ficam como o jogador deixou, ele vê o
+  erro (RN12a) e pode corrigir, tentar outra jogada, Desfazer ou Comprar, enquanto houver
+  tempo. Ele não compra peça por ter errado. Se não baixou nenhuma peça, o botão Terminar vez
+  fica desabilitado e ele usa Comprar.
 - RN15. **Tempo da vez:** **40 segundos**, com um relógio visível para todos. Se o tempo
-  acabar, a vez é desfeita como em RN14 e o jogador compra uma peça.
+  acabar, a vez é desfeita (mesa e mão voltam ao começo da vez) e o jogador **compra uma peça
+  automaticamente**.
 - RN16. **Monte vazio:** quem não pode ou não quer jogar passa a vez sem comprar. Se todos
   passarem uma volta inteira seguida, a partida acaba (RN18).
 
@@ -112,6 +128,63 @@ Ganha quem **ficar sem peças** primeiro.
   (que pode ser ordenada por cor ou por número), o relógio e os botões.
 - RN27. Enquanto joga, o guaxinim fica parado e o chat continua funcionando. Os outros veem a
   etiqueta "jogando" sobre ele.
+
+## Emenda A: mesa, suporte, chat e mesa livre (2026-10-30)
+
+Pedida pelo dono depois do primeiro teste. Substitui RN26 e completa RN11 e RN27.
+
+### Visual da partida
+
+- RN28. **Mesa em tela cheia** (Q7), no estilo dos jogos de cartas online. A partida abre numa
+  cena própria por cima da Praça, com uma **mesa oval de feltro** no centro.
+  - Os adversários ficam ao redor (em cima, à esquerda e à direita, conforme quantos são),
+    cada um com o avatar do seu guaxinim, o apelido e o número de peças.
+  - O **monte** fica num canto da mesa, mostrando quantas peças restam.
+- RN29. **Vez visível:** o avatar de quem joga ganha um **anel que esvazia** ao longo dos 40 s
+  da vez (RN15). Nos últimos 10 s o anel fica vermelho.
+- RN30. **Suporte de peças:** a mão fica embaixo, num **suporte escuro com duas fileiras**, como
+  o porta-peças do jogo físico. As peças ficam em pé, com vagas livres entre elas.
+  - O jogador **arruma o suporte como quiser**: arrasta uma peça para qualquer vaga das duas
+    fileiras e ela fica ali, sem se reordenar sozinha.
+  - Os botões **Por cor** e **Por número** reorganizam o suporte de uma vez.
+  - A arrumação é só visual e local: o servidor não recebe nem guarda as posições.
+  - Uma peça comprada entra na primeira vaga livre.
+- RN31. Os botões **Terminar vez**, **Comprar**, **Desfazer** e **Sair** ficam ao lado do
+  suporte. Fora da vez, só **Sair** aparece.
+
+### Mesa livre (Q9)
+
+- RN32. **Posição livre:** cada combinação tem uma posição na mesa.
+  - O jogador da vez arrasta uma combinação inteira, pela alça dela, para **qualquer ponto
+    livre** da mesa, e todos da sala veem a nova posição.
+  - As combinações não se sobrepõem: uma combinação solta em cima de outra é empurrada para o
+    lugar livre mais perto.
+- RN33. **Dividir:**
+  - Soltar uma peça entre duas peças de uma combinação insere a peça ali.
+  - Arrastar peças **para fora** de uma combinação cria uma combinação nova onde elas forem
+    soltas.
+  - Clicar no espaço entre duas peças de uma combinação **corta** a combinação em duas naquele
+    ponto.
+- RN34. **Juntar:** arrastar uma combinação até a ponta de outra junta as duas numa só.
+- RN35. **Várias peças:**
+  - **Shift+clique** marca e desmarca peças, do suporte ou da mesa.
+  - Um **retângulo de seleção**, arrastado num espaço vazio da mesa, marca as peças dentro
+    dele.
+  - Ao arrastar uma peça marcada, todas as marcadas vão juntas, na ordem em que estavam.
+  - **Esc** desmarca tudo.
+- RN36. As regras de mexer na mesa continuam as mesmas (RN11, RN13):
+  - no modo Clássico, antes de abrir, o jogador não move nem divide as combinações da mesa;
+  - peças da mesa nunca voltam para o suporte;
+  - Desfazer volta tudo ao começo da vez, inclusive as posições.
+
+### Chat da mesa (Q8)
+
+- RN37. A partida tem um **chat da sala**, num painel recolhível ao lado da mesa. Só os
+  jogadores daquela sala enviam e recebem essas mensagens. Quem está na Praça não as vê.
+- RN38. Cada mensagem também aparece por 5 segundos num **balão** ao lado do avatar de quem a
+  enviou.
+- RN39. As mensagens seguem os limites do chat da Praça (RW-001): tamanho máximo e limite de
+  envio. O histórico dura só a partida.
 
 ## Critérios de aceitação
 
@@ -251,3 +324,18 @@ Funcionalidade: Rummy das Nozes
   `web/art/rummy.webp`. As cores são marrom (bolota), vermelho (cereja), verde (folha) e azul
   (gota). **O verso é sempre o marrom**, para todas as peças: versos de cores diferentes
   revelariam a cor das peças escondidas, então os versos coloridos da arte não são usados.
+- **Q7. Visual da partida** (dono, 2026-10-30): mesa em tela cheia com os adversários ao redor,
+  no estilo dos jogos de cartas online, e a mão num suporte de duas fileiras, como o do jogo
+  físico.
+- **Q8. Chat só na mesa** (dono, 2026-10-30): as mensagens da partida não aparecem na Praça.
+- **Q9. Mesa livre** (dono, 2026-10-30): mover combinações para qualquer lugar, dividir e
+  juntar combinações, e mover várias peças de uma vez.
+- **Q10. Sem máximo de peças na mão** (dono, 2026-10-30): o dono retirou esse pedido.
+- **Grupo com 7 verde, 7 verde, 7 azul e 7 vermelho** (dono, 2026-10-30): continua inválido,
+  porque um grupo não repete cor (RN2). Para ficar mais claro, a mensagem passa a dizer qual cor
+  se repete (RN12a).
+- **Q11. Erros mais claros** (dono, 2026-10-30): todos os erros dizem quais peças estão erradas
+  e como resolver (RN12a).
+- **Q12. Jogada recusada não encerra a vez** (dono, 2026-10-30): o jogador pode corrigir
+  enquanto houver tempo. A compra automática só acontece quando o tempo acaba. Isso substitui a
+  parte de RN14 que fazia comprar ao errar.

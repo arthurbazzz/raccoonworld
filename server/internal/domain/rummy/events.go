@@ -17,14 +17,21 @@ type TurnStarted struct {
 	Ends   time.Time
 }
 
-// TurnEnded says how the turn ended. Reason explains a refused play (RN14); Drew
-// is false when the pool was empty (RN16).
+// TurnEnded says how the turn ended. Drew is false when the pool was empty
+// (RN16).
 type TurnEnded struct {
 	Turn   int
 	By     room.PlayerID
 	Result Result
-	Reason string
 	Drew   bool
+}
+
+// Refused says the current player's play was refused and why (RN12a, RN14).
+// The turn goes on: only that player needs to know.
+type Refused struct {
+	Turn   int
+	Player room.PlayerID
+	Issues []Issue
 }
 
 // PlayerRemoved says a player left the match or did not come back (RN20, RN21).
@@ -47,6 +54,7 @@ type MatchOver struct {
 
 func (TurnStarted) rummyEvent()   {}
 func (TurnEnded) rummyEvent()     {}
+func (Refused) rummyEvent()       {}
 func (PlayerRemoved) rummyEvent() {}
 func (MatchOver) rummyEvent()     {}
 
