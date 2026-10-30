@@ -22,14 +22,14 @@ RW-001 a RW-005).
 - [x] **T4** `Classify` e `Points`: grupos, sequências e coringas, com os motivos de erro. Tabela
   de casos grande, guardada em JSON em `server/internal/domain/rummy/testdata/melds.json` para o
   TypeScript reaproveitar (RN2, RN3).
-- [ ] **T5** `Match`: distribuição, ordem sorteada, rascunho (`Move` com a checagem de
+- [x] **T5** `Match`: distribuição, ordem sorteada, rascunho (`Move` com a checagem de
   permutação), `Undo`, `Draw` e `EndTurn` com as regras de mesa válida e de nenhuma peça da
   mesa na mão (RN8–RN12, RN14).
-- [ ] **T6** Modos e abertura: Clássico com 30 pontos só da mão e sem mexer na mesa antes de
+- [x] **T6** Modos e abertura: Clássico com 30 pontos só da mão e sem mexer na mesa antes de
   abrir; Livre sem abertura (RN13).
-- [ ] **T7** Prazo e fim: vez de 40 s por `Advance`, monte vazio e volta de passes, vitória por
+- [x] **T7** Prazo e fim: vez de 40 s por `Advance`, monte vazio e volta de passes, vitória por
   mão vazia, placar com coringa valendo 30 (RN15–RN19).
-- [ ] **T8** Saída e ausência: peças de volta ao monte, vez passada se era dele, último jogador
+- [x] **T8** Saída e ausência: peças de volta ao monte, vez passada se era dele, último jogador
   ganha; assento ausente guardado pelo apelido por 30 s e recuperado (RN20–RN22, plano 3.2).
 - [ ] **T9** `Table`: criar sala com modo, entrar, vagas, contagem de 15 s que para com 1,
   início na hora com 4, sala "jogando" fechada, "Jogar de novo" volta à espera, sala vazia some
