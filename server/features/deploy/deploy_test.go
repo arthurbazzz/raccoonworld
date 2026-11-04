@@ -5,9 +5,12 @@
 package deploy
 
 import (
+	"context"
 	"os"
+	"strings"
 	"testing"
 
+	"github.com/coder/websocket"
 	"github.com/cucumber/godog"
 )
 
@@ -22,8 +25,14 @@ func TestDeployStack(t *testing.T) {
 	suite := godog.TestSuite{
 		Name: "raccoons-world-deploy",
 		ScenarioInitializer: func(sc *godog.ScenarioContext) {
-			w := &stackWorld{baseURL: baseURL}
-			w.register(sc)
+			w := &stackWorld{baseURL: strings.TrimSuffix(baseURL, "/")}
+			sc.After(func(ctx context.Context, _ *godog.Scenario, _ error) (context.Context, error) {
+				if w.conn != nil {
+					_ = w.conn.CloseNow()
+				}
+				return ctx, nil
+			})
+			w.registerHTTPSteps(sc)
 		},
 		Options: &godog.Options{
 			Format:   "pretty",
@@ -41,8 +50,10 @@ func TestDeployStack(t *testing.T) {
 
 // stackWorld holds per-scenario state.
 type stackWorld struct {
-	baseURL string
-}
+	baseURL string // public address of the stack, e.g. http://localhost
 
-// register binds the steps. They arrive in T6 and T7.
-func (w *stackWorld) register(_ *godog.ScenarioContext) {}
+	status int    // status of the last HTTP response
+	body   []byte // body of the last HTTP response
+
+	conn *websocket.Conn // WebSocket opened through the proxy
+}

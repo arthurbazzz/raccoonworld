@@ -30,7 +30,7 @@ as suítes existentes continuam verdes (godog, `go test`, Vitest, lint).
 - [x] **T5** `deploy/compose.yaml`, `deploy/compose.build.yaml`, `deploy/.env.example` e
   `deploy/.env` no `.gitignore` (plano, seção 3). Conferir à mão: a stack local sobe com
   `--wait` e o jogo abre em `http://localhost`.
-- [ ] **T6** Steps do smoke: página, WebSocket, mapa e origem recusada (plano, seção 5).
+- [x] **T6** Steps do smoke: página, WebSocket, mapa e origem recusada (plano, seção 5).
   Contra a stack local, esses 4 cenários ficam verdes.
 - [ ] **T7** Steps do smoke: só a porta 80 e persistência do Postgres. Os 6 cenários ficam
   verdes.
