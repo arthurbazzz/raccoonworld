@@ -91,6 +91,7 @@ export class BoothView extends Container {
         fontWeight: "700",
         fill: COLORS.sign,
         stroke: { color: 0x000000, width: 3 },
+        padding: 4, // keeps the last letter from being clipped (see scene.ts)
       },
       resolution: 2,
     });

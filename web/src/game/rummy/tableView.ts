@@ -24,6 +24,7 @@ export class TableView extends Container {
         fontSize: 11,
         fontWeight: "700",
         fill: 0xffffff,
+        padding: 4, // keeps the last letter from being clipped (see scene.ts)
       },
     });
     this.caption.anchor.set(0.5, 1);

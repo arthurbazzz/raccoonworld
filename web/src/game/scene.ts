@@ -225,6 +225,9 @@ function drawRaccoon(
       fontWeight: isYou ? "700" : "500",
       fill: isYou ? COLORS.youLabel : COLORS.label,
       stroke: { color: COLORS.shadow, width: 3 },
+      // Room around the glyphs: some browsers measure bold system-ui text
+      // narrower than it draws, and the last letter got clipped.
+      padding: 4,
     },
     resolution: 2,
   });
