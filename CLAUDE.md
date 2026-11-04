@@ -17,6 +17,10 @@ Leia e siga `specs/constituion.md`. Ela prevalece sobre este arquivo.
 8. Gin só nos handlers e adapters. Os casos de uso recebem DTOs próprios, nunca `*gin.Context`.
 9. Decisões listadas como "em aberto" na constituição (ex.: framework Go) são
    discutidas com o usuário antes de qualquer escolha.
+10. **Git**: o trabalho de uma spec fica numa branch própria (`rw-NNN-<nome-curto>`), nunca
+    direto na `main`, e entra por PR. Commits de task seguem `RW-NNN/Tn: <descrição>`. Os demais
+    (correções avulsas, docs, chores) seguem Conventional Commits em inglês, ex.:
+    `fix(web): pad canvas text so the last letter is not clipped`.
 
 ## Estrutura de specs
 
