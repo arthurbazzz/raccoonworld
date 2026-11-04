@@ -27,7 +27,7 @@ as suítes existentes continuam verdes (godog, `go test`, Vitest, lint).
 
 ## Fase 2 — Stack
 
-- [ ] **T5** `deploy/compose.yaml`, `deploy/compose.build.yaml`, `deploy/.env.example` e
+- [x] **T5** `deploy/compose.yaml`, `deploy/compose.build.yaml`, `deploy/.env.example` e
   `deploy/.env` no `.gitignore` (plano, seção 3). Conferir à mão: a stack local sobe com
   `--wait` e o jogo abre em `http://localhost`.
 - [ ] **T6** Steps do smoke: página, WebSocket, mapa e origem recusada (plano, seção 5).

@@ -94,7 +94,7 @@ name: raccoonworld
 
 services:
   traefik:
-    image: traefik:v3
+    image: traefik:v3.6   # v3.6+: older versions fail against Docker 29 (API 1.24)
     command:
       - --providers.docker=true
       - --providers.docker.exposedbydefault=false
