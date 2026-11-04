@@ -1,0 +1,10 @@
+# Only the Go module is needed to build the binary.
+.git
+.golangci.yml
+tools/
+features/
+**/*_test.go
+**/testdata/
+*.test
+*.out
+bin/

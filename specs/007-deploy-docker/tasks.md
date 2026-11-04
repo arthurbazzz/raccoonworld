@@ -19,7 +19,7 @@ as suítes existentes continuam verdes (godog, `go test`, Vitest, lint).
   1 caso contrário). Conferir se o `server` lê arquivos do disco em runtime (mapas etc.) e, se
   lê, incluí-los na imagem (plano, seção 6). *Resultado: o único arquivo é o mapa da Praça, já
   embutido no binário com `go:embed`; a imagem não copia nada além do binário.*
-- [ ] **T3** `server/Dockerfile` e `server/.dockerignore` (plano, 2.1). Conferir: `docker build`
+- [x] **T3** `server/Dockerfile` e `server/.dockerignore` (plano, 2.1). Conferir: `docker build`
   passa, a imagem roda como não-root e `/health` responde.
 - [ ] **T4** `output: "standalone"` em `web/next.config.ts`; `web/Dockerfile` e
   `web/.dockerignore` com o build-arg `NEXT_PUBLIC_WS_URL` (plano, 2.2). Conferir: a imagem
