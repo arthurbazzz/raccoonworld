@@ -445,7 +445,9 @@ func TestMeldPositions(t *testing.T) {
 	if err := m.Move(rocky.ID, v.Turn, l); !errors.Is(err, rummy.ErrBadLayout) {
 		t.Fatalf("Move off the table = %v, want ErrBadLayout", err)
 	}
-	m.EndTurn(rocky.ID, v.Turn, t0)
+	if _, err := m.EndTurn(rocky.ID, v.Turn, t0); err != nil {
+		t.Fatal(err)
+	}
 	if got := m.ViewFor(bandit.ID).Pos; !slices.Equal(got, []rummy.Pos{{X: 20, Y: 9}}) {
 		t.Fatalf("table positions = %v, want them kept after the turn", got)
 	}
