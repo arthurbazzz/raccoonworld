@@ -32,7 +32,7 @@ as suítes existentes continuam verdes (godog, `go test`, Vitest, lint).
   `--wait` e o jogo abre em `http://localhost`.
 - [x] **T6** Steps do smoke: página, WebSocket, mapa e origem recusada (plano, seção 5).
   Contra a stack local, esses 4 cenários ficam verdes.
-- [ ] **T7** Steps do smoke: só a porta 80 e persistência do Postgres. Os 6 cenários ficam
+- [x] **T7** Steps do smoke: só a porta 80 e persistência do Postgres. Os 6 cenários ficam
   verdes.
 
 ## Fase 3 — Pipeline

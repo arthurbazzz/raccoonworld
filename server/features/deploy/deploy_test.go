@@ -2,6 +2,8 @@
 //
 // It only runs when RW_STACK_URL points at the stack (e.g. http://localhost);
 // otherwise it is skipped, so plain `go test ./...` does not need Docker.
+// The port and Postgres scenarios use the docker CLI, so the stack must run on
+// this machine; RW_STACK_PROJECT names its compose project (default raccoonworld).
 package deploy
 
 import (
@@ -30,9 +32,11 @@ func TestDeployStack(t *testing.T) {
 				if w.conn != nil {
 					_ = w.conn.CloseNow()
 				}
+				w.dropProbeTable()
 				return ctx, nil
 			})
 			w.registerHTTPSteps(sc)
+			w.registerDockerSteps(sc)
 		},
 		Options: &godog.Options{
 			Format:   "pretty",
@@ -56,4 +60,6 @@ type stackWorld struct {
 	body   []byte // body of the last HTTP response
 
 	conn *websocket.Conn // WebSocket opened through the proxy
+
+	probeTable string // Postgres table created by the scenario, dropped after it
 }
