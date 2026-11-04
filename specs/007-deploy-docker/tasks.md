@@ -15,9 +15,10 @@ as suítes existentes continuam verdes (godog, `go test`, Vitest, lint).
 
 ## Fase 1 — Imagens
 
-- [ ] **T2** Subcomando `server healthcheck` em `cmd/server` (teste: sai 0 com `/health` 200 e
+- [x] **T2** Subcomando `server healthcheck` em `cmd/server` (teste: sai 0 com `/health` 200 e
   1 caso contrário). Conferir se o `server` lê arquivos do disco em runtime (mapas etc.) e, se
-  lê, incluí-los na imagem (plano, seção 6).
+  lê, incluí-los na imagem (plano, seção 6). *Resultado: o único arquivo é o mapa da Praça, já
+  embutido no binário com `go:embed`; a imagem não copia nada além do binário.*
 - [ ] **T3** `server/Dockerfile` e `server/.dockerignore` (plano, 2.1). Conferir: `docker build`
   passa, a imagem roda como não-root e `/health` responde.
 - [ ] **T4** `output: "standalone"` em `web/next.config.ts`; `web/Dockerfile` e
