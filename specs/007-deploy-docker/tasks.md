@@ -21,7 +21,7 @@ as suítes existentes continuam verdes (godog, `go test`, Vitest, lint).
   embutido no binário com `go:embed`; a imagem não copia nada além do binário.*
 - [x] **T3** `server/Dockerfile` e `server/.dockerignore` (plano, 2.1). Conferir: `docker build`
   passa, a imagem roda como não-root e `/health` responde.
-- [ ] **T4** `output: "standalone"` em `web/next.config.ts`; `web/Dockerfile` e
+- [x] **T4** `output: "standalone"` em `web/next.config.ts`; `web/Dockerfile` e
   `web/.dockerignore` com o build-arg `NEXT_PUBLIC_WS_URL` (plano, 2.2). Conferir: a imagem
   serve a Praça com os sprites e roda como não-root; `npm run dev` e os testes seguem iguais.
 

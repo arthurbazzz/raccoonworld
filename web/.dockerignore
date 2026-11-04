@@ -1,0 +1,13 @@
+# Generated or local-only; the image builds them from scratch.
+node_modules
+.next
+out
+public/sprites
+coverage
+e2e
+.features-gen
+test-results
+playwright-report
+.env*
+Dockerfile
+.dockerignore
