@@ -1,5 +1,8 @@
 // Command server runs the Raccoons World backend: one room (the Praça),
 // a WebSocket endpoint at /ws and a health check at /health.
+//
+// `server healthcheck` checks the /health of a server already running at
+// RW_ADDR and exits 0 or 1 (the Docker healthcheck).
 package main
 
 import (
@@ -27,6 +30,14 @@ func main() {
 		level = slog.LevelDebug
 	}
 	logger := slog.New(slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{Level: level}))
+
+	if len(os.Args) > 1 && os.Args[1] == "healthcheck" {
+		if err := healthcheck(context.Background(), healthcheckHost(cfg.Addr)); err != nil {
+			logger.Error("unhealthy", "error", err)
+			os.Exit(1)
+		}
+		return
+	}
 
 	if err := run(cfg, logger); err != nil {
 		logger.Error("server stopped", "error", err)

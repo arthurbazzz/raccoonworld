@@ -1,0 +1,16 @@
+# Local override: build the images from the source instead of pulling them (RW-007 RN10).
+#   docker compose -f deploy/compose.yaml -f deploy/compose.build.yaml \
+#     --env-file deploy/.env.example up --build -d --wait
+# The game opens at http://localhost.
+services:
+  server:
+    image: raccoonworld-server:local
+    build:
+      context: ../server
+
+  web:
+    image: raccoonworld-web:local
+    build:
+      context: ../web
+      args:
+        NEXT_PUBLIC_WS_URL: ws://${PUBLIC_HOST}/ws

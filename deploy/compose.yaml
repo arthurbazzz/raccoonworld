@@ -1,0 +1,67 @@
+# Raccoons World production stack (RW-007).
+# Production: docker compose --env-file .env up -d --wait   (images from GHCR)
+# Local:      see compose.build.yaml
+name: raccoonworld
+
+services:
+  traefik:
+    image: traefik:v3.6
+    command:
+      - --providers.docker=true
+      - --providers.docker.exposedbydefault=false
+      - --entrypoints.web.address=:80
+      - --api.dashboard=false
+      - --ping=true
+    ports:
+      - "80:80"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    healthcheck:
+      test: ["CMD", "traefik", "healthcheck", "--ping"]
+      interval: 10s
+    restart: unless-stopped
+
+  server:
+    image: ghcr.io/${GHCR_OWNER}/raccoonworld-server:${IMAGE_TAG:-latest}
+    environment:
+      RW_ADDR: ":8080"
+      RW_ALLOWED_ORIGINS: ${PUBLIC_HOST:?set PUBLIC_HOST}
+      # Not used yet (RW-007 Q3); ready for the first repository.
+      DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}?sslmode=disable
+    depends_on:
+      postgres:
+        condition: service_healthy
+    stop_grace_period: 30s
+    restart: unless-stopped
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.server.entrypoints=web
+      - traefik.http.routers.server.rule=Path(`/ws`) || PathPrefix(`/maps/`) || Path(`/health`)
+      - traefik.http.routers.server.priority=100
+      - traefik.http.services.server.loadbalancer.server.port=8080
+
+  web:
+    image: ghcr.io/${GHCR_OWNER}/raccoonworld-web:${IMAGE_TAG:-latest}
+    restart: unless-stopped
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.web.entrypoints=web
+      - traefik.http.routers.web.rule=PathPrefix(`/`)
+      - traefik.http.routers.web.priority=1
+      - traefik.http.services.web.loadbalancer.server.port=3000
+
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:?set POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB:?set POSTGRES_DB}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+    restart: unless-stopped
+
+volumes:
+  pgdata:

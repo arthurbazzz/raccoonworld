@@ -25,3 +25,6 @@ Thumbs.db
 
 # RW-004: generated from web/art/ by `npm run sprites`
 web/public/sprites/
+
+# Deploy secrets (RW-007)
+deploy/.env
